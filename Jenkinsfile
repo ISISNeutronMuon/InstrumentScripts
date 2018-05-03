@@ -11,7 +11,6 @@ node ('master') {
  			// Shell build step
 sh """ 
 cd docs
-ls
 sh make_doc.sh 
  """
 		archiveArtifacts allowEmptyArchive: false, artifacts: 'docs/_build/html/**/*', caseSensitive: true, defaultExcludes: true, fingerprint: false, onlyIfSuccessful: false 
