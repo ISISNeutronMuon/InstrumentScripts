@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# genie_python documentation build configuration file, created by
+# shared_scripting documentation build configuration file, created by
 # sphinx-quickstart on Tue Aug 19 08:23:25 2014.
 #
 # This file is execfile()d with the current directory set to its
@@ -44,10 +44,10 @@ source_suffix = '.rst'
 #source_encoding = 'utf-8-sig'
 
 # The master toctree document.
-master_doc = 'genie_python'
+master_doc = 'shared_scripting'
 
 # General information about the project.
-project = u'genie_python'
+project = u'shared_scripting'
 copyright = u'2014, ISIS Computing Group'
 
 # The version info for the project you're documenting, acts as replacement for
@@ -114,7 +114,7 @@ html_theme_options = { 'nosidebar': True}
 
 # The name for this set of Sphinx documents.  If None, it defaults to
 # "<project> v<release> documentation".
-html_title = "genie_python documentation"
+html_title = "shared_scripting documentation"
 
 # A shorter title for the navigation bar.  Default is the same as html_title.
 #html_short_title = None
@@ -180,7 +180,7 @@ html_use_index = True
 #html_file_suffix = None
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = 'genie_pythondoc'
+htmlhelp_basename = 'shared_scriptingdoc'
 
 
 # -- Options for LaTeX output ---------------------------------------------
@@ -200,7 +200,7 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-  ('index', 'genie_python.tex', u'genie\\_python Documentation',
+  ('index', 'shared_scripting.tex', u'genie\\_python Documentation',
    u'ISIS Computing Group', 'manual'),
 ]
 
@@ -230,7 +230,7 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    ('index', 'genie_python', u'genie_python Documentation',
+    ('index', 'shared_scripting', u'shared_scripting Documentation',
      [u'ISIS Computing Group'], 1)
 ]
 
@@ -244,8 +244,8 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-  ('index', 'genie_python', u'genie_python Documentation',
-   u'ISIS Computing Group', 'genie_python', 'One line description of project.',
+  ('index', 'shared_scripting', u'shared_scripting Documentation',
+   u'ISIS Computing Group', 'shared_scripting', 'One line description of project.',
    'Miscellaneous'),
 ]
 
