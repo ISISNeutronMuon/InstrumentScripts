@@ -1,11 +1,11 @@
 // Powered by Infostretch 
 
-// Clean up workspace on entry
-deleteDir()
-
 timestamps {
 
 node ('master') { 
+	
+	// Clean up workspace on entry
+	deleteDir()
 
 	stage ('shared_scripting_docs - Checkout') {
  	 checkout([$class: 'GitSCM', branches: [[name: '*/Ticket3082_Shared_scripting_docs']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: '6b2f1ee9-91ff-4bc5-ab7d-6a3282eb73b4', url: 'https://github.com/ISISNeutronMuon/InstrumentScripts']]]) 
