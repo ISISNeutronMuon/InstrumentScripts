@@ -1,5 +1,8 @@
 // Powered by Infostretch 
 
+// Clean up workspace on entry
+deleteDir()
+
 timestamps {
 
 node ('master') { 
