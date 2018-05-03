@@ -19,7 +19,7 @@
 
 # -- Project information -----------------------------------------------------
 
-project = u'genie_python'
+project = u'shared_scripting'
 copyright = u'2018, ISIS_Computing_Group'
 author = u'ISIS_Computing_Group'
 
@@ -103,7 +103,7 @@ html_static_path = ['ystatic']
 # -- Options for HTMLHelp output ---------------------------------------------
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = 'genie_pythondoc'
+htmlhelp_basename = 'shared_scriptingdoc'
 
 
 # -- Options for LaTeX output ------------------------------------------------
@@ -130,7 +130,7 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-    (master_doc, 'genie_python.tex', u'genie\\_python Documentation',
+    (master_doc, 'shared_scripting.tex', u'genie\\_python Documentation',
      u'ISIS\\_Computing\\_Group', 'manual'),
 ]
 
@@ -140,7 +140,7 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    (master_doc, 'genie_python', u'genie_python Documentation',
+    (master_doc, 'shared_scripting', u'shared_scripting Documentation',
      [author], 1)
 ]
 
@@ -151,8 +151,8 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-    (master_doc, 'genie_python', u'genie_python Documentation',
-     author, 'genie_python', 'One line description of project.',
+    (master_doc, 'shared_scripting', u'shared_scripting Documentation',
+     author, 'shared_scripting', 'One line description of project.',
      'Miscellaneous'),
 ]
 
