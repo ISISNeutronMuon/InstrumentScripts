@@ -1,6 +1,6 @@
 #!/bin/sh
 set -o errexit
-sphinx-autogen -o source/ docs/shared_instrument_scripts.rst
+sphinx-autogen -o source/ shared_instrument_scripts.rst
 ls -R .
 env PYTHONPATH=.. make html
 ls -R _build/html
