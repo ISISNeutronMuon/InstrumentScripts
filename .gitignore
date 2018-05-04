@@ -3,3 +3,4 @@
 *~ 
 *.egg-info 
 .idea/
+docs/shared_instrument_scripts.rst
