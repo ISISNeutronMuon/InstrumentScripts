@@ -8,9 +8,9 @@ Welcome to the ISIS shared Python scripting documentation!
 .. autosummary::
    :toctree: source
 
-	general
-	general.scans
-	instrument
-	instrument.larmor
-	technique
+	..general
+	..general.scans
+	..instrument
+	..instrument.larmor
+	..technique
 	
