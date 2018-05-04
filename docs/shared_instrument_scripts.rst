@@ -11,7 +11,7 @@ Welcome to the ISIS shared Python scripting documentation!
 General
 -------
 
-.. automodule:: general
+.. automodule:: test
    :members:
 
 Instrument
