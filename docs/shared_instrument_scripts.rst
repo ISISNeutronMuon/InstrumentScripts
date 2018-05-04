@@ -12,17 +12,24 @@ General
 -------
 
 .. automodule:: general
+	:members:
+	
 .. automodule:: general.scans
+	:members:
 
 Instrument
 ----------
    
 .. automodule:: instrument
+	:members:
+	
 .. automodule:: instrument.larmor
+	:members:
 
 Technique
 ---------
    
 .. automodule:: technique
+	:members:
 
 
