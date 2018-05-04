@@ -4,8 +4,8 @@ def test(arg1, arg2):
 	build is working.
 
     Args:
-        arg1: The first argument
-		arg2: The second argument
+        arg1: The first argument.
+		arg2: The second argument.
 		
 	Returns:
 		None
