@@ -24,10 +24,12 @@ def generate_text():
     Returns: The text that will be written to file
     """
     cwd = os.getcwd()  # Should be docs folder
+    text = ""
+
     try:
         # Run from parent dir where section folders are
         os.chdir("..")
-        text = add_header("")
+        text = add_header(text)
         for section in ("general", "instrument", "technique"):
             text = add_section(section, text)
     except Exception as e:
@@ -36,7 +38,8 @@ def generate_text():
     finally:
         # Restore to original dir before leaving
         os.chdir(cwd)
-        return text
+
+    return text
 
 
 def add_header(current_text):
