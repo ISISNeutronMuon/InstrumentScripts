@@ -107,7 +107,7 @@ def add_module(name, path, original_text):
     new_text = original_text
 
     def is_file_for_documentation(f):
-        return os.path.isfile(os.path.join(path,f)) and not f.startswith("_") and os.path.splitext(f)[1] == ".py"
+        return os.path.isfile(os.path.join(path, f)) and not f.startswith("_") and os.path.splitext(f)[1] == ".py"
 
     # Add documentation for Python files in this dir
     for file_name in (o for o in os.listdir(path) if is_file_for_documentation(o)):
