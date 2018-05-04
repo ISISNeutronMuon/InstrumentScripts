@@ -59,9 +59,12 @@ def add_automodule_entry(name, original_text):
 
 def add_module(name, original_text):
     print("Adding module text for {}".format(name))
-    new_text = add_automodule_entry(name, original_text)
+    new_text = original_text
 
     cwd = os.getcwd()
+    for file_name in (o for o in os.listdir(cwd) if os.path.isfile(os.path.join(cwd,o)) and not o.startswith("_")):
+        new_text = add_automodule_entry(name + "." + os.path.splitext(file_name)[0], new_text)
+
     for subdir_name, subdir_path in ((o, os.path.join(cwd, o)) for o in os.listdir(cwd)
                                      if os.path.isdir(os.path.join(cwd,o))):
         os.chdir(subdir_path)
