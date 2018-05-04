@@ -5,5 +5,5 @@
 Welcome to the ISIS shared Python scripting documentation!
 ==========================================================
 
-.. toctree::
-   :maxdepth: 5
+.. autosummary::
+   :toctree: modules
