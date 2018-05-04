@@ -7,24 +7,3 @@ Welcome to the ISIS shared Python scripting documentation!
 
 .. toctree::
    :maxdepth: 2
-
-General
--------
-
-.. automodule:: general.test
-   :members:
-
-Instrument
-----------
-   
-.. automodule:: instrument
-   :members:
-
-Technique
----------
-   
-.. automodule:: technique
-   :members:
-
-
-
