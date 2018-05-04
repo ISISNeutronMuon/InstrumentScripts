@@ -6,7 +6,7 @@ Welcome to the ISIS shared Python scripting documentation!
 ==========================================================
 
 .. autosummary::
-   :toctree: modules
+   :toctree: source
 
 	general
 	general.scans
