@@ -1,6 +1,6 @@
 #!/bin/sh
 set -o errexit
-env PYTHONPATH=generate_template_rst.py
+python generate_template_rst.py
 env PYTHONPATH=.. make html
 ls -R _build/html
 rm -fr /isis/www/doxygen/shared_instrument_scripts/sphinx
