@@ -14,6 +14,9 @@ General
 .. automodule:: general
 	:members:
 	
+.. automodule:: general.test
+	:members:
+	
 .. automodule:: general.scans
 	:members:
 
