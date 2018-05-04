@@ -7,3 +7,10 @@ Welcome to the ISIS shared Python scripting documentation!
 
 .. autosummary::
    :toctree: modules
+
+	general
+	general.scans
+	instrument
+	instrument.larmor
+	technique
+	
