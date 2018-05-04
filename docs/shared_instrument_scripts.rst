@@ -5,12 +5,24 @@
 Welcome to the ISIS shared Python scripting documentation!
 ==========================================================
 
-.. autosummary::
-   :toctree: source
+.. toctree::
+   :maxdepth: 2
 
-	..general
-	..general.scans
-	..instrument
-	..instrument.larmor
-	..technique
-	
+General
+-------
+
+.. automodule:: general
+.. automodule:: general.scans
+
+Instrument
+----------
+   
+.. automodule:: instrument
+.. automodule:: instrument.larmor
+
+Technique
+---------
+   
+.. automodule:: technique
+
+
