@@ -14,15 +14,15 @@ try:
     # pylint: disable=import-error
     from genie_python import genie as g
 except ImportError:
-    from .Mocks import g
+    from general.scans.scans.Mocks import g
 try:
     import LSS.SANSroutines as lm  # pylint: disable=import-error
 except ImportError:
-    from .Mocks import lm
-from .Defaults import Defaults
-from .Detector import dae_periods
-from .Monoid import Polarisation, Average, MonoidList
-from .Util import make_scan
+    from general.scans.scans.Mocks import lm
+from general.scans.scans.Defaults import Defaults
+from general.scans.scans.Detector import dae_periods
+from general.scans.scans.Monoid import Polarisation, Average, MonoidList
+from general.scans.scans.Util import make_scan
 
 
 def _trans_mode():
@@ -67,17 +67,20 @@ class Larmor(Defaults):
 def get_user_dir():
     """Move to the current user directory"""
     base = r"U:/Users/"
-    dirs = [[os.path.join(base, x, d)
-             for d in os.listdir(os.path.join(base, x))
-             if os.path.isdir(os.path.join(base, x, d))]
-            for x in os.listdir(base)
-            if os.path.isdir(os.path.join(base, x))]
-    dirs = [x for x in dirs if x]
-    result = max([max(x, key=os.path.getmtime)
-                  for x in dirs],
-                 key=os.path.getmtime)
-    print("Setting path to {}".format(result))
-    os.chdir(result)
+    try:
+        dirs = [[os.path.join(base, x, d)
+                 for d in os.listdir(os.path.join(base, x))
+                 if os.path.isdir(os.path.join(base, x, d))]
+                for x in os.listdir(base)
+                if os.path.isdir(os.path.join(base, x))]
+        dirs = [x for x in dirs if x]
+        result = max([max(x, key=os.path.getmtime)
+                      for x in dirs],
+                     key=os.path.getmtime)
+        print("Setting path to {}".format(result))
+        os.chdir(result)
+    except:
+        print("U Drive not found.  Setting path to current directory")
 
 
 get_user_dir()
