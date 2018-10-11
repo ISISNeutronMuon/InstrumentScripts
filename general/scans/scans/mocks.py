@@ -41,16 +41,23 @@ def fake_spectrum(channel, period):  # pragma: no cover
     """Create a fake intensity spectrum."""
     if channel == 1:
         return {"signal": np.zeros(1000)+1}
-    x = np.arange(1000)+1
+    x = np.arange(1000)
     base = np.cos(0.01*(instrument["Theta"]+1.05)*x)+1
     if period % 2 == 0:
         base = 2 - base
     base *= 100000
     base += np.sqrt(base) * (2 * np.random.rand(1000) - 1)
     base /= x
-    # raise RuntimeError(str(base))
-    print("Taking a count at theta={:0.2f} and two theta={:0.2f}".format(
-        float(instrument["Theta"]), float(instrument["Two_Theta"])))
+    if channel == 4:
+        base[np.isnan(base)] = 0
+        base *= 0
+        print("Taking a count at theta=%0.2f and two theta=%0.2f" %
+              (g.cget("Theta")["value"], g.cget("Two_Theta")["value"]))
+        base += (1+np.cos(g.cget("Theta")["value"])) * \
+            np.sqrt(g.cget("Theta")["value"]) + \
+            g.cget("Two_Theta")["value"] ** 2 + \
+            0.05 * np.random.rand()
+        # raise RuntimeError(str(base))
     return {"signal": base}
 
 

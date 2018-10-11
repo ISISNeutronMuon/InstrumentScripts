@@ -1,6 +1,6 @@
 """The Spec module implements a couple of commond commands from SPEC."""
 
-from . import scan
+from instrument.larmor.scans import scan
 
 
 def ascan(motor, start, end, intervals, time):

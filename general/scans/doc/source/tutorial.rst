@@ -22,6 +22,7 @@ Plot Motor Scan
   steps of 0.6.
 
   >>> from instrument.larmor.scans import scan
+  U Drive not found.  Setting path to current directory
   >>> from general.scans.scans.motion import populate
   >>> populate()
   >>> scan(theta, 0, 2, 0.6, 50)
@@ -62,7 +63,7 @@ Plot Motor Scan
 
   .. test
 
-     >>> infile = open("mock_scan_02.dat", "r")
+     >>> infile = open("general/scans/mock_scan_02.dat", "r")
      >>> lines = infile.readlines()
      >>> infile.close()
      >>> for line in lines: print(line.split("\t")[0])
@@ -135,6 +136,7 @@ Plot Motor Scan
   :meth:`scans.Spec.rscan` method which defaults to a relative scan,
   instead of an absolute.
 
+  >>> from general.scans.scans.spec import rscan
   >>> rscan(theta, -1, 1, 0.5, 5)
   Taking a count at theta=3.00 and two theta=0.00
   Taking a count at theta=3.50 and two theta=0.00
@@ -444,6 +446,7 @@ SPEC compatibility
   represent a number of frames instead of a monitor count, since
   waiting for a monitor count is currently unsupported.
 
+  >>> from general.scans.scans.spec import ascan, dscan
   >>> ascan(theta, 0, 2, 10, 1)
   Taking a count at theta=0.00 and two theta=3.00
   Taking a count at theta=0.20 and two theta=3.00

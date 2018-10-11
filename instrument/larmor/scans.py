@@ -51,7 +51,7 @@ class Larmor(Defaults):
         g.pause()
         temp = sum(g.get_spectrum(4, period=g.get_period())["signal"])
         base = sum(g.get_spectrum(1, period=g.get_period())["signal"])
-        return Average(temp*100, count=base)
+        return Average(temp, count=base)
 
     @staticmethod
     def log_file():
