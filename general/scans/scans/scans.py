@@ -14,9 +14,9 @@ from collections import Iterable, OrderedDict
 import numpy as np
 from six import add_metaclass
 import six
-from .Monoid import ListOfMonoids, Monoid
-from .Detector import DetectorManager
-from .Fit import Fit
+from .monoid import ListOfMonoids, Monoid
+from .detector import DetectorManager
+from .fit import Fit
 
 try:
     # pylint: disable=import-error
@@ -25,7 +25,7 @@ except ImportError:
     # We must be in a test environment
     g = None
 from .multiplot import NBPlot
-from .Monoid import Average
+from .monoid import Average
 
 TIME_KEYS = ["frames", "uamps", "seconds", "minutes", "hours"]
 

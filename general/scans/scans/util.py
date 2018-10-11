@@ -4,8 +4,8 @@ module should ever need to be called by the end user.
 
 """
 import numpy as np
-from .Scans import SimpleScan
-from .Motion import Motion, BlockMotion
+from .scans import SimpleScan
+from .motion import Motion, BlockMotion
 
 TIME_KEYS = ["frames", "uamps", "seconds", "minutes", "hours"]
 

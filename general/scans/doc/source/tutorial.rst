@@ -9,6 +9,8 @@ Tutorial
   matches the functionality declared here.
 
   .. comment
+     >>> import os, sys
+     >>> sys.path.insert(0, os.getcwd())
      >>> import matplotlib
      >>> # matplotlib.use("Agg")
 
@@ -19,7 +21,9 @@ Plot Motor Scan
   detector intensity as the motor moves from 0 to 2 exclusively in
   steps of 0.6.
 
-  >>> from scans import *
+  >>> from instrument.larmor.scans import scan
+  >>> from general.scans.scans.motion import populate
+  >>> populate()
   >>> scan(theta, 0, 2, 0.6, 50)
   Taking a count at theta=0.00 and two theta=0.00
   Taking a count at theta=0.60 and two theta=0.00
@@ -224,6 +228,8 @@ Perform Fits
 
   Performing a fit on a measurement is merely a modification of
   performing the plot
+
+  >>> from general.scans.scans.fit import *
 
   >>> fit = scan(theta, start=0, stop=2, stride=0.6, fit=Linear, frames=5)
   Taking a count at theta=0.00 and two theta=0.00

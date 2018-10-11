@@ -132,7 +132,7 @@ class BlockMotion(Motion):
             # pylint: disable=import-error
             from genie_python import genie as g
         except ImportError:
-            from .Mocks import g
+            from .mocks import g
         if block not in g.get_blocks():
             raise RuntimeError(
                 "Unknown block {}.  Does the capitalisation "
@@ -150,7 +150,7 @@ def populate():
         # pylint: disable=import-error
         from genie_python import genie as g
     except ImportError:
-        from .Mocks import g
+        from .mocks import g
     for i in g.get_blocks():
         temp = BlockMotion(i)
         __builtins__[i.upper()] = temp

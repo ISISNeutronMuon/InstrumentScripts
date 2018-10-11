@@ -9,11 +9,11 @@ environment.
 """
 from __future__ import print_function
 import numpy as np
-from .Util import make_scan
-from .Defaults import Defaults
-from .Detector import dae_periods
-from .Motion import populate
-from .Mocks import g
+from .util import make_scan
+from .defaults import Defaults
+from .detector import dae_periods
+from .motion import populate
+from .mocks import g
 
 
 class MockInstrument(Defaults):
