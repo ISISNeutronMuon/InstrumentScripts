@@ -21,9 +21,11 @@ def cget(block):
     return None
 
 
-def cset(block, value):
+def cset(block=None, value=None, **kwargs):
     """Fake cset for the fake genie_python"""
     instrument[block] = value
+    for k in kwargs:
+        instrument[k] = kwargs[k]
 
 
 g.cget.side_effect = cget
