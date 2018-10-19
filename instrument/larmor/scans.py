@@ -49,8 +49,8 @@ class Larmor(Defaults):
 
         g.waitfor(**local_kwargs)
         g.pause()
-        temp = sum(g.get_spectrum(4, period=g.get_period())["signal"])
-        base = sum(g.get_spectrum(1, period=g.get_period())["signal"])
+        temp = sum(g.get_spectrum(4, period=g.get_period())["signal"])*100
+        base = sum(g.get_spectrum(1, period=g.get_period())["signal"])*100
         return Average(temp, count=base)
 
     @staticmethod

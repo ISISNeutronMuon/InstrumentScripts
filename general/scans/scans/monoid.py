@@ -51,7 +51,7 @@ class Monoid(object):
 
     def upgrade(self, x):
         """Ensure that a value is a member of this monoid"""
-        if x == 0 or x == 0.0:
+        if x in (0, 0.0):
             return self.zero()
         if not isinstance(x, self.__class__):
             return self.pure(x)

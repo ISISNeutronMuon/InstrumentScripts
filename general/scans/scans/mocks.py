@@ -7,6 +7,10 @@ on development or testing machines.
 from mock import Mock
 import numpy as np
 
+# Seed the random number generator so that unit tests always produce
+# the same images
+np.random.seed(0)
+
 g = Mock()
 g.period = 0
 g.frames = 0

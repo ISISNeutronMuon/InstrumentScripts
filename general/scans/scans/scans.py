@@ -16,14 +16,14 @@ from six import add_metaclass
 import six
 from .monoid import ListOfMonoids, Monoid
 from .detector import DetectorManager
-from .fit import Fit
+from .fit import Fit, ExactFit
 
 try:
     # pylint: disable=import-error
     from genie_python import genie as g
 except ImportError:
     # We must be in a test environment
-    g = None
+    from .mocks import g
 from .multiplot import NBPlot
 from .monoid import Average
 
@@ -68,10 +68,13 @@ def estimate(seconds=None, minutes=None, hours=None,
         if not hours:
             hours = 0
         return seconds + 60 * minutes + 3600 * hours
-    elif frames:
+
+    if frames:
         return frames / 10.0
-    elif uamps:
+
+    if uamps:
         return 90 * uamps
+
     return 0
 
 
@@ -222,7 +225,7 @@ class Scan(object):
 
         result = self.plot(action=fit.fit_plot_action(), **kwargs)
 
-        if isinstance(result[0], Iterable):
+        if isinstance(result[0], Iterable) and not isinstance(fit, ExactFit):
             result = np.array([x for x in result if x is not None])
             result = np.median(result, axis=0)
 
@@ -282,6 +285,7 @@ class SimpleScan(Scan):
     def __iter__(self):
         for i in self.values:
             self.action(i)
+            g.waitfor_move()
             dic = OrderedDict()
             dic[self.name] = self.action()
             yield dic

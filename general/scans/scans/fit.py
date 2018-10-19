@@ -5,8 +5,38 @@ fits (i.e. Linear and Gaussian).
 
 """
 from abc import ABCMeta, abstractmethod
+from sys import platform
+import ctypes
+import os
 import numpy as np
 from six import add_metaclass
+from scipy.special import erf  # pylint: disable=no-name-in-module
+
+if platform == "win32":
+    def handler(_):
+        """Basic handler for KeyboardInterrupt
+
+    This handler bypasses the Intel handler and prevents Python from
+    completely crashing on a Ctrl+C
+
+        """
+        try:
+            import _thread
+        except ImportError:
+            import thread as _thread
+        _thread.interrupt_main()
+        return 1
+
+    BASEPATH = r"C:\Instrument\Apps\Python\Lib\site-packages\numpy\core"
+    ctypes.CDLL(os.path.join(BASEPATH, "libmmd.dll"))
+    ctypes.CDLL(os.path.join(BASEPATH, "libifcoremd.dll"))
+    routine = ctypes.WINFUNCTYPE(ctypes.c_int, ctypes.c_uint)(handler)
+    ctypes.windll.kernel32.SetConsoleCtrlHandler(routine, 1)
+
+else:
+    os.environ['FOR_DISABLE_CONSOLE_CTRL_HANDLER'] = "T"
+# pylint: disable=wrong-import-position
+from scipy.optimize import curve_fit, OptimizeWarning  # noqa: E402
 
 
 @add_metaclass(ABCMeta)
@@ -149,6 +179,36 @@ class PolyFit(Fit):
         return self._title + ": $y = " + " + ".join(terms) + "$"
 
 
+class ExactFit(Fit):
+    """
+    A class for pulling the exact data points out of a plot
+    """
+
+    def __init__(self):
+        Fit.__init__(self, np.inf, "Exact Points")
+
+    def fit(self, x, y):
+        return (x, y)
+
+    def get_y(self, _, fit):
+        return fit[1]
+
+    def readable(self, fit):
+        return {"x": fit[0], "y": map(float, fit[1])}
+
+    def title(self, _):
+        return "Exact Points"
+
+    def fit_plot_action(self):
+        def action(x, y, _):
+            """Perform no actual plotting action and simply pass on the data
+ points.
+
+            """
+            return (x, y)
+        return action
+
+
 class PeakFit(Fit):
     """A simple peak-finding fitter.
 
@@ -227,7 +287,6 @@ class CurveFit(Fit):
         pass
 
     def fit(self, x, y):
-        from scipy.optimize import curve_fit
         return curve_fit(self._model, x, y, self.guess(x, y))[0]
 
     def get_y(self, x, fit):
@@ -241,9 +300,8 @@ class GaussianFit(CurveFit):
 
     def __init__(self):
         CurveFit.__init__(self, 4, "Gaussian Fit")
-        # import warnings
-        # from scipy.optimize import OptimizeWarning
-        # warnings.simplefilter("ignore", OptimizeWarning)
+        import warnings
+        warnings.simplefilter("ignore", OptimizeWarning)
 
     @staticmethod
     # pylint: disable=arguments-differ
@@ -321,6 +379,94 @@ class DampedOscillatorFit(CurveFit):
                 "cos({frequency:.3g}*(x-{center:.3g}))").format(**params)
 
 
+class ErfFit(CurveFit):
+    """A simple Erf edge fitter.
+
+    y = background + scale * erf(-stretch*(x-center))
+
+    >>> scan(TRANSLATION, start=-20, stop=20, step=1).Fit(Erf, uamps=1)
+
+    Will use all of the points within 5 mm of the peak when fitting
+    the quadratic.
+
+    """
+
+    def __init__(self):
+        CurveFit.__init__(self, 4, "Erf Fit")
+        import warnings
+        warnings.simplefilter("ignore", OptimizeWarning)
+
+    @staticmethod
+    # pylint: disable=arguments-differ
+    def _model(xs, cen, stretch, scale, background):
+        """
+        This is the model for an error function centered at cen with
+        an xscale of stretch and a yscale of scale over a base of
+        background.
+        """
+        return background + scale * erf(stretch*(xs-cen))
+
+    @staticmethod
+    def guess(x, y):
+        return [
+            np.mean(x),  # center
+            (max(x)-min(x))/2,  # stretch
+            (max(y)-min(y))/2,  # scale
+            min(y)]  # background
+
+    def readable(self, fit):
+        return {"center": fit[0], "stretch": fit[1],
+                "scale": fit[2], "background": fit[3]}
+
+    def title(self, fit):
+        # pylint: disable=arguments-differ
+        params = self.readable(fit)
+        return "Edge at {center:.3g}".format(**params)
+
+
+class TopHatFit(CurveFit):
+    """A simple top hat finder.
+
+    y = abs(x-center) < width/2 ? amplitude : background
+
+    >>> scan(TRANSLATION, start=-20, stop=20, step=1).Fit(Erf, uamps=1)
+    """
+
+    def __init__(self):
+        CurveFit.__init__(self, 5, "Top Hat Fit")
+        import warnings
+        warnings.simplefilter("ignore", OptimizeWarning)
+
+    @staticmethod
+    # pylint: disable=arguments-differ
+    def _model(xs, cen, width, height, background):
+        """
+        This is the model for a top hat function centered at cen with
+        a full width of width and a height of height over a base of
+        background.
+        """
+        ys = xs * 0
+        ys[np.abs(xs-cen) < width/2] = height
+        return background + ys
+
+    @staticmethod
+    def guess(x, y):
+        return [
+            np.mean(x),  # center
+            (max(x)-min(x))/2,  # stretch
+            (max(y)-min(y))/2,  # scale
+            min(y)]  # background
+
+    def readable(self, fit):
+        return {"center": fit[0], "width": fit[1],
+                "height": fit[2], "background": fit[3]}
+
+    def title(self, fit):
+        # pylint: disable=arguments-differ
+        params = self.readable(fit)
+        return "Top Hat at {center:.3g} of width {width:.3g}".format(**params)
+
+
 #: A linear regression
 Linear = PolyFit(1, title="Linear")
 
@@ -329,4 +475,11 @@ Gaussian = GaussianFit()
 
 DampedOscillator = DampedOscillatorFit()
 
-__all__ = ["PolyFit", "Linear", "Gaussian", "DampedOscillator", "PeakFit"]
+Erf = ErfFit()
+
+TopHat = TopHatFit()
+
+ExactPoints = ExactFit()
+
+__all__ = ["PolyFit", "Linear", "Gaussian", "DampedOscillator", "PeakFit",
+           "Erf", "TopHat", "ExactPoints"]

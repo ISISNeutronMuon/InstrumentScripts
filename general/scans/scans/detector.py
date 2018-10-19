@@ -73,6 +73,7 @@ class DaePeriods(DetectorManager):
             title = "Scan"
         g.change_title(title)
         g.change(nperiods=self.period_function(self._scan))
+        g.change(period=1)
         g.begin(paused=1)
 
         @wraps(self._f)
