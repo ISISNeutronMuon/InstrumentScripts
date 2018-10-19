@@ -5,9 +5,7 @@ This is the auto-generated reference from the doc strings in the
 source code.
 
 general.scans
--------------
-.. automodule:: general.scans
-   :members:
++++++++++++++
 
 general.scans.defaults
 ----------------------
