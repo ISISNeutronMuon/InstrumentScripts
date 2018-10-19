@@ -51,7 +51,11 @@ class Zoom(Defaults):
         return "Zoom()"
 
 
-scan = make_scan(Zoom())
+_zm = Zoom()
+scan = local_wrapper(_lm, "scan")
+ascan = local_wrapper(_lm, "ascan")
+dscan = local_wrapper(_lm, "dscan")
+rscan = local_wrapper(_lm, "rscan")
 populate()
 monitor1 = zoom_monitor(1)
 monitor2 = zoom_monitor(2)

@@ -22,7 +22,7 @@ except ImportError:
 from general.scans.scans.defaults import Defaults
 from general.scans.scans.detector import dae_periods
 from general.scans.scans.monoid import Polarisation, Average, MonoidList
-from general.scans.scans.util import make_scan
+from general.scans.scans.util import local_wrapper
 
 
 def _trans_mode():
@@ -157,4 +157,8 @@ def fast_pol_measure(**kwargs):
     return MonoidList(pols)
 
 
-scan = make_scan(Larmor())
+_lm = Larmor()
+scan = local_wrapper(_lm, "scan")
+ascan = local_wrapper(_lm, "ascan")
+dscan = local_wrapper(_lm, "dscan")
+rscan = local_wrapper(_lm, "rscan")
