@@ -4,47 +4,42 @@ Reference
 This is the auto-generated reference from the doc strings in the
 source code.
 
-Scans.Defaults
---------------
-.. automodule:: Scans.Defaults
+general.scans
+-------------
+.. automodule:: general.scans
    :members:
 
-Scans.Fit
----------
-.. automodule:: Scans.Fit
+general.scans.defaults
+----------------------
+.. automodule:: general.scans.defaults
    :members:
 
-Scans.Instrument
-----------------
-.. automodule:: Scans.Instrument
+general.scans.fit
+-----------------
+.. automodule:: general.scans.fit
    :members:
 
-Scans.Monoid
-------------
-.. automodule:: Scans.Monoid
+general.scans.monoid
+--------------------
+.. automodule:: general.scans.monoid
    :members:
 
-Scans.Motion
-------------
-.. automodule:: Scans.Motion
+general.scans.motion
+--------------------
+.. automodule:: general.scans.motion
    :members:
 
-Scans.multiplot
----------------
-.. automodule:: Scans.multiplot
+general.scans.multiplot
+-----------------------
+.. automodule:: general.scans.multiplot
    :members:
 
-Scans.Scans
------------
-.. automodule:: Scans.Scans
+general.scans.scans
+-------------------
+.. automodule:: general.scans.scans
    :members:
 
-Scans.Spec
------------
-.. automodule:: Scans.Spec
-   :members:
-
-Scans.Util
-----------
-.. automodule:: Scans.Util
+general.scans.util
+------------------
+.. automodule:: general.scans.util
    :members:
