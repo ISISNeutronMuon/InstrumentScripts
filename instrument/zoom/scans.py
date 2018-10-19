@@ -10,11 +10,11 @@ try:
     from genie_python import genie as g
 except ImportError:
     g = None
-from .Defaults import Defaults
-from .Detector import dae_periods
-from .Motion import populate
-from .Monoid import Sum
-from .Util import make_scan
+from genie.scans.scans.defaults import Defaults
+from genie.scans.scans.detector import dae_periods
+from genie.scans.scans.motion import populate
+from genie.scans.scans.monoid import Sum
+from genie.scans.scans.util import make_scan
 
 
 def zoom_monitor(spectrum):
