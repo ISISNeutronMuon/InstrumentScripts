@@ -4,6 +4,3 @@ A wildcard import from this module will provide all of the scanning
 utilities a user could be expected to need at a beamline.
 
 """
-
-from __future__ import absolute_import
-from .scans import *

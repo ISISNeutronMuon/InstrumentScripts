@@ -23,7 +23,7 @@ Plot Motor Scan
 
   >>> from instrument.larmor.scans import scan
   U Drive not found.  Setting path to current directory
-  >>> from general.scans.scans.motion import populate
+  >>> from general.scans.motion import populate
   >>> populate()
   >>> scan(theta, 0, 2, 0.6, 50)
   Taking a count at theta=0.00 and two theta=0.00
@@ -231,7 +231,7 @@ Perform Fits
   Performing a fit on a measurement is merely a modification of
   performing the plot
 
-  >>> from general.scans.scans.fit import *
+  >>> from general.scans.fit import *
 
   >>> fit = scan(theta, start=0, stop=2, stride=0.6, fit=Linear, frames=5)
   Taking a count at theta=0.00 and two theta=0.00
