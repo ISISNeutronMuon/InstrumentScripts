@@ -3,3 +3,6 @@
 *~ 
 *.egg-info 
 .idea/
+/doc/build
+/doc/source/scans/*.dat
+

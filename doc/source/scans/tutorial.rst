@@ -11,6 +11,7 @@ Tutorial
   .. comment
      >>> import os, sys
      >>> sys.path.insert(0, os.getcwd())
+     >>> os.chdir("doc/source/scans")
      >>> import matplotlib
      >>> # matplotlib.use("Agg")
 
@@ -58,12 +59,12 @@ Plot Motor Scan
   the log is set by the instrument scientist.  The data from the scan
   above can be seen below.
 
-  .. literalinclude:: ../../mock_scan_02.dat
+  .. literalinclude:: mock_scan_02.dat
      :caption: mock_scan_02.dat
 
   .. test
 
-     >>> infile = open("general/scans/mock_scan_02.dat", "r")
+     >>> infile = open("mock_scan_02.dat", "r")
      >>> lines = infile.readlines()
      >>> infile.close()
      >>> for line in lines: print(line.split("\t")[0])
@@ -85,7 +86,7 @@ Plot Motor Scan
   instead of frames.  The values or ``minutes``, ``hours``, and
   ``uamps`` are also accepted.
 
-  .. image:: ../../plot_example.png
+  .. image:: plot_example.png
      :alt: Example plot
 
   There are many possibilities beyond the ``start``, ``stop``,
@@ -233,7 +234,7 @@ Perform Fits
 
   >>> from general.scans.fit import *
 
-  >>> fit = scan(theta, start=0, stop=2, stride=0.6, fit=Linear, frames=5)
+  >>> fit = scan(theta, start=0, stop=2, stride=0.6, fit=Linear, frames=5, save="linear.png")
   Taking a count at theta=0.00 and two theta=0.00
   Taking a count at theta=0.50 and two theta=0.00
   Taking a count at theta=1.00 and two theta=0.00
@@ -246,9 +247,9 @@ Perform Fits
   array with the slope and intercept.  The fit is also plotted over the
   original graph when finished.
 
-  .. image:: ../../linear.png
+  .. image:: linear.png
 
-  >>> fit = scan(theta, start=0, stop=2, stride=0.6, fit=PolyFit(3), frames=5)
+  >>> fit = scan(theta, start=0, stop=2, stride=0.6, fit=PolyFit(3), frames=5, save="cubic.png")
   Taking a count at theta=0.00 and two theta=0.00
   Taking a count at theta=0.50 and two theta=0.00
   Taking a count at theta=1.00 and two theta=0.00
@@ -259,7 +260,7 @@ Perform Fits
 
   Higher order polynomials are also supported
 
-  .. image:: ../../cubic.png
+  .. image:: cubic.png
 
   We can also plot the same scan against a Gaussian
 
@@ -278,7 +279,7 @@ Perform Fits
   >>> abs(fit["center"] - 1.0) < 0.2
   True
 
-  .. figure:: ../../gaussian.png
+  .. figure:: gaussian.png
      :alt: Fitting a gaussian
 
   There is a simple peak finder as well.  It finds the largest data
@@ -301,7 +302,7 @@ Perform Fits
   >>> abs(fit["peak"] - 1.0) < 0.1
   True
 
-  .. figure:: ../../peak.png
+  .. figure:: peak.png
      :alt: Fitting a peak
 
 
@@ -330,7 +331,7 @@ Perform complex scans
   Taking a count at theta=0.75 and two theta=1.50
   Taking a count at theta=1.00 and two theta=2.00
 
-  .. figure:: ../../locked.png
+  .. figure:: locked.png
      :alt: Scan of th and two_th locked together
 
   On the other hand, if the user is unsure about the proper sample
@@ -361,7 +362,7 @@ Perform complex scans
   Taking a count at theta=12.00 and two theta=1.50
   Taking a count at theta=12.00 and two theta=2.00
 
-  .. figure:: ../../2d.png
+  .. figure:: 2d.png
      :alt: 2D scan image
 
   Two scans can also be run one after the other.  If there are any
