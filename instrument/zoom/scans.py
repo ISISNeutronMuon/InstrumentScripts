@@ -14,7 +14,7 @@ from general.scans.defaults import Defaults
 from general.scans.detector import dae_periods
 from general.scans.motion import populate
 from general.scans.monoid import Sum
-from general.scans.util import make_scan
+from general.scans.util import local_wrapper
 
 
 def zoom_monitor(spectrum):
@@ -52,10 +52,10 @@ class Zoom(Defaults):
 
 
 _zm = Zoom()
-scan = local_wrapper(_lm, "scan")
-ascan = local_wrapper(_lm, "ascan")
-dscan = local_wrapper(_lm, "dscan")
-rscan = local_wrapper(_lm, "rscan")
+scan = local_wrapper(_zm, "scan")
+ascan = local_wrapper(_zm, "ascan")
+dscan = local_wrapper(_zm, "dscan")
+rscan = local_wrapper(_zm, "rscan")
 populate()
 monitor1 = zoom_monitor(1)
 monitor2 = zoom_monitor(2)

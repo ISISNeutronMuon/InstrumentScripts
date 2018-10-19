@@ -103,6 +103,4 @@ def local_wrapper(SCANNING, method):
     def inner(*args, **kwargs):
         """Call the method without the object"""
         return getattr(SCANNING, method)(*args, **kwargs)
-    if not inner.__doc__ and hasattr(ScanningInstrument, method):
-        inner.__doc__ = getattr(ScanningInstrument, method).__doc__
     return inner
