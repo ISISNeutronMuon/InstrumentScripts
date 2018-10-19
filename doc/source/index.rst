@@ -11,10 +11,8 @@ Contents:
 .. toctree::
    :maxdepth: 2
 
-   tutorial
-   instrument
+   scans/index.rst
    reference
-   issues
 
 
 Indices and tables
