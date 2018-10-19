@@ -41,3 +41,21 @@ general.scans.util
 ------------------
 .. automodule:: general.scans.util
    :members:
+
+technique.sans
+++++++++++++++
+
+technique.sans.instrument
+--------------
+.. automodule:: technique.sans.instrument
+   :members:
+
+technique.sans.reduction
+---------
+.. automodule:: technique.sans.reduction
+   :members:
+
+technique.sans.util
+---------
+.. automodule:: technique.sans.util
+   :members:

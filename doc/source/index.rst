@@ -12,6 +12,7 @@ Contents:
    :maxdepth: 2
 
    scans/index.rst
+   sans/index.rst
    reference
 
 
