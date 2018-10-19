@@ -40,7 +40,8 @@ class Defaults(object):
         """
         pass
 
-    def scan(self, motion, start=None, stop=None, step=None, frames=None, **kwargs):
+    def scan(self, motion, start=None, stop=None, step=None, frames=None,
+             **kwargs):
         """scan establishes the setup for performing a measurement scan.
 
         Examples
@@ -148,7 +149,6 @@ class Defaults(object):
             return scn.plot(**kwargs)
         return scn
 
-
     def ascan(self, motor, start, end, intervals, time):
         """A reimplementations of ascan from spec
 
@@ -178,10 +178,9 @@ class Defaults(object):
         """
         if time > 0:
             return self.scan(motor, start=start, stop=end,
-                        gaps=intervals).plot(seconds=time)
+                             gaps=intervals).plot(seconds=time)
         return self.scan(motor, start=start, stop=end,
-                    gaps=intervals).plot(frames=-time)
-
+                         gaps=intervals).plot(frames=-time)
 
     def dscan(self, motor, start, end, intervals, time):
         """A reimplementations of dscan from spec
@@ -191,9 +190,10 @@ class Defaults(object):
         >>> dscan(COARSEZ, -20, 20, 40, -50)
 
         Scan the CoarseZ motor from 20 mm below the current position
-        to position 20 mm above the current position (inclusive) in 1 mm steps.
-        At each point, take measure for 50 frames (about five seconds).
-        After the plot, the CoarseZ motor will move back to its original position.
+        to position 20 mm above the current position (inclusive) in 1
+        mm steps.  At each point, take measure for 50 frames (about
+        five seconds).  After the plot, the CoarseZ motor will move
+        back to its original position.
 
         Parameters
         ----------
@@ -214,14 +214,14 @@ class Defaults(object):
         try:
             if time > 0:
                 return self.scan(motor, before=start, after=end,
-                            gaps=intervals).plot(seconds=time)
+                                 gaps=intervals).plot(seconds=time)
             return self.scan(motor, before=start, after=end,
-                        gaps=intervals).plot(frames=-time)
+                             gaps=intervals).plot(frames=-time)
         finally:
             motor(init)
 
-
-    def rscan(self, motor, before=None, after=None, step=None, frames=None, **kwargs):
+    def rscan(self, motor, before=None, after=None, step=None, frames=None,
+              **kwargs):
         """An ISIS specific relative scan function
 
         This function is identical to the normal scan function, but it
@@ -232,9 +232,10 @@ class Defaults(object):
         >>> rscan(coarsez, -20, 20, 1, 50)
 
         Scan the CoarseZ motor from 20 mm below the current position
-        to position 20 mm above the current position (exclusive) in 1 mm steps.
-        At each point, take measure for 50 frames (about five seconds).
-        After the plot, the CoarseZ motor will move back to its original position.
+        to position 20 mm above the current position (exclusive) in 1
+        mm steps.  At each point, take measure for 50 frames (about
+        five seconds).  After the plot, the CoarseZ motor will move
+        back to its original position.
 
         Parameters
         ----------
@@ -248,6 +249,7 @@ class Defaults(object):
         The absolute step size
         frames
         The number of pulse frames to measure at each point
+
         """
         init = motor()
         try:

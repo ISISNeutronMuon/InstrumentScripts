@@ -98,9 +98,10 @@ def get_points(
     raise RuntimeError("Unable to build a scan with that set of options.")
 
 
-def local_wrapper(SCANNING, method):
-    @wraps(getattr(SCANNING, method))
+def local_wrapper(obj, method):
+    """Get a function that calls a METHOD on object OBJect"""
+    @wraps(getattr(obj, method))
     def inner(*args, **kwargs):
         """Call the method without the object"""
-        return getattr(SCANNING, method)(*args, **kwargs)
+        return getattr(obj, method)(*args, **kwargs)
     return inner

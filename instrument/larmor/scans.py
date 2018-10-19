@@ -79,7 +79,7 @@ def get_user_dir():
                      key=os.path.getmtime)
         print("Setting path to {}".format(result))
         os.chdir(result)
-    except:
+    except OSError:
         print("U Drive not found.  Setting path to current directory")
 
 
