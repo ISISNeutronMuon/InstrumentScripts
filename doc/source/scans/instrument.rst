@@ -122,7 +122,7 @@ Monoid Examples
 
 Most of our monoids can be created fairly simply
 
->>> from scans.Monoid import *
+>>> from general.scans.monoid import *
 >>> s = Sum(2.0)
 >>> x = Average(1.0)
 >>> p = Polarisation(ups=100.0, downs=0.0)

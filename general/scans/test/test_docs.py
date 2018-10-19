@@ -3,8 +3,8 @@ import doctest
 
 
 def load_tests(loader, tests, ignore):
-    tests.addTests(doctest.DocFileSuite("../doc/source/tutorial.rst"))
-    tests.addTests(doctest.DocFileSuite("../doc/source/instrument.rst"))
+    tests.addTests(doctest.DocFileSuite("../../../doc/source/scans/tutorial.rst"))
+    tests.addTests(doctest.DocFileSuite("../../../doc/source/scans/instrument.rst"))
     return tests
 
 
