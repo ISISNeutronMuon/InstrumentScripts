@@ -11,7 +11,6 @@ Tutorial
   .. comment
      >>> import os, sys
      >>> sys.path.insert(0, os.getcwd())
-     >>> os.chdir("doc/source/scans")
      >>> import matplotlib
      >>> # matplotlib.use("Agg")
 

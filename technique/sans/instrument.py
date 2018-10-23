@@ -529,7 +529,7 @@ of parameters accepted. """
           users return.
 
         """
-        from .Util import user_script
+        from .util import user_script
 
         @user_script
         def inner():

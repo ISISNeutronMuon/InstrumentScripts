@@ -1,7 +1,9 @@
 """This is the instrument implementation for the Zoom beamline."""
-from .Instrument import ScanningInstrument
-from .genie import gen
-from .Util import dae_setter
+from technique.sans.instrument import ScanningInstrument
+from technique.sans.genie import gen
+# pylint: disable=unused-import
+from technique.sans.util import dae_setter, user_script  # noqa: F401
+from general.scans.util import local_wrapper
 
 
 class Zoom(ScanningInstrument):
@@ -110,3 +112,10 @@ class Zoom(ScanningInstrument):
     def _configure_trans_custom(self):
         # move the transmission monitor in
         gen.set_pv("IN:ZOOM:VACUUM:MONITOR:4:INSERT", "INSERT")
+
+
+obj = Zoom()
+for method in dir(obj):
+    if method[0] != "_" and method not in locals() and \
+       callable(getattr(obj, method)):
+        locals()[method] = local_wrapper(obj, method)

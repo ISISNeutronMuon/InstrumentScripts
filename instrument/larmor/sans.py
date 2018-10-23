@@ -1,8 +1,10 @@
 """This is the instrument implementation for the Larmor beamline."""
 from logging import info
-from .Instrument import ScanningInstrument
-from .Util import dae_setter
-from .genie import gen
+from technique.sans.instrument import ScanningInstrument
+from technique.sans.genie import gen
+# pylint: disable=unused-import
+from technique.sans.util import dae_setter, user_script  # noqa: F401
+from general.scans.util import local_wrapper
 
 
 def sleep(seconds):
@@ -496,3 +498,10 @@ class Larmor(ScanningInstrument):  # pylint: disable=too-many-public-methods
     def home_pi_rotation():
         """Calibrate the pi flipper."""
         gen.set_pv("IN: LARMOR: SDTEST_01: P2: COMM", "FRF 1")
+
+
+obj = Larmor()
+for method in dir(obj):
+    if method[0] != "_" and method not in locals() and \
+       callable(getattr(obj, method)):
+        locals()[method] = local_wrapper(obj, method)
