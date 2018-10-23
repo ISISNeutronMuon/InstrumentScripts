@@ -1,0 +1,7 @@
+title,uamps,pos,thickness,trans,frames
+Sample1,10,AT,1, ,
+Sample2,5,AT,1,TRUE,
+Sample2,5,BT,1,TRUE,
+Sample2,10,BT,1,FALSE,
+Sample3,,CT,2,TRUE,3000
+Sample3,,CT,2,FALSE,6000
