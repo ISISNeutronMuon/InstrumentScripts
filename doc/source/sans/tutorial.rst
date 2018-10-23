@@ -25,6 +25,8 @@ Tutorial
 Basic examples
 ==============
 
+.. py:currentmodule:: technique.sans.instrument
+
 First, we'll just do a simple measurement on the main detector for 600
 frames.
 
@@ -185,7 +187,7 @@ Measuring Beam stop_SANS for 300 frames
 
 The :py:meth:`ScanningInstrument.measure` function also has a ``dae``
 keyword parameter that is automatically passed to
-:py:meth:`setup_default_dae`.  The above example puts the instrument
+:py:meth:`ScanningInstrument.setup_default_dae`.  The above example puts the instrument
 back into event mode.
 
 >>> enumerate_dae()
@@ -197,7 +199,7 @@ of the supported dae modes on the current beamline.
 Automated script checking
 =========================
 
-.. py:currentmodule:: src.Util
+.. py:currentmodule:: technique.sans.util
 
 This module includes a decorator :py:meth:`user_script` that can be
 added to the front of any user function.  This will allow the
@@ -255,7 +257,7 @@ will then run the script for real.
 Large script handling
 =====================
 
-.. py:currentmodule:: src.Instrument
+.. py:currentmodule:: technique.sans.instrument
 
 The :py:meth:`ScanningInstrument.measure_file` function allows the
 user to define everything in a CSV file with excel and then run it
@@ -432,7 +434,7 @@ Flipper Off
 Flipper On
 Flipper Off
 
-.. py:currentmodule:: src.Larmor
+.. py:currentmodule:: instruments.larmor.sans
 
 In this example, the instrument scientist has written two functions
 :py:meth:`Larmor._begin_sesans` and :py:meth:`Larmor._waitfor_sesans`
@@ -452,6 +454,8 @@ Flipper Off
 Flipper On
 Flipper Off
 
+.. py:currentmodule:: technique.sans.instrument
+
 These custom mode also allow more default parameters to be added onto
 :py:meth:`ScanningInstrument.measure`.  In this instance, the ``u``
 and ``d`` parameters set the number of frames in the up and down
@@ -460,7 +464,7 @@ states.
 Reduction Script Generation
 ===========================
 
-.. py:currentmodule:: src.reduction
+.. py:currentmodule:: technique.sans.reduction
 
 A small amount of metadata is attached to each run.  It's possible to
 generate a reduction script from this metadata.

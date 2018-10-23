@@ -133,7 +133,7 @@ Plot Motor Scan
   Taking a count at theta=4.00 and two theta=0.00
 
   Since relative scans are fairly common, there's a built in
-  :meth:`scans.Spec.rscan` method which defaults to a relative scan,
+  :meth:`general.scans.defaults.Defaults.rscan` method which defaults to a relative scan,
   instead of an absolute.
 
   >>> from instrument.larmor.scans import rscan
@@ -506,7 +506,7 @@ Position Commands
 	 integer number of steps, the measurement will stop before the
 	 requested end.
 
-  See the :meth:`scans.Util.get_points` function for more information on the parameters.
+  See the :meth:`general.scans.util.get_points` function for more information on the parameters.
 
 
 Class setup
