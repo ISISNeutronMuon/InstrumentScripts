@@ -1,0 +1,7 @@
+coverage
+numpy
+matplotlib
+pylint
+flake8
+scipy
+six
