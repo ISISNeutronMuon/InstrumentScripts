@@ -323,16 +323,16 @@ because there is infinite output.
 >>> convert_file("test/good_julabo.csv")
 >>> with open("test/good_julabo.csv.py", "r") as infile:
 ...     for line in infile:
-...         print line,
+...         print(line[:-1])
 from SansScripting import *
 @user_script
 def good_julabo():
-    do_sans("Sample1", "AT", uamps=10, thickness=1)
-    do_trans("Sample2", "AT", uamps=5, thickness=1)
-    do_trans("Sample2", "BT", uamps=5, thickness=1)
-    do_sans("Sample2", "BT", uamps=10, thickness=1)
-    do_trans("Sample3", "CT", thickness=2, frames=3000)
-    do_sans("Sample3", "CT", thickness=2, frames=6000)
+    do_sans("Sample1", "AT", thickness=1, uamps=10)
+    do_trans("Sample2", "AT", thickness=1, uamps=5)
+    do_trans("Sample2", "BT", thickness=1, uamps=5)
+    do_sans("Sample2", "BT", thickness=1, uamps=10)
+    do_trans("Sample3", "CT", frames=3000, thickness=2)
+    do_sans("Sample3", "CT", frames=6000, thickness=2)
 
 When the user is ready to take the next step into full python
 scripting, the CSV file can be turned into a python source file that
@@ -477,8 +477,8 @@ be collected from runs 29200 through 29309 in a nested dictionary.
 The orders of the keys will be the sample name, the blank name, and
 finally the magnet angle.
 
->>> d["example in pure h2o"]["h2o blank"]["20.0"]
-{'Sample': [88, 98, 107], 'P0Trans': [89], 'P0': [90, 99, 108], 'Trans': [87]}
+>>> d["example in pure h2o"]["h2o blank"]["20.0"] == {'Sample': [88, 98, 107], 'P0Trans': [89], 'P0': [90, 99, 108], 'Trans': [87]}
+True
 
 Once we've chose out instrument parameters, we get a labelled set of
 run numbers which describe the reduction that we want to perform.

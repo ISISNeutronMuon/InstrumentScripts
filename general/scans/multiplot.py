@@ -58,7 +58,7 @@ class ProcessPlotter(object):  # pragma: no cover
                 del self.fig
                 self.pipe.send((self.x, self.y))
                 return None
-            elif isinstance(command, tuple):
+            if isinstance(command, tuple):
                 if command[0] == "clf":
                     self.axis.cla()
                     continue

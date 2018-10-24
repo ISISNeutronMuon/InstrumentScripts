@@ -465,8 +465,7 @@ class Larmor(ScanningInstrument):  # pylint: disable=too-many-public-methods
             info("The detector is not turned off")
             info("Not attempting Move")
             return
-        else:
-            info("The detector is off")
+        info("The detector is off")
 
         if angle >= -0.5:
             gen.cset(benchlift=1)

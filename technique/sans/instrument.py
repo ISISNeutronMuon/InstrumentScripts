@@ -14,6 +14,13 @@ from six import add_metaclass
 from .genie import gen
 
 
+def _get_times(times):
+    for k in ["uamps", "frames", "hours", "minutes", "seconds"]:
+        if k in times:
+            return k, times[k]
+    raise RuntimeError("No valid time found")
+
+
 @add_metaclass(ABCMeta)  # pylint: disable=too-many-public-methods
 class ScanningInstrument(object):
     """The base class for scanning measurement instruments."""
@@ -456,11 +463,11 @@ class ScanningInstrument(object):
                 pos()
             else:
                 raise TypeError("Cannot understand position {}".format(pos))
-        for arg in kwargs:
+        for arg, val in sorted(kwargs.items()):
             if arg in self.TIMINGS:
                 continue
-            info("Moving {} to {}".format(arg, kwargs[arg]))
-            gen.cset(arg, kwargs[arg])
+            info("Moving {} to {}".format(arg, val))
+            gen.cset(arg, val)
         times = self.sanitised_timings(kwargs)
         gen.waitfor_move()
         gen.change_sample_par("Thick", thickness)
@@ -469,10 +476,11 @@ class ScanningInstrument(object):
         gen.change(title=title+self.title_footer)
 
         self._begin()
+        unit, time = _get_times(times)
         info("Measuring {title:} for {time:} {units:}".format(
             title=title+self.title_footer,
-            units=list(times.keys())[0],
-            time=times[list(times.keys())[0]]))
+            units=unit,
+            time=time))
         self._waitfor(**times)
         self._end()
 
@@ -536,13 +544,12 @@ of parameters accepted. """
             """Actually load and run the script"""
             import csv
             import ast
-            with open(file_path, "rb") as csvfile:
+            with open(file_path, "r") as csvfile:
                 reader = csv.DictReader(csvfile)
                 for row in reader:
+                    row = {k: row[k] for k in row if row[k].strip() != ""}
                     for k in row.keys():
-                        if row[k].strip() == "":
-                            del row[k]
-                        elif row[k].upper() == "TRUE":
+                        if row[k].upper() == "TRUE":
                             row[k] = True
                         elif row[k].upper() == "FALSE":
                             row[k] = False
@@ -570,7 +577,7 @@ of parameters accepted. """
         import csv
         import ast
         import os.path
-        with open(file_path, "rb") as src, open(file_path+".py", "w") as out:
+        with open(file_path, "r") as src, open(file_path+".py", "w") as out:
             out.write("from SansScripting import *\n")
             out.write("@user_script\n")
             out.write("def {}():\n".format(
@@ -596,10 +603,9 @@ of parameters accepted. """
                     out.write('"{}", '.format(row["pos"]))
                     del row["pos"]
 
+                row = {k: row[k] for k in row if row[k].strip() != ""}
                 for k in row.keys():
-                    if row[k].strip() == "":
-                        del row[k]
-                    elif row[k].upper() == "TRUE":
+                    if row[k].upper() == "TRUE":
                         row[k] = True
                     elif row[k].upper() == "FALSE":
                         row[k] = False
@@ -609,7 +615,8 @@ of parameters accepted. """
                         except ValueError:
                             row[k] = "\"" + row[k] + "\""
                             continue
-                params = ", ".join([k + "=" + str(row[k]) for k in row])
+                params = ", ".join([k + "=" + str(v)
+                                    for (k, v) in sorted(row.items())])
                 out.write('{})\n'.format(params))
 
     @staticmethod

@@ -3,7 +3,7 @@
 from __future__ import print_function
 from xml.etree import ElementTree as ET
 from collections import defaultdict
-from six import input
+from six.moves import input
 
 SCHEMA = "{http://definition.nexusformat.org/schema/3.0}"
 
@@ -21,7 +21,7 @@ def is_blank_transmission(run):
 def is_sample(run):
     """Was the measurement in sesans mode and on a sample?"""
     kind = get_kind(run)
-    return kind == "sesans" or kind == "sans"
+    return kind in ("sesans", "sans")
 
 
 def is_transmission(run):
@@ -88,7 +88,7 @@ def sans_connection(start, end, path):
     bts = connect_samples(runs, is_blank_transmission)
 
     # Identify Sample Names
-    samples = set([get_sample(run) for run in runs if is_sample(run)])
+    samples = {get_sample(run) for run in runs if is_sample(run)}
 
     # Identify Sample Transmissions
     trans = {}
@@ -111,7 +111,7 @@ def sans_connection(start, end, path):
     # Identify Blank Runs
     blank_parts = connect_samples(runs, is_blank)
     blank_parts = {
-        key: set([get_echo_id(run) for run in blank_parts[key]])
+        key: {get_echo_id(run) for run in blank_parts[key]}
         for key in blank_parts}
 
     sample_blank_pairs = set()
@@ -147,7 +147,7 @@ def sesans_connection(start, end, path):
     bts = connect_samples(runs, is_blank_transmission)
 
     # Identify Sample Names
-    samples = set([get_sample(run) for run in runs if is_sample(run)])
+    samples = {get_sample(run) for run in runs if is_sample(run)}
 
     # Identify Sample Transmissions
     trans = {}
@@ -165,7 +165,7 @@ def sesans_connection(start, end, path):
         relevant = [run for run in runs if
                     get_sample(run) == sample
                     and is_sample(run)]
-        sels = set([get_sel(run) for run in relevant])
+        sels = {get_sel(run) for run in relevant}
         for sel in sels:
             sample_runs[sample][sel] = [run for run in relevant
                                         if get_sel(run) == sel]
@@ -173,15 +173,15 @@ def sesans_connection(start, end, path):
     # Identify Blank Runs
     blank_parts = connect_samples(runs, is_blank)
     blank_parts = {
-        key: set([get_echo_id(run) for run in blank_parts[key]])
+        key: {get_echo_id(run) for run in blank_parts[key]}
         for key in blank_parts}
 
     sample_blank_pairs = set()
     for sample in sample_runs:
         echos = set()
         for sel in sample_runs[sample]:
-            echos = echos.union(set([get_echo_id(x)
-                                     for x in sample_runs[sample][sel]]))
+            echos = echos.union({get_echo_id(x)
+                                 for x in sample_runs[sample][sel]})
         for blank in blank_parts:
             if echos.issubset(blank_parts[blank]):
                 sample_blank_pairs.add((sample, blank))

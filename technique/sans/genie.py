@@ -101,7 +101,8 @@ mock_gen.set_pv.side_effect = set_pv
 mock_gen.mock_detector_on = "On"
 
 try:
-    import genie_python.genie as genie  # pylint: disable=unused-import
+    # pylint: disable=unused-import, useless-import-alias
+    import genie_python.genie as genie
 except ImportError:
     genie = mock_gen
 

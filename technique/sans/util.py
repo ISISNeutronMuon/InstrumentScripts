@@ -76,7 +76,7 @@ def wait_time(call):
     name, _, kwargs = call
     if name != "waitfor":
         return 0
-    key = kwargs.keys()[0]
+    key = list(kwargs.keys())[0]
     return SCALES[key] * kwargs[key]
 
 
