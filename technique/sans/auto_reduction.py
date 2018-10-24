@@ -3,6 +3,7 @@
 from __future__ import print_function
 from xml.etree import ElementTree as ET
 from collections import defaultdict
+from six import input
 
 SCHEMA = "{http://definition.nexusformat.org/schema/3.0}"
 
@@ -288,7 +289,7 @@ def console_oracle(sample, blanks):  # pragma: no cover
     while True:
         for idx, blank in enumerate(blanks):
             print("{}: \t {}".format(idx + 1, blank))
-        result = raw_input(
+        result = input(
             "What is the blank for the sample: {}".format(sample))
         result = int(result) - 1
         if 0 <= result <= len(blanks):
