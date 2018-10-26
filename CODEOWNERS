@@ -1,0 +1,15 @@
+* @rprospero @DiegoAlbaVenero
+
+# Any changes to instrument code should be reviewed by an instrument
+# scientist on that beam line
+/instrument/larmor @rprospero
+/instrument/zoom @DiegoAlbaVenero
+
+# Changes to the sans code should be reviewed by someone on that sans team
+/technique/sans @rprospero @DiegoAlbaVenero
+/doc/source/sans @rprospero @DiegoAlbaVenero
+
+# The scan code is currently just Adam's code, but he's happy to share
+# ownerhip if someone else wants to get involved
+/general/scans @rprospero
+/doc/source/scans @rprospero
