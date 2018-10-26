@@ -39,7 +39,7 @@ its tests on python version 2.7 and 3.6.  This ensures that all code
 will remain forward compatible when Python 2 stops being maintained
 in 2020.  This does create some small hassle now to support both
 versions, but it will save a massive effort down the road to test and
-cheap the whole library for errors during the upgrade.
+check the whole library for errors during the upgrade.
 
 Documenting
 -----------
