@@ -17,8 +17,8 @@ Tutorial
     >>> import sys
     >>> import os
     >>> ch = logging.StreamHandler(sys.stdout)
-    >>> ch.setLevel(logging.DEBUG)
-    >>> logging.getLogger().setLevel(logging.DEBUG)
+    >>> ch.setLevel(logging.INFO)
+    >>> logging.getLogger().setLevel(logging.INFO)
     >>> logging.getLogger().addHandler(ch)
     >>> from technique.sans.genie import gen
 
@@ -427,6 +427,10 @@ Width=10
 Height=10
 Thick=1.0
 Measuring SESANS Test_SESANS for 6000 frames
+Flipper On
+Flipper Off
+Flipper On
+Flipper Off
 Flipper On
 Flipper Off
 Flipper On
