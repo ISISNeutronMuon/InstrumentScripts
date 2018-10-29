@@ -22,6 +22,7 @@ Tutorial
     >>> logging.getLogger().addHandler(ch)
     >>> from technique.sans.genie import gen
     >>> from instrument.larmor import *
+    ...
 
 Basic examples
 ==============
