@@ -15,20 +15,17 @@ try:
     from genie_python import genie as g
 except ImportError:
     from general.scans.mocks import g
-try:
-    import LSS.SANSroutines as lm  # pylint: disable=import-error
-except ImportError:
-    from general.scans.mocks import lm
 from general.scans.defaults import Defaults
-from general.scans.detector import dae_periods
+from general.scans.detector import dae_periods, specific_spectra
 from general.scans.monoid import Polarisation, Average, MonoidList
 from general.scans.motion import pv_motion
 from general.scans.util import local_wrapper
+from instrument.larmor.sans import setup_dae_transmission
 
 
 def _trans_mode():
     """Setup the instrument for a simple transmission measurement."""
-    lm.setuplarmor_transmission()
+    setup_dae_transmission()
     g.cset(m4trans=0)
     g.waitfor_move()
 
