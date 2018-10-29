@@ -21,6 +21,7 @@ from general.scans.monoid import Polarisation, Average, MonoidList
 from general.scans.motion import pv_motion
 from general.scans.util import local_wrapper
 from instrument.larmor.sans import setup_dae_transmission, setup_dae_scanning
+from .util import flipper1
 
 
 def _trans_mode():
