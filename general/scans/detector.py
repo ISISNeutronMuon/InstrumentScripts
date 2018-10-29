@@ -99,7 +99,7 @@ def dae_periods(pre_init=lambda: None, period_function=len):
         return DaePeriods(func, pre_init, period_function=period_function)
     return inner
 
-def specific_spectra(spectra_list):
+def specific_spectra(spectra_list, preconfig=lambda: None):
     """Create a detector that scans over a given set of spectrum numbers.
 
     The function takes a list of list of integers.  Each inner list contains
@@ -114,7 +114,7 @@ def specific_spectra(spectra_list):
     Will create a plot with two data points on it.  The first will be
     all of the counts in monitor four.  The second will be the combined
     sum of the counts in channels 1000 through 1999, inclusive."""
-    @dae_periods
+    @dae_periods(preconfig)
     def inner(**kwargs):
         local_kwargs = {}
         if "frames" in kwargs:
@@ -126,7 +126,7 @@ def specific_spectra(spectra_list):
         g.pause()
 
         base = sum(g.get_spectrum(1, period=g.get_period())["signal"])*100.0
-        pols = [Average.(0, base) for _ in spectra_list]
+        pols = [Average(0, base) for _ in spectra_list]
         for idx, spectra in spectra_list:
             for channel in enumerate(spectra):
                 temp = sum(g.get_spectrum(channel, 
