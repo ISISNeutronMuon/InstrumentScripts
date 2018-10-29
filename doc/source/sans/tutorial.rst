@@ -21,8 +21,8 @@ Tutorial
     >>> logging.getLogger().setLevel(logging.INFO)
     >>> logging.getLogger().addHandler(ch)
     >>> from technique.sans.genie import gen
-    >>> from instrument.larmor import *
-    ...
+    >>> ();from instrument.larmor import *;()  # doctest:+ELLIPSIS
+    (...)
 
 Basic examples
 ==============

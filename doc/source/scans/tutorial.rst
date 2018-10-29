@@ -13,7 +13,8 @@ Tutorial
      >>> sys.path.insert(0, os.getcwd())
      >>> import matplotlib
      >>> # matplotlib.use("Agg")
-     >>> from instrument.larmor import *
+     >>> ();from instrument.larmor import *;()  # doctest:+ELLIPSIS
+     (...)
 
 Plot Motor Scan
 ---------------
