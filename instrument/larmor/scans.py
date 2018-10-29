@@ -20,7 +20,7 @@ from general.scans.detector import dae_periods, specific_spectra
 from general.scans.monoid import Polarisation, Average, MonoidList
 from general.scans.motion import pv_motion
 from general.scans.util import local_wrapper
-from instrument.larmor.sans import setup_dae_transmission
+from instrument.larmor.sans import setup_dae_transmission, setup_dae_scanning
 
 
 def _trans_mode():
@@ -35,21 +35,22 @@ class Larmor(Defaults):
     This class represents the default functions for the Larmor instrument.
     """
 
-    @staticmethod
-    @dae_periods(_trans_mode)
-    def detector(**kwargs):
-        local_kwargs = {}
-        if "frames" in kwargs:
-            local_kwargs["frames"] = kwargs["frames"] + g.get_frames()
-        if "uamps" in kwargs:
-            local_kwargs["uamps"] = kwargs["uamps"] + g.get_uamps()
-        g.resume()
+    # @staticmethod
+    # @dae_periods(_trans_mode)
+    # def detector(**kwargs):
+        # local_kwargs = {}
+        # if "frames" in kwargs:
+            # local_kwargs["frames"] = kwargs["frames"] + g.get_frames()
+        # if "uamps" in kwargs:
+            # local_kwargs["uamps"] = kwargs["uamps"] + g.get_uamps()
+        # g.resume()
 
-        g.waitfor(**local_kwargs)
-        g.pause()
-        temp = sum(g.get_spectrum(4, period=g.get_period())["signal"])*100
-        base = sum(g.get_spectrum(1, period=g.get_period())["signal"])*100
-        return Average(temp, count=base)
+        # g.waitfor(**local_kwargs)
+        # g.pause()
+        # temp = sum(g.get_spectrum(4, period=g.get_period())["signal"])*100
+        # base = sum(g.get_spectrum(1, period=g.get_period())["signal"])*100
+        # return Average(temp, count=base)
+    detector = specific_spectra([[4]], _trans_mode)
 
     @staticmethod
     def log_file():
@@ -84,7 +85,7 @@ def get_user_dir():
 get_user_dir()
 
 
-@dae_periods(lm.setuplarmor_echoscan, lambda x: 2*len(x))
+@dae_periods(setup_dae_scanning, lambda x: 2*len(x))
 def pol_measure(**kwargs):
     """
     Get a single polarisation measurement
@@ -95,14 +96,14 @@ def pol_measure(**kwargs):
     i = g.get_period()
 
     g.change(period=i+1)
-    lm.flipper1(1)
+    flipper1(1)
     g.waitfor_move()
     gfrm = g.get_frames()
     g.resume()
     g.waitfor(frames=gfrm+kwargs["frames"])
     g.pause()
 
-    lm.flipper1(0)
+    flipper1(0)
     g.change(period=i+2)
     gfrm = g.get_frames()
     g.resume()
