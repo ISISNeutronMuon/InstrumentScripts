@@ -66,7 +66,7 @@ def get_user_dir():
         print("Setting path to {}".format(result))
         os.chdir(result)
     except OSError:
-        print("U Drive not found.  Setting path to current directory")
+        pass
 
 
 get_user_dir()

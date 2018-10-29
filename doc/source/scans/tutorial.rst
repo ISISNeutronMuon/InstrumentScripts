@@ -14,7 +14,6 @@ Tutorial
      >>> import matplotlib
      >>> # matplotlib.use("Agg")
      >>> from instrument.larmor import *
-     U Drive not found.  Setting path to current directory
 
 Plot Motor Scan
 ---------------
