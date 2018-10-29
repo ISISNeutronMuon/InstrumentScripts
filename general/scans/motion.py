@@ -142,6 +142,12 @@ class BlockMotion(Motion):
                         lambda x: g.cset(block, x),
                         block)
 
+try:
+    # pylint: disable=import-error
+    from genie_python import genie as g
+except ImportError:
+    from .mocks import g
+
 def pv_motion(pv, name):
     """Create a motion object around a PV string."""
     return Motion(lambda: g.get_pv(pv),
