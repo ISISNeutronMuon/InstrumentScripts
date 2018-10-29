@@ -99,8 +99,21 @@ def dae_periods(pre_init=lambda: None, period_function=len):
         return DaePeriods(func, pre_init, period_function=period_function)
     return inner
 
-def specific_spectra(spectra):
-    """Create a detector that scans over a given set of spectrum numbers"""
+def specific_spectra(spectra_list):
+    """Create a detector that scans over a given set of spectrum numbers.
+
+    The function takes a list of list of integers.  Each inner list contains
+    the channel numbers that should be combined for one single data plot.
+    A MonoidList of all of the combined spectra of each inner list will
+    be returned.  In the event that there is only a single inner list,
+    then only that single average value will be returned.
+
+    Examples
+    ========
+    >> specific_spectra([[4], range(1000,2000)])
+    Will create a plot with two data points on it.  The first will be
+    all of the counts in monitor four.  The second will be the combined
+    sum of the counts in channels 1000 through 1999, inclusive."""
     @dae_periods
     def inner(**kwargs):
         local_kwargs = {}
@@ -112,11 +125,14 @@ def specific_spectra(spectra):
         g.waitfor(**local_kwargs)
         g.pause()
 
-        pols = [Average.zero() for _ in spectra]
-        for idx, channel in enumerate(spectra):
-            temp = sum(g.get_spectrum(channel, period=g.get_period())["signal"])
-            temp = sum(g.get_spectrum(1, period=g.get_period())["signal"])
-            val = Average(temp*100.0, base*100.0)
-            pols[idx] += val
-        return MonoitList(pols)
+        base = sum(g.get_spectrum(1, period=g.get_period())["signal"])*100.0
+        pols = [Average.(0, base) for _ in spectra_list]
+        for idx, spectra in spectra_list:
+            for channel in enumerate(spectra):
+                temp = sum(g.get_spectrum(channel, 
+                                          period=g.get_period())["signal"])
+                pos[idx] += Average(temp*100.0, 0.0)
+        if len(pols) == 1:
+            return pols[0]
+        return MonoidList(pols)
     return inner
