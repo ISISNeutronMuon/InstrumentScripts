@@ -5,6 +5,7 @@ try:
     from genie_python import genie as g
 except ImportError:
     from .mocks import g
+from .monoid import Average, MonoidList
 
 
 class DetectorManager(object):
@@ -99,6 +100,7 @@ def dae_periods(pre_init=lambda: None, period_function=len):
         return DaePeriods(func, pre_init, period_function=period_function)
     return inner
 
+
 def specific_spectra(spectra_list, preconfig=lambda: None):
     """Create a detector that scans over a given set of spectrum numbers.
 
@@ -116,6 +118,7 @@ def specific_spectra(spectra_list, preconfig=lambda: None):
     sum of the counts in channels 1000 through 1999, inclusive."""
     @dae_periods(preconfig)
     def inner(**kwargs):
+        """Get counts on a set of channels"""
         local_kwargs = {}
         if "frames" in kwargs:
             local_kwargs["frames"] = kwargs["frames"] + g.get_frames()
@@ -127,11 +130,11 @@ def specific_spectra(spectra_list, preconfig=lambda: None):
 
         base = sum(g.get_spectrum(1, period=g.get_period())["signal"])*100.0
         pols = [Average(0, base) for _ in spectra_list]
-        for idx, spectra in spectra_list:
-            for channel in enumerate(spectra):
-                temp = sum(g.get_spectrum(channel, 
+        for idx, spectra in enumerate(spectra_list):
+            for channel in spectra:
+                temp = sum(g.get_spectrum(channel,
                                           period=g.get_period())["signal"])
-                pos[idx] += Average(temp*100.0, 0.0)
+                pols[idx] += Average(temp*100.0, 0.0)
         if len(pols) == 1:
             return pols[0]
         return MonoidList(pols)

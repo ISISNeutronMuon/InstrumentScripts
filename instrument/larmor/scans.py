@@ -20,6 +20,7 @@ from general.scans.detector import dae_periods, specific_spectra
 from general.scans.monoid import Polarisation, Average, MonoidList
 from general.scans.motion import pv_motion
 from general.scans.util import local_wrapper
+# pylint: disable=no-name-in-module
 from instrument.larmor.sans import setup_dae_transmission, setup_dae_scanning
 from .util import flipper1
 
@@ -36,21 +37,6 @@ class Larmor(Defaults):
     This class represents the default functions for the Larmor instrument.
     """
 
-    # @staticmethod
-    # @dae_periods(_trans_mode)
-    # def detector(**kwargs):
-        # local_kwargs = {}
-        # if "frames" in kwargs:
-            # local_kwargs["frames"] = kwargs["frames"] + g.get_frames()
-        # if "uamps" in kwargs:
-            # local_kwargs["uamps"] = kwargs["uamps"] + g.get_uamps()
-        # g.resume()
-
-        # g.waitfor(**local_kwargs)
-        # g.pause()
-        # temp = sum(g.get_spectrum(4, period=g.get_period())["signal"])*100
-        # base = sum(g.get_spectrum(1, period=g.get_period())["signal"])*100
-        # return Average(temp, count=base)
     detector = specific_spectra([[4]], _trans_mode)
 
     @staticmethod
@@ -155,6 +141,7 @@ def fast_pol_measure(**kwargs):
                 np.sum(mon1["signal"])*100.0)
             pols[idx] += ups
     return MonoidList(pols)
+
 
 detector_trans = pv_motion("IN:LARMOR:MOT:MTD1501", "DetectorTranslation")
 

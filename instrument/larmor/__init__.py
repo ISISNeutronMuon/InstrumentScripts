@@ -1,7 +1,11 @@
+"""The base module for the Larmor beamline
 
-from instrument.larmor.sans import *
-from instrument.larmor.scans import scan, ascan, rscan, dscan, pol_measure, \
-    fast_pol_measure, detector_trans
-from general.scans.detector import specific_spectra
-from general.scans.fit import *
-from general.scans.motion import populate
+Using a wildcard import will pull in most of the interesting
+commands for this instrument."""
+
+# pylint: disable=wildcard-import
+from instrument.larmor.sans import *  # noqa: F401, F403
+from instrument.larmor.scans import *  # noqa: F401, F403
+from general.scans.detector import specific_spectra  # noqa: F401
+from general.scans.fit import *  # noqa: F401, F403
+from general.scans.motion import populate  # noqa: F401
