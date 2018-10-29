@@ -142,6 +142,11 @@ class BlockMotion(Motion):
                         lambda x: g.cset(block, x),
                         block)
 
+def pv_motion(pv, name):
+    """Create a motion object around a PV string."""
+    return Motion(lambda: g.get_pv(pv),
+                  lambda x: g.set_pv(pv, x),
+                  name)
 
 def populate():
     """Create Motion objects in the GLOBAL namespace for each
