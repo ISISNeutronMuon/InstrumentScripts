@@ -296,7 +296,7 @@ class Larmor(ScanningInstrument):  # pylint: disable=too-many-public-methods
         gen.begin(paused=1)
 
     @staticmethod
-    def _waitfor_sesans(u=1000, d=1000,
+    def _waitfor_sesans(u=600, d=600,
                         **kwargs):  # pylint: disable=invalid-name
         """Perform a SESANS run"""
         if "uamps" in kwargs:
