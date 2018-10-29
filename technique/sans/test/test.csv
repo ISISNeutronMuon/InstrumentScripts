@@ -1,0 +1,11 @@
+title,uamps,pos,thickness,trans,CoarseZ
+Sample1,10,AT,1, ,
+Sample2,10,BT,1,,30
+Sample3,10,CT,2,,
+Sample4,10,DT,2,,
+Sample5,20,ET,1,,
+Sample1,10,AT,1,TRUE,
+Sample2,10,BT,1,TRUE,30
+Sample3,10,CT,2,TRUE,
+Sample4,10,DT,2,TRUE,
+Sample5,20,ET,1,TRUE,
