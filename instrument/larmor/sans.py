@@ -5,8 +5,15 @@ from technique.sans.genie import gen
 # pylint: disable=unused-import
 from technique.sans.util import dae_setter, user_script  # noqa: F401
 from general.scans.util import local_wrapper
-from LSS.SESANSroutines import flipper1
 
+def flipper1(state=0):
+    if state == 0:
+        set_pv("IN:LARMOR:SPINFLIPPER_01:FLIPSTATE:SP", 0)
+    else:
+        set_pv("IN:LARMOR:SPINFLIPPER_01:FLIPSTATE:SP", 1)
+    time.sleep(5)        
+    flipstate=get_pv("IN:LARMOR:SPINFLIPPER_01:FLIPSTATE")
+    print "Flipstate="+str(flipstate)
 
 def sleep(seconds):
     """Override the sleep function to use genie.
