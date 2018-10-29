@@ -13,6 +13,8 @@ Tutorial
      >>> sys.path.insert(0, os.getcwd())
      >>> import matplotlib
      >>> # matplotlib.use("Agg")
+     >>> from instrument.larmor import *
+     U Drive not found.  Setting path to current directory
 
 Plot Motor Scan
 ---------------
@@ -21,8 +23,6 @@ Plot Motor Scan
   detector intensity as the motor moves from 0 to 2 exclusively in
   steps of 0.6.
 
-  >>> from instrument.larmor.scans import scan
-  U Drive not found.  Setting path to current directory
   >>> from general.scans.motion import populate
   >>> populate()
   >>> scan(theta, 0, 2, 0.6, 50)
@@ -136,7 +136,6 @@ Plot Motor Scan
   :meth:`general.scans.defaults.Defaults.rscan` method which defaults to a relative scan,
   instead of an absolute.
 
-  >>> from instrument.larmor.scans import rscan
   >>> rscan(theta, -1, 1, 0.5, 5)
   Taking a count at theta=3.00 and two theta=0.00
   Taking a count at theta=3.50 and two theta=0.00
@@ -446,7 +445,6 @@ SPEC compatibility
   represent a number of frames instead of a monitor count, since
   waiting for a monitor count is currently unsupported.
 
-  >>> from instrument.larmor.scans import ascan, dscan
   >>> ascan(theta, 0, 2, 10, 1)
   Taking a count at theta=0.00 and two theta=3.00
   Taking a count at theta=0.20 and two theta=3.00
