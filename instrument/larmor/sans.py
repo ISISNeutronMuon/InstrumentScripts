@@ -5,7 +5,7 @@ from technique.sans.genie import gen
 # pylint: disable=unused-import
 from technique.sans.util import dae_setter, user_script  # noqa: F401
 from general.scans.util import local_wrapper
-from LSS.SESANS routines import flipper1
+from LSS.SESANSroutines import flipper1
 
 
 def sleep(seconds):
