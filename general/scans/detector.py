@@ -98,3 +98,25 @@ def dae_periods(pre_init=lambda: None, period_function=len):
         """wrapper"""
         return DaePeriods(func, pre_init, period_function=period_function)
     return inner
+
+def specific_spectra(spectra):
+    """Create a detector that scans over a given set of spectrum numbers"""
+    @dae_periods
+    def inner(**kwargs):
+        local_kwargs = {}
+        if "frames" in kwargs:
+            local_kwargs["frames"] = kwargs["frames"] + g.get_frames()
+        if "uamps" in kwargs:
+            local_kwargs["uamps"] = kwargs["uamps"] + g.get_frames()
+        g.resume()
+        g.waitfor(**local_kwargs)
+        g.pause()
+
+        pols = [Average.zero() for _ in spectra]
+        for idx, channel in enumerate(spectra):
+            temp = sum(g.get_spectrum(channel, period=g.get_period())["signal"])
+            temp = sum(g.get_spectrum(1, period=g.get_period())["signal"])
+            val = Average(temp*100.0, base*100.0)
+            pols[idx] += val
+        return MonoitList(pols)
+    return inner
