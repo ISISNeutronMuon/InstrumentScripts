@@ -5,6 +5,7 @@ from technique.sans.genie import gen
 # pylint: disable=unused-import
 from technique.sans.util import dae_setter, user_script  # noqa: F401
 from general.scans.util import local_wrapper
+from LSS.SESANS routines import flipper1
 
 
 def sleep(seconds):
@@ -310,7 +311,7 @@ class Larmor(ScanningInstrument):  # pylint: disable=too-many-public-methods
         while gtotal < kwargs[key]:
             gen.change(period=1)
             info("Flipper On")
-            gen.flipper1(1)
+            flipper1(1)
             gfrm = gen.get_frames()
             gen.resume()
             gen.waitfor(frames=gfrm+u)
@@ -318,7 +319,7 @@ class Larmor(ScanningInstrument):  # pylint: disable=too-many-public-methods
 
             gen.change(period=2)
             info("Flipper Off")
-            gen.flipper1(1)
+            flipper1(0)
             gfrm = gen.get_frames()
             gen.resume()
             gen.waitfor(frames=gfrm+d)
