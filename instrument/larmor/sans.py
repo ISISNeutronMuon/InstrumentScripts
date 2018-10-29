@@ -409,17 +409,17 @@ class Larmor(ScanningInstrument):  # pylint: disable=too-many-public-methods
     @staticmethod
     def _generic_home_slit(slit):
         # home north and west
-        gen.set_pv(slit + "JN: MTR.HOMR", "1")
-        gen.set_pv(slit + "JW: MTR.HOMR", "1")
+        gen.set_pv(slit + "JN:MTR.HOMR", 1)
+        gen.set_pv(slit + "JW:MTR.HOMR", 1)
         gen.waitfor_move()
-        gen.set_pv(slit + "JN: MTR.VAL", "20")
-        gen.set_pv(slit + "JW: MTR.VAL", "20")
+        gen.set_pv(slit + "JN:MTR.VAL", "20")
+        gen.set_pv(slit + "JW:MTR.VAL", "20")
         # home south and east
-        gen.set_pv(slit + "JS: MTR.HOMR", "1")
-        gen.set_pv(slit + "JE: MTR.HOMR", "1")
+        gen.set_pv(slit + "JS:MTR.HOMR", 1)
+        gen.set_pv(slit + "JE:MTR.HOMR", 1)
         gen.waitfor_move()
-        gen.set_pv(slit + "JS: MTR.VAL", "20")
-        gen.set_pv(slit + "JE: MTR.VAL", "20")
+        gen.set_pv(slit + "JS:MTR.VAL", "20")
+        gen.set_pv(slit + "JE:MTR.VAL", "20")
         gen.waitfor_move()
 
     @staticmethod
@@ -428,14 +428,14 @@ class Larmor(ScanningInstrument):  # pylint: disable=too-many-public-methods
         info("Homing Coarse Jaws")
         gen.cset(cjhgap=40, cjvgap=40)
         gen.waitfor_move()
-        Larmor._generic_home_slit("IN: LARMOR: MOT: JAWS1: ")
+        Larmor._generic_home_slit("IN:LARMOR:MOT:JAWS1:")
 
     @staticmethod
     def homea1():
         """Rehome aperature 1."""
         info("Homing a1")
         gen.cset(a1hgap=40, a1vgap=40)
-        Larmor._generic_home_slit("IN: LARMOR: MOT: JAWS2: ")
+        Larmor._generic_home_slit("IN:LARMOR:MOT:JAWS2:")
         gen.waitfor_move()
 
     @staticmethod
@@ -444,7 +444,7 @@ class Larmor(ScanningInstrument):  # pylint: disable=too-many-public-methods
         info("Homing s1")
         gen.cset(s1hgap=40, s1vgap=40)
         gen.waitfor_move()
-        Larmor._generic_home_slit("IN: LARMOR: MOT: JAWS3: ")
+        Larmor._generic_home_slit("IN:LARMOR:MOT:JAWS3:")
 
     @staticmethod
     def homes2():
