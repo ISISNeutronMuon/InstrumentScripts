@@ -20,6 +20,7 @@ from general.scans.detector import dae_periods, specific_spectra
 from general.scans.monoid import Polarisation, Average, MonoidList
 from general.scans.motion import pv_motion
 from general.scans.util import local_wrapper
+# pylint: disable=no-name-in-module
 from instrument.larmor.sans import setup_dae_transmission, setup_dae_scanning
 from .util import flipper1
 
@@ -71,7 +72,7 @@ def get_user_dir():
 get_user_dir()
 
 
-@dae_periods(lm.setuplarmor_echoscan, lambda x: 2*len(x))
+@dae_periods(setup_dae_scanning, lambda x: 2*len(x))
 def pol_measure(**kwargs):
     """
     Get a single polarisation measurement
