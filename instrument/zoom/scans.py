@@ -11,26 +11,10 @@ try:
 except ImportError:
     g = None
 from general.scans.defaults import Defaults
-from general.scans.detector import dae_periods
+from general.scans.detector import dae_periods, specific_spectra
 from general.scans.motion import populate
 from general.scans.monoid import Sum
 from general.scans.util import local_wrapper
-
-
-def zoom_monitor(spectrum):
-    """A generating function for detectors for monitor spectra"""
-    @dae_periods()
-    def monitor(**kwargs):
-        """A simple detector for monitor number {}""".format(spectrum)
-        g.resume()
-        g.waitfor(**kwargs)
-        spec = g.get_spectrum(spectrum)
-        while not spec:
-            spec = g.get_spectrum(spectrum)
-        temp = sum(spec["signal"])
-        g.pause()
-        return Sum(temp)
-    return monitor
 
 
 class Zoom(Defaults):
@@ -38,7 +22,7 @@ class Zoom(Defaults):
     This class represents the default functions for the Zoom instrument.
     """
 
-    detector = zoom_monitor(4)
+    detector = specific_spectra([[4]])
 
     @staticmethod
     def log_file():
@@ -57,7 +41,6 @@ ascan = local_wrapper(_zm, "ascan")
 dscan = local_wrapper(_zm, "dscan")
 rscan = local_wrapper(_zm, "rscan")
 populate()
-monitor1 = zoom_monitor(1)
-monitor2 = zoom_monitor(2)
-monitor3 = zoom_monitor(3)
-monitor4 = zoom_monitor(4)
+monitor2 = specific_spectra([[2]])
+monitor3 = specific_spectra([[3]])
+monitor4 = specific_spectra([[4]])
