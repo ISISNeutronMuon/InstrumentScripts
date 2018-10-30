@@ -13,6 +13,12 @@ can be controlled by an instrument.  Although it is called Motion,
 it will also handle temperatures, currents, and other physical properties.
 """
 
+try:
+    # pylint: disable=import-error
+    from genie_python import genie as g
+except ImportError:
+    from .mocks import g
+
 
 class Motion(object):
     """A Motion object largely acts like a function to control and
@@ -128,11 +134,6 @@ class BlockMotion(Motion):
       A string containing the name of the ibex block to control
     """
     def __init__(self, block):
-        try:
-            # pylint: disable=import-error
-            from genie_python import genie as g
-        except ImportError:
-            from .mocks import g
         if block not in g.get_blocks():
             raise RuntimeError(
                 "Unknown block {}.  Does the capitalisation "
@@ -146,11 +147,6 @@ class BlockMotion(Motion):
 def populate():
     """Create Motion objects in the GLOBAL namespace for each
     block registered with IBEX."""
-    try:
-        # pylint: disable=import-error
-        from genie_python import genie as g
-    except ImportError:
-        from .mocks import g
     for i in g.get_blocks():
         temp = BlockMotion(i)
         __builtins__[i.upper()] = temp

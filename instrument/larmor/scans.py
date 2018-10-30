@@ -15,19 +15,17 @@ try:
     from genie_python import genie as g
 except ImportError:
     from general.scans.mocks import g
-try:
-    import LSS.SANSroutines as lm  # pylint: disable=import-error
-except ImportError:
-    from general.scans.mocks import lm
 from general.scans.defaults import Defaults
 from general.scans.detector import dae_periods, specific_spectra
 from general.scans.monoid import Polarisation, Average, MonoidList
 from general.scans.util import local_wrapper
+from instrument.larmor.sans import setup_dae_transmission, setup_dae_scanning
+from .util import flipper1
 
 
 def _trans_mode():
     """Setup the instrument for a simple transmission measurement."""
-    lm.setuplarmor_transmission()
+    setup_dae_transmission()
     g.cset(m4trans=0)
     g.waitfor_move()
 
@@ -83,14 +81,14 @@ def pol_measure(**kwargs):
     i = g.get_period()
 
     g.change(period=i+1)
-    lm.flipper1(1)
+    flipper1(1)
     g.waitfor_move()
     gfrm = g.get_frames()
     g.resume()
     g.waitfor(frames=gfrm+kwargs["frames"])
     g.pause()
 
-    lm.flipper1(0)
+    flipper1(0)
     g.change(period=i+2)
     gfrm = g.get_frames()
     g.resume()

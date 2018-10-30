@@ -85,6 +85,8 @@ def set_pv(pv_name, value):
     """Fake setting a PV value"""
     if "pwonoff" in pv_name:
         mock_gen.mock_detector_on = value
+    if pv_name == "IN:LARMOR:SPINFLIPPER_01:FLIPSTATE:SP":
+        mock_gen.mock_flipper_on = value
 
 
 def get_pv(pv_name):
@@ -93,12 +95,15 @@ def get_pv(pv_name):
         if mock_gen.mock_detector_on == "On":
             return "On"
         return "Off"
+    if "IN:LARMOR:SPINFLIPPER_01:FLIPSTATE" in pv_name:
+        return 1 if mock_gen.mock_flipper_on else 0
     return mock_gen.mock_get_pv(pv_name)
 
 
 mock_gen.get_pv.side_effect = get_pv
 mock_gen.set_pv.side_effect = set_pv
 mock_gen.mock_detector_on = "On"
+mock_gen.mock_flipper_on = False
 
 try:
     # pylint: disable=unused-import, useless-import-alias
