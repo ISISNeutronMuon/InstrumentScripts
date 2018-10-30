@@ -434,6 +434,10 @@ Flipper On
 Flipper Off
 Flipper On
 Flipper Off
+Flipper On
+Flipper Off
+Flipper On
+Flipper Off
 
 .. py:currentmodule:: instruments.larmor.sans
 
