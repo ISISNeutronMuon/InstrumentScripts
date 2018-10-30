@@ -20,7 +20,7 @@ try:
 except ImportError:
     from general.scans.mocks import lm
 from general.scans.defaults import Defaults
-from general.scans.detector import dae_periods
+from general.scans.detector import dae_periods, specific_spectra
 from general.scans.monoid import Polarisation, Average, MonoidList
 from general.scans.util import local_wrapper
 
@@ -37,21 +37,7 @@ class Larmor(Defaults):
     This class represents the default functions for the Larmor instrument.
     """
 
-    @staticmethod
-    @dae_periods(_trans_mode)
-    def detector(**kwargs):
-        local_kwargs = {}
-        if "frames" in kwargs:
-            local_kwargs["frames"] = kwargs["frames"] + g.get_frames()
-        if "uamps" in kwargs:
-            local_kwargs["uamps"] = kwargs["uamps"] + g.get_uamps()
-        g.resume()
-
-        g.waitfor(**local_kwargs)
-        g.pause()
-        temp = sum(g.get_spectrum(4, period=g.get_period())["signal"])*100
-        base = sum(g.get_spectrum(1, period=g.get_period())["signal"])*100
-        return Average(temp, count=base)
+    detector = specific_spectra([[4]], _trans_mode)
 
     @staticmethod
     def log_file():
