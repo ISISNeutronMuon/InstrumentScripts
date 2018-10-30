@@ -18,6 +18,7 @@ except ImportError:
 from general.scans.defaults import Defaults
 from general.scans.detector import dae_periods, specific_spectra
 from general.scans.monoid import Polarisation, Average, MonoidList
+from general.scans.motion import pv_motion
 from general.scans.util import local_wrapper
 from instrument.larmor.sans import setup_dae_transmission, setup_dae_scanning
 from .util import flipper1
@@ -140,6 +141,8 @@ def fast_pol_measure(**kwargs):
             pols[idx] += ups
     return MonoidList(pols)
 
+
+detector_trans = pv_motion("IN:LARMOR:MOT:MTD1501", "DetectorTranslation")
 
 _lm = Larmor()
 scan = local_wrapper(_lm, "scan")

@@ -36,6 +36,7 @@ class Motion(object):
     5
 
     """
+
     def __init__(self, getter, setter, title, low=None, high=None):
         self.getter = getter
         self.setter = setter
@@ -142,6 +143,13 @@ class BlockMotion(Motion):
                         lambda: g.cget(block)["value"],
                         lambda x: g.cset(block, x),
                         block)
+
+
+def pv_motion(pv_str, name):
+    """Create a motion object around a PV string."""
+    return Motion(lambda: g.get_pv(pv_str),
+                  lambda x: g.set_pv(pv_str, x),
+                  name)
 
 
 def populate():
