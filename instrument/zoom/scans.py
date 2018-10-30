@@ -12,7 +12,6 @@ except ImportError:
     g = None
 from general.scans.defaults import Defaults
 from general.scans.detector import dae_periods
-from general.scans.motion import populate
 from general.scans.monoid import Sum
 from general.scans.util import local_wrapper
 
@@ -56,7 +55,7 @@ scan = local_wrapper(_zm, "scan")
 ascan = local_wrapper(_zm, "ascan")
 dscan = local_wrapper(_zm, "dscan")
 rscan = local_wrapper(_zm, "rscan")
-populate()
+print("Remember to populate")
 monitor1 = zoom_monitor(1)
 monitor2 = zoom_monitor(2)
 monitor3 = zoom_monitor(3)
