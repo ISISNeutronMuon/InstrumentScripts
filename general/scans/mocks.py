@@ -67,8 +67,6 @@ def fake_spectrum(channel, period):  # pragma: no cover
 
 g.get_spectrum.side_effect = fake_spectrum
 
-lm = Mock()
-
 RUNSTATE = "SETUP"
 
 

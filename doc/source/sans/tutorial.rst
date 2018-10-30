@@ -17,10 +17,12 @@ Tutorial
     >>> import sys
     >>> import os
     >>> ch = logging.StreamHandler(sys.stdout)
-    >>> ch.setLevel(logging.DEBUG)
-    >>> logging.getLogger().setLevel(logging.DEBUG)
+    >>> ch.setLevel(logging.INFO)
+    >>> logging.getLogger().setLevel(logging.INFO)
     >>> logging.getLogger().addHandler(ch)
     >>> from technique.sans.genie import gen
+    >>> ();from instrument.larmor import *;()  # doctest:+ELLIPSIS
+    (...)
 
 Basic examples
 ==============
@@ -30,7 +32,6 @@ Basic examples
 First, we'll just do a simple measurement on the main detector for 600
 frames.
 
->>> from instrument.larmor.sans import *
 >>> do_sans("Sample Name", frames=600)
 Setup Larmor for event
 Using the following Sample Parameters
@@ -427,6 +428,10 @@ Width=10
 Height=10
 Thick=1.0
 Measuring SESANS Test_SESANS for 6000 frames
+Flipper On
+Flipper Off
+Flipper On
+Flipper Off
 Flipper On
 Flipper Off
 Flipper On

@@ -5,6 +5,7 @@ from technique.sans.genie import gen
 # pylint: disable=unused-import
 from technique.sans.util import dae_setter, user_script  # noqa: F401
 from general.scans.util import local_wrapper
+from .util import flipper1
 
 
 def sleep(seconds):
@@ -295,7 +296,7 @@ class Larmor(ScanningInstrument):  # pylint: disable=too-many-public-methods
         gen.begin(paused=1)
 
     @staticmethod
-    def _waitfor_sesans(u=1000, d=1000,
+    def _waitfor_sesans(u=600, d=600,
                         **kwargs):  # pylint: disable=invalid-name
         """Perform a SESANS run"""
         if "uamps" in kwargs:
@@ -310,7 +311,7 @@ class Larmor(ScanningInstrument):  # pylint: disable=too-many-public-methods
         while gtotal < kwargs[key]:
             gen.change(period=1)
             info("Flipper On")
-            gen.flipper1(1)
+            flipper1(1)
             gfrm = gen.get_frames()
             gen.resume()
             gen.waitfor(frames=gfrm+u)
@@ -318,7 +319,7 @@ class Larmor(ScanningInstrument):  # pylint: disable=too-many-public-methods
 
             gen.change(period=2)
             info("Flipper Off")
-            gen.flipper1(1)
+            flipper1(0)
             gfrm = gen.get_frames()
             gen.resume()
             gen.waitfor(frames=gfrm+d)
@@ -408,17 +409,17 @@ class Larmor(ScanningInstrument):  # pylint: disable=too-many-public-methods
     @staticmethod
     def _generic_home_slit(slit):
         # home north and west
-        gen.set_pv(slit + "JN: MTR.HOMR", "1")
-        gen.set_pv(slit + "JW: MTR.HOMR", "1")
+        gen.set_pv(slit + "JN:MTR.HOMR", 1)
+        gen.set_pv(slit + "JW:MTR.HOMR", 1)
         gen.waitfor_move()
-        gen.set_pv(slit + "JN: MTR.VAL", "20")
-        gen.set_pv(slit + "JW: MTR.VAL", "20")
+        gen.set_pv(slit + "JN:MTR.VAL", "20")
+        gen.set_pv(slit + "JW:MTR.VAL", "20")
         # home south and east
-        gen.set_pv(slit + "JS: MTR.HOMR", "1")
-        gen.set_pv(slit + "JE: MTR.HOMR", "1")
+        gen.set_pv(slit + "JS:MTR.HOMR", 1)
+        gen.set_pv(slit + "JE:MTR.HOMR", 1)
         gen.waitfor_move()
-        gen.set_pv(slit + "JS: MTR.VAL", "20")
-        gen.set_pv(slit + "JE: MTR.VAL", "20")
+        gen.set_pv(slit + "JS:MTR.VAL", "20")
+        gen.set_pv(slit + "JE:MTR.VAL", "20")
         gen.waitfor_move()
 
     @staticmethod
@@ -427,14 +428,14 @@ class Larmor(ScanningInstrument):  # pylint: disable=too-many-public-methods
         info("Homing Coarse Jaws")
         gen.cset(cjhgap=40, cjvgap=40)
         gen.waitfor_move()
-        Larmor._generic_home_slit("IN: LARMOR: MOT: JAWS1: ")
+        Larmor._generic_home_slit("IN:LARMOR:MOT:JAWS1:")
 
     @staticmethod
     def homea1():
         """Rehome aperature 1."""
         info("Homing a1")
         gen.cset(a1hgap=40, a1vgap=40)
-        Larmor._generic_home_slit("IN: LARMOR: MOT: JAWS2: ")
+        Larmor._generic_home_slit("IN:LARMOR:MOT:JAWS2:")
         gen.waitfor_move()
 
     @staticmethod
@@ -443,7 +444,7 @@ class Larmor(ScanningInstrument):  # pylint: disable=too-many-public-methods
         info("Homing s1")
         gen.cset(s1hgap=40, s1vgap=40)
         gen.waitfor_move()
-        Larmor._generic_home_slit("IN: LARMOR: MOT: JAWS3: ")
+        Larmor._generic_home_slit("IN:LARMOR:MOT:JAWS3:")
 
     @staticmethod
     def homes2():
