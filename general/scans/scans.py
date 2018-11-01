@@ -15,7 +15,7 @@ import numpy as np
 from six import add_metaclass
 import six
 from .monoid import ListOfMonoids, Monoid
-from .detector import DetectorManager
+from .detector import DetectorManager, ReplayDetector
 from .fit import Fit, ExactFit
 
 try:
@@ -256,6 +256,7 @@ class Scan(object):
 
 class SimpleScan(Scan):
     """SimpleScan is a scan along a single axis for a fixed set of values"""
+
     def __init__(self, action, values, defaults):
         self.action = action
         self.values = values
@@ -301,6 +302,7 @@ class SimpleScan(Scan):
 
 class SumScan(Scan):
     """The SumScan performs two separate scans sequentially"""
+
     def __init__(self, first, second):
         self.first = first
         self.second = second
@@ -341,6 +343,7 @@ class SumScan(Scan):
 class ProductScan(Scan):
     """ProductScan performs every possible combination of the positions of
     its two constituent scans."""
+
     def __init__(self, outer, inner):
         self.outer = outer
         self.inner = inner
@@ -466,6 +469,7 @@ class ProductScan(Scan):
 class ParallelScan(Scan):
     """ParallelScan runs two scans alongside each other, performing both
     sets of position adjustments before each step of the scan."""
+
     def __init__(self, first, second):
         self.first = first
         self.second = second
@@ -508,6 +512,7 @@ class ForeverScan(Scan):  # pragma: no cover
     ForeverScan repeats the same scan over and over again to improve
     the statistics until the user manually halts the scan.
     """
+
     def __init__(self, scan):
         self.scan = scan
         self.defaults = scan.defaults
@@ -535,3 +540,35 @@ class ForeverScan(Scan):  # pragma: no cover
 
     def max(self):
         return self.scan.max()
+
+
+class ReplayScan(Scan):
+    """A Scan that merely repeated the output of a previous scan"""
+
+    def __init__(self, xs, ys, axis):
+        self.xs = xs
+        self.ys = ys
+        self.axis = axis
+        self.defaults = ReplayDetector(xs, ys)
+
+    def min(self):
+        return min(self.xs)
+
+    def max(self):
+        return max(self.xs)
+
+    @property
+    def reverse(self):
+        return ReplayScan(self.xs[::-1], self.ys[::-1], self.axis)
+
+    def map(self, func):
+        return ReplayScan(map(func, self.xs), self.ys, self.axis)
+
+    def __len__(self):
+        return min(len(self.xs), len(self.ys))
+
+    def __iter__(self):
+        for x, _ in zip(self.xs, self.ys):
+            dic = OrderedDict()
+            dic[self.axis] = x
+            yield dic

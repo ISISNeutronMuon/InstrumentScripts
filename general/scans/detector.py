@@ -10,6 +10,7 @@ from .monoid import Average, MonoidList
 
 class DetectorManager(object):
     """Manage routines for pulling data from the instrument"""
+
     def __init__(self, f):
         self._f = f
         self.scan = None
@@ -26,6 +27,20 @@ class DetectorManager(object):
 
     def __exit__(self, typ, value, traceback):
         pass
+
+
+class ReplayDetector(DetectorManager):
+    """Create a pseudo detector from a data set"""
+
+    def __init__(self, xs, ys):
+        def inner():
+            """Generator to pull points from data."""
+            for _, y in xs, ys:
+                yield Average(y, 1)
+        DetectorManager.__init__(self, inner)
+
+    def __enter__(self):
+        return self._f
 
 
 class DaePeriods(DetectorManager):
