@@ -549,7 +549,9 @@ class ReplayScan(Scan):
         self.xs = xs
         self.ys = ys
         self.axis = axis
-        self.defaults = ReplayDetector(xs, ys)
+        # self.defaults = ReplayDetector(xs, ys)
+        self.defaults = Defaults()
+        self.defaults.detector = ReplayDetector(xs, ys)
 
     def min(self):
         return min(self.xs)

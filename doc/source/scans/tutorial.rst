@@ -154,6 +154,18 @@ Plot Motor Scan
 	    RuntimeError: Unable to build a scan with that set of options.
 
 
+Replaying Scans
+---------------
+
+It's possible to create a pseudo scan from the results of a previous
+scan.
+
+>>> from general.scans.scans import ReplayScan
+>>> xs = range(20)
+>>> ys = [x**2 for x in xs]
+>>> ReplayScan(xs, ys, "quux").plot()
+
+
 Motor Objects
 -------------
 
