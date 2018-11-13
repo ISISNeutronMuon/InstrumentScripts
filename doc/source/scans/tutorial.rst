@@ -163,7 +163,13 @@ scan.
 >>> from general.scans.scans import ReplayScan
 >>> xs = range(20)
 >>> ys = [x**2 for x in xs]
->>> ReplayScan(xs, ys, "quux").plot()
+>>> fit = ReplayScan(xs, ys, "quux").fit(PolyFit(2), save="replay.png")
+>>> fit["x^2"] == 1.0
+True
+>>> abs(fit["x^1"]) < 1e-7
+True
+>>> abs(fit["x^0"]) < 1e-7
+True
 
 
 Motor Objects

@@ -14,8 +14,8 @@ from collections import Iterable, OrderedDict
 import numpy as np
 from six import add_metaclass
 import six
-from .monoid import ListOfMonoids, Monoid
-from .detector import DetectorManager, ReplayDetector
+from .monoid import ListOfMonoids, Monoid, Sum
+from .detector import DetectorManager
 from .fit import Fit, ExactFit
 
 try:
@@ -550,8 +550,6 @@ class ReplayScan(Scan):
         self.ys = ys
         self.axis = axis
         # self.defaults = ReplayDetector(xs, ys)
-        self.defaults = Defaults()
-        self.defaults.detector = ReplayDetector(xs, ys)
 
     def min(self):
         return min(self.xs)
@@ -574,3 +572,31 @@ class ReplayScan(Scan):
             dic = OrderedDict()
             dic[self.axis] = x
             yield dic
+
+    def plot(self, detector=None, save=None,
+             action=None, **kwargs):
+        """Overload the scan method for the replay scan.  Since we aren't
+actually detecting anything, we can run the code much simpler instead
+of trying to fake a detector."""
+        action_remainder = None
+        xs = self.xs
+        ys = ListOfMonoids(map(Sum, self.ys))
+        axis = NBPlot()
+        axis.clear()
+        if isinstance(self.min(), tuple):
+            rng = [1.05*self.min()[0] - 0.05 * self.max()[0],
+                   1.05*self.max()[0] - 0.05 * self.min()[0]]
+        else:
+            rng = [1.05*self.min() - 0.05 * self.max(),
+                   1.05*self.max() - 0.05 * self.min()]
+        axis.set_xlabel(self.axis)
+        axis.set_xlim(rng[0], rng[1])
+        rng = _plot_range(ys)
+        axis.set_ylim(rng[0], rng[1])
+        ys.plot(axis, xs)
+        if action:
+            action_remainder = action(xs, ys, axis)
+        if save:
+            axis.savefig(save)
+
+        return action_remainder

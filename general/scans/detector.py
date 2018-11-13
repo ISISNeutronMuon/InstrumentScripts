@@ -29,20 +29,6 @@ class DetectorManager(object):
         pass
 
 
-class ReplayDetector(DetectorManager):
-    """Create a pseudo detector from a data set"""
-
-    def __init__(self, xs, ys):
-        def inner():
-            """Generator to pull points from data."""
-            for _, y in xs, ys:
-                yield Average(y, 1)
-        DetectorManager.__init__(self, inner)
-
-    def __enter__(self):
-        return self._f
-
-
 class DaePeriods(DetectorManager):
     """This helper class aids in making detector managers that perform all
     of their measurements in a single DAE run, instead of constantly

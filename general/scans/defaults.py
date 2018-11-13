@@ -265,13 +265,3 @@ class Defaults(object):
             return self.scan(motor, **kwargs)
         finally:
             motor(init)
-
-
-class ReplayDefaults(Defaults):
-    """A pseduo instrument for running scan replays"""
-
-    def __init__(self, detector):
-        self._detector = detector
-
-    def detector(**kwargs):
-        return self._detector(**kwargs)
