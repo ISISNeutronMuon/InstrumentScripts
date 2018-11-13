@@ -600,3 +600,23 @@ of trying to fake a detector."""
             axis.savefig(save)
 
         return action_remainder
+
+
+def last_scan(path=None, axis="replay"):
+    """Load the last run scan and replay that scan
+
+    PARAMETERS
+    ----------
+    path
+      The log file to replay.  If None, replay the most recent scan
+    axis
+      The label for the x axis
+
+    """
+    import os
+    if path is None:
+        path = max([f for f in os.listdir(os.getcwd()) if f[-4:] == ".dat"],
+                   key=os.path.getctime)
+    with open(path, "r") as infile:
+        data = np.loadtxt(infile)
+        return ReplayScan(data[:, 0], data[:, 1], axis)
