@@ -8,3 +8,4 @@ coverage run --source=general,instrument,technique -m unittest discover
 coverage html
 cd doc
 make html
+make latexpdf
