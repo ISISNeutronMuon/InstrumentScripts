@@ -14,7 +14,7 @@ from collections import Iterable, OrderedDict
 import numpy as np
 from six import add_metaclass
 import six
-from .monoid import ListOfMonoids, Monoid, Sum
+from .monoid import ListOfMonoids, Monoid, Average
 from .detector import DetectorManager
 from .fit import Fit, ExactFit
 
@@ -25,7 +25,6 @@ except ImportError:
     # We must be in a test environment
     from .mocks import g
 from .multiplot import NBPlot
-from .monoid import Average
 
 TIME_KEYS = ["frames", "uamps", "seconds", "minutes", "hours"]
 
@@ -173,7 +172,8 @@ class Scan(object):
                     else:
                         xs.append(position)
                         ys.append(value)
-                    logfile.write("{}\t{}\n".format(xs[-1], str(ys[-1])))
+                    logfile.write("{}\t{}\t{}\n".format(xs[-1], str(ys[-1]),
+                                                        str(ys[-1].err())))
                     axis.clear()
                     axis.set_xlabel(label)
                     if isinstance(self.min(), tuple):
@@ -422,7 +422,8 @@ class ProductScan(Scan):
                         values[ys.index(y)][xs.index(x)] += value
                     else:
                         values[ys.index(y)][xs.index(x)] = value
-                    logfile.write("{}\t{}\n".format(xs[-1], str(values[-1])))
+                    logfile.write(
+                        "{}\t{}\n".format(xs[-1], str(values[-1])))
                     axis.clear()
                     axis.set_xlabel(keys[1])
                     axis.set_ylabel(keys[0])
@@ -580,7 +581,7 @@ actually detecting anything, we can run the code much simpler instead
 of trying to fake a detector."""
         action_remainder = None
         xs = self.xs
-        ys = ListOfMonoids(map(Sum, self.ys))
+        ys = ListOfMonoids(self.ys)
         axis = NBPlot()
         axis.clear()
         if isinstance(self.min(), tuple):
@@ -618,5 +619,6 @@ def last_scan(path=None, axis="replay"):
         path = max([f for f in os.listdir(os.getcwd()) if f[-4:] == ".dat"],
                    key=os.path.getctime)
     with open(path, "r") as infile:
-        data = np.loadtxt(infile)
-        return ReplayScan(data[:, 0], data[:, 1], axis)
+        xs, ys, errs = np.loadtxt(infile, unpack=True)
+        ys = [Average((y/e)**2, y/e**2) for y, e in zip(ys, errs)]
+        return ReplayScan(xs, ys, axis)
