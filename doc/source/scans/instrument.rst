@@ -62,9 +62,11 @@ Monoid
 
 Mathematically, a monoid is a collection with the following properties:
 
-1) There exists an operator ⊙, such that, for any two elements, such as x and y, in the collection, then there is another element in the collection whose value would be x ⊙ y.
-2) a ⊙ (b ⊙ c) = (a ⊙ b) ⊙ c
-3) There exists a zero element Z such that, a ⊙ Z = Z ⊙ a = a
+1) There exists an operator &, such that, for any two elements, such
+   as x and y, in the collection, then there is another element in the
+   collection whose value would be x & y.
+2) a & (b & c) = (a & b) & c
+3) There exists a zero element Z such that, a & Z = Z & a = a
 
 The more intuitive explanation is that a monoid promises us that we
 can combine many elements together and get back a single element.  Many common structures form monoids.
@@ -82,12 +84,12 @@ Sum
 Unit Monoid
   The collection with only a single element is a monoid.  The zero
   value is that element and the operator just returns its first
-  value.  For example, the set {🌲} is a monoid with zero element
-  🌲 and a combining operator 🌲 ⊙ 🌲 = 🌲.
+  value.  For example, the set {@} is a monoid with zero element
+  @ and a combining operator @ & @ = @.
 Minimum
-  ∞ is the zero elemenent and the ⊙ operator simply returns the smallest of its operands
+  ∞ is the zero elemenent and the & operator simply returns the smallest of its operands
 A pair of monoids (m, n)
-  The zero element is (0ₘ, 0ₙ) and our ⊙ operator is defined so that (xₘ, xₙ) ⊙ (yₘ, yₙ) = (xₘ ⊙ yₘ, xₙ ⊙ yₙ)
+  The zero element is (m_0, n_0) and our & operator is defined so that (m_x, n_x) & (m_y, n_y) = (m_x & m_y, n_x & n_y)
 
 The ability of a pair of monoids to form another monoid allows for the
 development of surprisingly deep structures.
@@ -115,7 +117,7 @@ utility and simplified the value enough to warrant its inclusion,
 despite the mathematical issues.  We may re-examine this issue in the future.
 
 .. [#] Returning to the Unit monoid example, there is no obvious
-       implementation of uncertainty for {🌲}.
+       implementation of uncertainty for {@}.
 
 Monoid Examples
 ---------------

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# PyGenie Scans documentation build configuration file, created by
+# Instrument Script documentation build configuration file, created by
 # sphinx-quickstart on Tue Jul 18 14:48:15 2017.
 #
 # This file is execfile()d with the current directory set to its
@@ -181,37 +181,29 @@ html_static_path = ['_static']
 #html_file_suffix = None
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = 'PyGenieScansdoc'
+htmlhelp_basename = 'Instrument Scripts'
 
 
 # -- Options for LaTeX output ---------------------------------------------
 
-latex_engine = "xelatex"
+latex_engine = "pdflatex"
 latex_elements = {
 # The paper size ('letterpaper' or 'a4paper').
-#'papersize': 'letterpaper',
+'papersize': 'a4paper',
 
 # The font size ('10pt', '11pt' or '12pt').
 #'pointsize': '10pt',
 
 # Additional stuff for the LaTeX preamble.
-#'preamble': '',
-    'preamble':'''
-\usepackage{fontspec}
-\usepackage{ucharclasses}
-
-\setmainfont{Symbola}
-% \setDefaultTransitions{\setmainfont{Nimbus Roman}}{}
-% \setTransitionsForSymbols{\setmainfont{Symbola}}{}
-'''
+# 'preamble': ''
 }
 
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-  ('index', 'PyGenieScans.tex', u'PyGenie Scans Documentation',
-   u'Washington et al', 'manual'),
+  ('index', 'InstrumentScripts.tex', u'Instrument Scripts Documentation',
+   u'ISIS Neutron and Muon Source', 'manual'),
 ]
 
 # The name of an image file (relative to this directory) to place at the top of

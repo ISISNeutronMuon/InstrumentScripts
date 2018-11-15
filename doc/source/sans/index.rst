@@ -13,6 +13,7 @@ Sans measurement module
    tutorial
    proposed
 
-The source is available on github_
-
-.. _github: https://github.com/PyGenie-Scans/SansScripts
+The sans module provides the common scripts needed to perform simple
+measurements on any of the SANS beam-lines.  It's also extensible by
+the beam-line scientists to allow for more complicated measurement
+types, even allowing for the collection of SESANS data.
