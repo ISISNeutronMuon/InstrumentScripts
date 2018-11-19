@@ -1,5 +1,6 @@
 """This module adds a helper class for detectors."""
 from functools import wraps
+
 try:
     # pylint: disable=import-error
     from genie_python import genie as g
