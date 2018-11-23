@@ -9,7 +9,8 @@ environment.
 """
 from __future__ import print_function, division, unicode_literals
 
-from general.scans.scans import ContinuousScan
+from general.scans.detector import BlockDetector
+from general.scans.scans import ContinuousScan, ContinuousMove
 
 try:
     from contextlib import contextmanager
@@ -30,9 +31,7 @@ class LoqSampleChanger(Defaults):
     """
     This class represents the default functions for the Larmor instrument.
     """
-
-    def detector(*args, **kwargs):
-        return g.cget("intensity")["value"]
+    detector = BlockDetector("intensity")
 
     @staticmethod
     def log_file():
@@ -41,12 +40,7 @@ class LoqSampleChanger(Defaults):
         return "loq_sample_changer_scan_{}_{}_{}_{}_{}_{}.dat".format(
             now.year, now.month, now.day, now.hour, now.minute, now.second)
 
-    def scan(self, motion, start=None, stop=None, speed=None, time=None, **kwargs):
-
-        if start is not None:
-            kwargs["start"] = start
-        if stop is not None:
-            kwargs["stop"] = stop
+    def scan(self, motion, **kwargs):
 
         if isinstance(motion, Motion):
             pass
@@ -59,10 +53,7 @@ class LoqSampleChanger(Defaults):
                 "need to rerun populate() to recreate your motion "
                 "axes.".format(motion))
 
-        motion.require(start)
-        motion.require(stop)
-
-        scn = ContinuousScan(motion, start, stop, speed, self)
+        scn = ContinuousScan(motion, [ContinuousMove(5, -5, 0.5)], self)
         return scn
 
     def __repr__(self):

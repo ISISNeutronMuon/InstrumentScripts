@@ -12,11 +12,13 @@ from __future__ import absolute_import, print_function
 from abc import ABCMeta, abstractmethod
 from collections import Iterable, OrderedDict
 import numpy as np
+import itertools
 from six import add_metaclass
 import six
-from .monoid import ListOfMonoids, Monoid, Average
+from .monoid import ListOfMonoids, Monoid, Average, Exact
 from .detector import DetectorManager
 from .fit import Fit, ExactFit
+import time
 
 try:
     # pylint: disable=import-error
@@ -89,6 +91,7 @@ class Scan(object):
         if not detector:
             detector = self.defaults.detector
         if not isinstance(detector, DetectorManager):
+            raise ValueError("fjiosfdjiosfdjisfdjisfdjiosfd {}".format(detector.__class__))
             detector = DetectorManager(detector)
         return detector
 
@@ -302,23 +305,45 @@ class SimpleScan(Scan):
                                                repr(self.defaults))
 
 
+class ContinuousMove(object):
+    def __init__(self, start, stop, speed):
+        self.start = start
+        self.stop = stop
+        self.speed = speed
+
+
 class ContinuousScan(Scan):
     """A continuous scan that starts motion and then collects while the axis is moving"""
 
-    def __init__(self, motion, start, stop, speed, binwidth, defaults):
+    def __init__(self, motion, moves, defaults):
+        """
+        Initialize a continuous scan object
+
+        Args:
+            motion: the axis to move
+            moves: a list of ContinuousMove objects describing the motion to be performed.
+        """
         super(Scan, self).__init__()
-        self._motion = motion
-        self.start = start
-        self.stop = stop
+        self.motion = motion
+        self.moves = moves
 
-        if abs(self.start - self.stop) <= 0.005:
-            raise ValueError("Cannot have start={} and stop={} within motor tolerance of each other (tol={})")
+        for move in self.moves:
+            if abs(move.start - move.stop) <= 0.005:
+                raise ValueError("Cannot have start={} and stop={} within motor tolerance of each other (tol={})")
 
-        self.speed = speed
         self.defaults = defaults
+
+    @property
+    def forever(self):
+        """
+        Create a scan that will cycle until stopped by the user.
+        """
+        return ForeverContinuousScan(self.motion, self.moves, self.defaults)
 
     def plot(self, detector=None, save=None, action=None, **kwargs):
         """Run over a continuous range """
+        import warnings
+        warnings.simplefilter("ignore", UserWarning)
 
         detector = self._normalise_detector(detector)
         axis = NBPlot()
@@ -328,42 +353,40 @@ class ContinuousScan(Scan):
 
         action_remainder = None
 
-        # Set initial motor position to correct value.
-        if abs(self._motion() - self.start) > 0.005:  # TODO: refactor tolerance
-            self._motion(self.start)
-            g.waitfor_move(self._motion.title)
-
         try:
             with open(self.defaults.log_file(), "w") as logfile, \
                     detector(self, save=save, **kwargs) as detect:
 
-                self._motion(self.stop)
+                for move in self:
+                    # Set initial motor position to correct value.
+                    if abs(self.motion() - move.start) > 0.005:  # TODO: refactor tolerance
+                        self.motion(move.start)
+                        g.waitfor_move(self.motion.title)
 
-                while g.get_pv("CS:SB:{}.DMOV".format(self._motion.title), is_local=True) == 0:  # TODO: make better.
-                    position, value = self._motion(), Average(detect(**just_times(kwargs)))
-                    xs.append(position)
-                    ys.append(value)
+                    self.motion(move.stop)
 
-                    logfile.write("{}\t{}\n".format(xs[-1], str(ys[-1])))
-                    axis.clear()
+                    while g.get_pv("CS:SB:{}.DMOV".format(self.motion.title), is_local=True) == 0:  # TODO: make better.
+                        position, value = self.motion(), Exact(detect(**just_times(kwargs)))
+                        xs.append(position)
+                        ys.append(value)
 
-                    # axis.set_xlabel(label)
+                        logfile.write("{}\t{}\n".format(xs[-1], str(ys[-1])))
+                        axis.clear()
 
-                    if isinstance(self.min(), tuple):
-                        rng = [1.05 * self.min()[0] - 0.05 * self.max()[0],
-                               1.05 * self.max()[0] - 0.05 * self.min()[0]]
-                    else:
-                        rng = [1.05 * self.min() - 0.05 * self.max(),
-                               1.05 * self.max() - 0.05 * self.min()]
-                    axis.set_xlim(rng[0], rng[1])
-                    rng = _plot_range(ys)
-                    axis.set_ylim(rng[0], rng[1])
-                    ys.plot(axis, xs)
-                    if action:
-                        action_remainder = action(xs, ys, axis)
+                        if isinstance(self.min(), tuple):
+                            rng = [1.05 * self.min()[0] - 0.05 * self.max()[0],
+                                   1.05 * self.max()[0] - 0.05 * self.min()[0]]
+                        else:
+                            rng = [1.05 * self.min() - 0.05 * self.max(),
+                                   1.05 * self.max() - 0.05 * self.min()]
+                        axis.set_xlim(rng[0], rng[1])
+                        rng = _plot_range(ys)
+                        axis.set_ylim(rng[0], rng[1])
+                        ys.plot(axis, xs)
+                        if action:
+                            action_remainder = action(xs, ys, axis)
 
-                    import time
-                    time.sleep(0.05)
+                        time.sleep(0.05)
 
         except KeyboardInterrupt:  # pragma: no cover
             pass
@@ -376,23 +399,39 @@ class ContinuousScan(Scan):
     def map(self, func):
         # TODO: the mapping translates positions. What do we do about speed? Keep it constant, so the scan time changes,
         # or keep the scan time constant? What are the implications of either approach?
-        return ContinuousScan(self._motion, func(self.start), func(self.stop), self.speed, self.defaults)
+        raise NotImplemented
+        return ContinuousScan(self.motion, func(self.start), func(self.stop), self.speed, self.defaults)
 
     def min(self):
-        return min((self.start, self.stop))
+        return min(min(move.start, move.stop) for move in self.moves)
 
     def max(self):
-        return max((self.start, self.stop))
+        return max(max(move.start, move.stop) for move in self.moves)
 
     @property
     def reverse(self):
-        return ContinuousScan(self._motion, start=self.stop, stop=self.start, speed=self.speed, defaults=self.defaults)
+        moves = [ContinuousMove(start=move.stop, stop=move.start, speed=move.speed) for move in self][::-1]
+        return ContinuousScan(self.motion, moves=moves, defaults=self.defaults)
 
     def __len__(self):
-        raise TypeError("Cannot take a length in points of a continuous scan.")
+        return len(self.moves)
 
     def __iter__(self):
-        raise TypeError("Cannot iterate over the points of a continuous scan.")
+        for move in self.moves:
+            yield move
+
+    def __add__(self, other):
+        if not isinstance(other, self.__class__):
+            raise ValueError("Cannot add a continuous and non-continuous scan together")
+        return ContinuousScan(self.motion, self.moves + other.moves, self.defaults)
+
+    def __and__(self, other):
+        raise ValueError("Executing continuous scans in parallel is not supported.")
+
+    def __mul__(self, other):
+        if not isinstance(other, self.__class__):
+            raise ValueError("Cannot create the product of a continuous and non-continuous scan")
+        return ContinuousScan(self.motion, [itertools.product(self.moves, other.moves)], self.defaults)
 
     def __repr__(self):
         return "Continous scan from {} to {} at speed={}".format(self.start, self.stop, self.speed)
@@ -622,23 +661,36 @@ class ForeverScan(Scan):  # pragma: no cover
                 yield x
 
     def __repr__(self):
-        return "ForeverScan(" + repr(self.scan) + ")"
+        return "{}({})".format(self.__class__.__name__, self.scan)
 
     def __len__(self):
         raise RuntimeError("Attempted to get the length of an infinite list")
 
     def map(self, func):
-        return ForeverScan(self.scan.map(func))
+        return self.__class__(self.scan.map(func))
 
     @property
     def reverse(self):
-        return ForeverScan(self.scan.reverse)
+        return self.__class__(self.scan.reverse)
 
     def min(self):
         return self.scan.min()
 
     def max(self):
         return self.scan.max()
+
+
+class ForeverContinuousScan(ContinuousScan):
+    """
+    A special case of a forever scan that can operate with continuous moves.
+    """
+    def __len__(self):
+        raise ValueError("Can't get length of continuous scan that runs forever.")
+
+    def __iter__(self):
+        while True:
+            for move in self.moves:
+                yield move
 
 
 class ReplayScan(Scan):

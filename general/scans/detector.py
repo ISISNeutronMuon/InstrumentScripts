@@ -30,6 +30,23 @@ class DetectorManager(object):
         pass
 
 
+class BlockDetector(DetectorManager):
+    def __init__(self, blockname):
+        super(DetectorManager, self).__init__()
+        self.blockname = blockname
+        self._f = lambda: g.cget(self.blockname)["value"]
+
+    def __call__(self, *args, **kwargs):
+        return self
+
+    def __enter__(self):
+        return self._f
+
+    def __exit__(self, *args, **kwargs):
+        pass
+
+
+
 class DaePeriods(DetectorManager):
     """This helper class aids in making detector managers that perform all
     of their measurements in a single DAE run, instead of constantly
