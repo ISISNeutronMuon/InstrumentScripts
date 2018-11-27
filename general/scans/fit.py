@@ -312,6 +312,8 @@ class GaussianFit(CurveFit):
         background.
 
         """
+        if sigma == 0:
+            return background  # zero-width peak so background everywhere. Avoids zero division.
         return background + amplitude * np.exp(-((xs - cen) / sigma /
                                                  np.sqrt(2)) ** 2)
 

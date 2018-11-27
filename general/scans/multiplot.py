@@ -4,7 +4,6 @@ from __future__ import print_function
 from multiprocessing import Process, Pipe
 import sys
 import threading
-
 import matplotlib.pyplot as plt
 
 # IBEX doesn't report a proper path for sys.executable
