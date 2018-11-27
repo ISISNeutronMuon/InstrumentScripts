@@ -26,7 +26,8 @@ try:
 except ImportError:
     # We must be in a test environment
     from .mocks import g
-from .multiplot import NBPlot
+
+import matplotlib.pyplot as plt
 
 TIME_KEYS = ["frames", "uamps", "seconds", "minutes", "hours"]
 
@@ -155,7 +156,9 @@ class Scan(object):
         warnings.simplefilter("ignore", UserWarning)
 
         detector = self._normalise_detector(detector)
-        axis = NBPlot()
+
+        fig, axis = plt.subplots()
+        plt.show()
 
         xs = []
         ys = ListOfMonoids()
@@ -192,6 +195,7 @@ class Scan(object):
                     if action:
                         action_remainder = action(xs, ys,
                                                   axis)
+                    plt.draw()
         except KeyboardInterrupt:  # pragma: no cover
             pass
         if save:
@@ -346,7 +350,8 @@ class ContinuousScan(Scan):
         warnings.simplefilter("ignore", UserWarning)
 
         detector = self._normalise_detector(detector)
-        axis = NBPlot()
+        fig, axis = plt.subplots()
+        plt.show()
 
         xs = []
         ys = ListOfMonoids()
@@ -386,7 +391,8 @@ class ContinuousScan(Scan):
                         if action:
                             action_remainder = action(xs, ys, axis)
 
-                        time.sleep(0.05)
+                        plt.draw()
+                        time.sleep(0.25)
 
         except KeyboardInterrupt:  # pragma: no cover
             pass
@@ -528,7 +534,9 @@ class ProductScan(Scan):
                                " Current state is: " + str(g.get_runstate()))
 
         detector = self._normalise_detector(detector)
-        axis = NBPlot()
+
+        fig, axis = plt.subplots()
+        plt.show()
 
         xs = []
         ys = []
@@ -582,6 +590,7 @@ class ProductScan(Scan):
                     if action:
                         action_remainder = action(xs, values,
                                                   axis)
+                    plt.draw()
         except KeyboardInterrupt:
             pass
         if save:
@@ -732,7 +741,10 @@ of trying to fake a detector."""
         action_remainder = None
         xs = self.xs
         ys = ListOfMonoids(self.ys)
-        axis = NBPlot()
+
+        fig, axis = plt.subplots()
+        plt.show()
+
         axis.clear()
         if isinstance(self.min(), tuple):
             rng = [1.05*self.min()[0] - 0.05 * self.max()[0],
@@ -749,6 +761,8 @@ of trying to fake a detector."""
             action_remainder = action(xs, ys, axis)
         if save:
             axis.savefig(save)
+
+        plt.draw()
 
         return action_remainder
 

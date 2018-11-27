@@ -98,7 +98,7 @@ class Fit(object):
         -------
         A function to call in the plotting loop
         """
-        def action(x, y, fig):
+        def action(x, y, axis):
             """Fit and plot the data within the plotting loop
 
             Parameters
@@ -107,8 +107,8 @@ class Fit(object):
               The x positions measured thus far
             y : Array of Float
               The y positions measured thus far
-            fig : matplotlib.figure.Figure
-              The figure on which to plot
+            axis : matplotlib.axis.Axis
+              The axis on which to plot
 
             Returns
             -------
@@ -130,17 +130,17 @@ class Fit(object):
                         params.append(None)
                         continue
                     fity = self.get_y(plot_x, params[-1])
-                    fig.plot(plot_x, fity, "-",
-                             label="{} fit".format(self.title(params[-1])))
+                    axis.plot(plot_x, fity, "-",
+                              label="{} fit".format(self.title(params[-1])))
             else:
                 try:
                     params = self.fit(x, values)
                 except RuntimeError:
                     return None
                 fity = self.get_y(plot_x, params)
-                fig.plot(plot_x, fity, "-",
-                         label="{} fit".format(self.title(params)))
-            fig.legend()
+                axis.plot(plot_x, fity, "-",
+                          label="{} fit".format(self.title(params)))
+            axis.legend()
             return params
         return action
 
@@ -287,7 +287,9 @@ class CurveFit(Fit):
         pass
 
     def fit(self, x, y):
-        return curve_fit(self._model, x, y, self.guess(x, y))[0]
+        # raise maxfev to 10,000, this allows scipy to make more function calls,
+        # improving the chances of getting a good/correct fit.
+        return curve_fit(self._model, x, y, self.guess(x, y), maxfev=10000)[0]
 
     def get_y(self, x, fit):
         return self._model(x, *fit)
@@ -312,15 +314,25 @@ class GaussianFit(CurveFit):
         background.
 
         """
-        if sigma == 0:
-            return background  # zero-width peak so background everywhere. Avoids zero division.
         return background + amplitude * np.exp(-((xs - cen) / sigma /
                                                  np.sqrt(2)) ** 2)
 
     @staticmethod
     def guess(x, y):
-        return [np.mean(x), np.max(x)-np.min(x),
-                np.max(y) - np.min(y), np.min(y)]
+        # Assume that amplitude is the difference between largest and smallest Y values.
+        amplitude = np.max(y) - np.min(y)
+
+        # guess that centre is the X value at which the highest Y value occurs.
+        cen = x[np.argmax(y)]
+
+        # Guess that the minimum Y value is representative of the background.
+        background = np.min(y)
+
+        # Predict a narrow peak somewhere within the scan. Estimating this much too large
+        # can lead to an incorrect fit.
+        sigma = (np.max(x) - np.min(x)) / 100
+
+        return [cen, sigma, amplitude, background]
 
     def readable(self, fit):
         return {"center": fit[0], "sigma": fit[1],
