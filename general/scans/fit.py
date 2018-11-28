@@ -481,6 +481,75 @@ class TopHatFit(CurveFit):
         return "Top Hat at {center:.3g} of width {width:.3g}".format(**params)
 
 
+class CentreOfMassFit(Fit):
+    """
+    A fit that calculates the 'centre of mass' of a peak over a background.
+    """
+    def __init__(self):
+        super(Fit, self).__init__()
+
+    def fit(self, x, y):
+        raw_data = np.array([(float(x_point), float(y_point)) for x_point, y_point in zip(x, y)])
+
+        if len(raw_data) == 0:
+            return [np.nan]
+
+        # Sort data to ascending x (keeping the Y values with their associated X values).
+        sorted_data = sorted(raw_data, key=lambda row: row[0])
+
+        sorted_x = np.array([i[0] for i in sorted_data])
+        sorted_y = np.array([i[1] for i in sorted_data])
+
+        # Re-bin the points so that we have the same number of points,
+        # but evenly spaced over the interval [min(data), max(data)]
+        # Interpolate values in-between where necessary.
+        interpolated_x = np.array(np.arange(np.min(x), np.max(x), float(np.max(x) - np.min(x))/len(raw_data)))
+        interpolated_y = np.interp(interpolated_x, sorted_x, sorted_y)
+
+        # Subtract background (assumed to be the minimum Y value)
+        if len(interpolated_y) > 0:
+            interpolated_y -= np.min(interpolated_y)
+
+        # Calculate "centre of mass"
+        centre_of_mass = np.sum(interpolated_x * interpolated_y) / np.sum(interpolated_y)
+        return [centre_of_mass]
+
+    def get_y(self, x, fit):
+        return np.zeros(len(x))
+
+    def title(self, params):
+        return "Centre of mass = {}".format(params[0])
+
+    def readable(self, fit):
+        return {"Centre_of_mass": fit[0]}
+
+    def fit_plot_action(self):
+        def action(x, y, axis):
+            """Fit and plot the data within the plotting loop
+
+            Parameters
+            ----------
+            x : Array of Float
+              The x positions measured thus far
+            y : Array of Float
+              The y positions measured thus far
+            axis : matplotlib.axis.Axis
+              The axis on which to plot
+
+            Returns
+            -------
+            line : None or dict
+                Either None if the fit is not possible or a dict of the fit
+                parameters if the fit was performed
+
+            """
+            params = self.fit(x, y)
+            axis.axvline(x=params[0])
+            axis.legend([self.title(params)])
+            return params
+        return action
+
+
 #: A linear regression
 Linear = PolyFit(1, title="Linear")
 
@@ -495,5 +564,7 @@ TopHat = TopHatFit()
 
 ExactPoints = ExactFit()
 
+CentreOfMass = CentreOfMassFit()
+
 __all__ = ["PolyFit", "Linear", "Gaussian", "DampedOscillator", "PeakFit",
-           "Erf", "TopHat", "ExactPoints"]
+           "Erf", "TopHat", "ExactPoints", "CentreOfMass"]
