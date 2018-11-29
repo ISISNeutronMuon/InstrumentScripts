@@ -8,6 +8,7 @@ from abc import ABCMeta, abstractmethod
 from sys import platform
 import ctypes
 import os
+import sys
 import numpy as np
 from six import add_metaclass
 from scipy.special import erf  # pylint: disable=no-name-in-module
@@ -27,7 +28,8 @@ if platform == "win32":
         _thread.interrupt_main()
         return 1
 
-    BASEPATH = r"C:\Instrument\Apps\Python\Lib\site-packages\numpy\core"
+    BASEPATH = os.path.join(os.path.dirname(sys.executable), "Lib", "site-packages", "numpy", "core")
+    print(BASEPATH)
     ctypes.CDLL(os.path.join(BASEPATH, "libmmd.dll"))
     ctypes.CDLL(os.path.join(BASEPATH, "libifcoremd.dll"))
     routine = ctypes.WINFUNCTYPE(ctypes.c_int, ctypes.c_uint)(handler)
