@@ -383,15 +383,15 @@ class ContinuousScan(Scan):
 
                 for move in self:
                     # Set initial motor position to correct value.
-                    tolerance = g.get_pv("CS:SB:{}.RDBD".format(self.motion.title), is_local=True)
-                    if abs(self.motion() - move.start) > tolerance:
+                    if abs(self.motion() - move.start) > self.motion.tolerance:
                         self.motion(move.start)
-                        g.waitfor_move(self.motion.title)
+                        while abs(self.motion() - move.start) > self.motion.tolerance:
+                            time.sleep(0.1)
 
                     with temporarily_change_motor_speed(self.motion, move.speed):
                         self.motion(move.stop)
 
-                        while g.get_pv("CS:SB:{}.DMOV".format(self.motion.title), is_local=True) == 0:
+                        while abs(self.motion() - move.stop) > self.motion.tolerance:
                             position, value = self.motion(), Exact(detect(**just_times(kwargs)))
                             xs.append(position)
                             ys.append(value)
@@ -415,12 +415,12 @@ class ContinuousScan(Scan):
                             plt.draw()
 
                             # If we plot in a tight loop, matplotlib can't keep up.
-                            # Taking data at 10Hz during the move seems the right
+                            # Taking data at 5Hz during the move seems the right
                             # balance of "continuous" and "pragmatic"
                             #
                             # Note: a galil's MAX update frequency is 40ms so there
                             # is no benefit in making this number smaller than 0.04
-                            time.sleep(0.1)
+                            time.sleep(0.2)
 
         except KeyboardInterrupt:  # pragma: no cover
             pass
@@ -477,7 +477,7 @@ class ContinuousScan(Scan):
         raise NotImplementedError("Executing continuous scans in parallel is not supported.")
 
     def __repr__(self):
-        return "Continous scan from {} to {} at speed={}".format(self.start, self.stop, self.speed)
+        return self.__class__.__name__
 
 
 class SumScan(Scan):

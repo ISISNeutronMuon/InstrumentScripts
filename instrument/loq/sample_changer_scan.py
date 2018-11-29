@@ -40,7 +40,7 @@ class LoqSampleChanger(Defaults):
         return "loq_sample_changer_scan_{}_{}_{}_{}_{}_{}.dat".format(
             now.year, now.month, now.day, now.hour, now.minute, now.second)
 
-    def scan(self, motion, **kwargs):
+    def scan(self, motion, centre=None, size=None, time=None, iterations=1):
 
         if isinstance(motion, Motion):
             pass
@@ -53,8 +53,28 @@ class LoqSampleChanger(Defaults):
                 "need to rerun populate() to recreate your motion "
                 "axes.".format(motion))
 
-        scn = ContinuousScan(motion, [ContinuousMove(5, -5, 0.5)], self)
-        return scn
+        if centre is None:
+            raise TypeError("Scan centre must be provided")
+
+        if size is None or size <= 0:
+            raise TypeError("Move size not provided or invalid")
+
+        if time is None or time <= 0:
+            raise TypeError("Scan time not provided or invalid")
+
+        time_single_direction = time / 2.0
+
+        speed = size / time_single_direction
+
+        start = centre + size/2.0
+        stop = centre - size/2.0
+
+        scan = ContinuousScan(motion, [], self)
+
+        for _ in range(iterations):
+            scan += ContinuousScan(motion, [ContinuousMove(start, stop, speed)], self).and_back
+
+        return scan
 
     def __repr__(self):
         return "{}()".format(self.__class__.__name__)
@@ -63,6 +83,7 @@ class LoqSampleChanger(Defaults):
 axis = BlockMotion("axis")
 
 _loq_sample_changer = LoqSampleChanger()
+
 scan = local_wrapper(_loq_sample_changer, "scan")
 ascan = local_wrapper(_loq_sample_changer, "ascan")
 dscan = local_wrapper(_loq_sample_changer, "dscan")
