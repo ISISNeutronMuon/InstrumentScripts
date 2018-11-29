@@ -29,7 +29,6 @@ if platform == "win32":
         return 1
 
     BASEPATH = os.path.join(os.path.dirname(sys.executable), "Lib", "site-packages", "numpy", "core")
-    print(BASEPATH)
     ctypes.CDLL(os.path.join(BASEPATH, "libmmd.dll"))
     ctypes.CDLL(os.path.join(BASEPATH, "libifcoremd.dll"))
     routine = ctypes.WINFUNCTYPE(ctypes.c_int, ctypes.c_uint)(handler)
