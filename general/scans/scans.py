@@ -11,6 +11,8 @@ treated as private.
 from __future__ import absolute_import, print_function
 from abc import ABCMeta, abstractmethod
 from collections import Iterable, OrderedDict
+from contextlib import contextmanager
+
 import numpy as np
 import itertools
 from six import add_metaclass
@@ -316,6 +318,23 @@ class ContinuousMove(object):
         self.speed = speed
 
 
+@contextmanager
+def temporarily_change_motor_speed(motion, temporary_speed):
+    """
+    Context manager to temporarily change motor velocity, and put it back on exit.
+
+    Args:
+        motion: the motion object
+        temporary_speed: the temporary speed to set within this context manager.
+    """
+    old_speed = motion.velocity
+    try:
+        motion.velocity = temporary_speed
+        yield
+    finally:
+        motion.velocity = old_speed
+
+
 class ContinuousScan(Scan):
     """A continuous scan that starts motion and then collects while the axis is moving"""
 
@@ -364,35 +383,44 @@ class ContinuousScan(Scan):
 
                 for move in self:
                     # Set initial motor position to correct value.
-                    if abs(self.motion() - move.start) > 0.005:  # TODO: refactor tolerance
+                    tolerance = g.get_pv("CS:SB:{}.RDBD".format(self.motion.title), is_local=True)
+                    if abs(self.motion() - move.start) > tolerance:
                         self.motion(move.start)
                         g.waitfor_move(self.motion.title)
 
-                    self.motion(move.stop)
+                    with temporarily_change_motor_speed(self.motion, move.speed):
+                        self.motion(move.stop)
 
-                    while g.get_pv("CS:SB:{}.DMOV".format(self.motion.title), is_local=True) == 0:  # TODO: make better.
-                        position, value = self.motion(), Exact(detect(**just_times(kwargs)))
-                        xs.append(position)
-                        ys.append(value)
+                        while g.get_pv("CS:SB:{}.DMOV".format(self.motion.title), is_local=True) == 0:
+                            position, value = self.motion(), Exact(detect(**just_times(kwargs)))
+                            xs.append(position)
+                            ys.append(value)
 
-                        logfile.write("{}\t{}\n".format(xs[-1], str(ys[-1])))
-                        axis.clear()
+                            logfile.write("{}\t{}\n".format(xs[-1], str(ys[-1])))
+                            axis.clear()
 
-                        if isinstance(self.min(), tuple):
-                            rng = [1.05 * self.min()[0] - 0.05 * self.max()[0],
-                                   1.05 * self.max()[0] - 0.05 * self.min()[0]]
-                        else:
-                            rng = [1.05 * self.min() - 0.05 * self.max(),
-                                   1.05 * self.max() - 0.05 * self.min()]
-                        axis.set_xlim(rng[0], rng[1])
-                        rng = _plot_range(ys)
-                        axis.set_ylim(rng[0], rng[1])
-                        ys.plot(axis, xs)
-                        if action:
-                            action_remainder = action(xs, ys, axis)
+                            if isinstance(self.min(), tuple):
+                                rng = [1.05 * self.min()[0] - 0.05 * self.max()[0],
+                                       1.05 * self.max()[0] - 0.05 * self.min()[0]]
+                            else:
+                                rng = [1.05 * self.min() - 0.05 * self.max(),
+                                       1.05 * self.max() - 0.05 * self.min()]
+                            axis.set_xlim(rng[0], rng[1])
+                            rng = _plot_range(ys)
+                            axis.set_ylim(rng[0], rng[1])
+                            ys.plot(axis, xs)
+                            if action:
+                                action_remainder = action(xs, ys, axis)
 
-                        plt.draw()
-                        time.sleep(0.25)
+                            plt.draw()
+
+                            # If we plot in a tight loop, matplotlib can't keep up.
+                            # Taking data at 10Hz during the move seems the right
+                            # balance of "continuous" and "pragmatic"
+                            #
+                            # Note: a galil's MAX update frequency is 40ms so there
+                            # is no benefit in making this number smaller than 0.04
+                            time.sleep(0.1)
 
         except KeyboardInterrupt:  # pragma: no cover
             pass
@@ -403,10 +431,11 @@ class ContinuousScan(Scan):
         return action_remainder
 
     def map(self, func):
-        # TODO: the mapping translates positions. What do we do about speed? Keep it constant, so the scan time changes,
-        # or keep the scan time constant? What are the implications of either approach?
-        raise NotImplemented
-        return ContinuousScan(self.motion, func(self.start), func(self.stop), self.speed, self.defaults)
+        # The mapping function translates positions. What do we do about speed?
+        # Keep it constant, so the scan time changes, or keep the scan time constant?
+        # What are the implications of either approach? Until there is a clear use case
+        # I think leaving this behaviour undefined is sensible.
+        raise NotImplementedError("Mapping a continuous scan is not yet supported.")
 
     def min(self):
         return min(min(move.start, move.stop) for move in self.moves)
@@ -420,6 +449,9 @@ class ContinuousScan(Scan):
         return ContinuousScan(self.motion, moves=moves, defaults=self.defaults)
 
     def __len__(self):
+        # Slightly different meaning - this is the number of continuous moves that this scan will perform
+        # not the number of points at which data will be taken. This meaning seems to make the most sense
+        # given the existing framework.
         return len(self.moves)
 
     def __iter__(self):
@@ -428,16 +460,21 @@ class ContinuousScan(Scan):
 
     def __add__(self, other):
         if not isinstance(other, self.__class__):
-            raise ValueError("Cannot add a continuous and non-continuous scan together")
+            # We probably could do this in the future, but this would need a bigger
+            # refactoring so that Continuous moves and points could be added together in the
+            # same list.
+            raise ValueError("Adding a continuous and non-continuous scan together is not supported.")
         return ContinuousScan(self.motion, self.moves + other.moves, self.defaults)
-
-    def __and__(self, other):
-        raise ValueError("Executing continuous scans in parallel is not supported.")
 
     def __mul__(self, other):
         if not isinstance(other, self.__class__):
-            raise ValueError("Cannot create the product of a continuous and non-continuous scan")
+            raise ValueError("The product of a continuous and non-continuous scan is not supported.")
         return ContinuousScan(self.motion, [itertools.product(self.moves, other.moves)], self.defaults)
+
+    def __and__(self, other):
+        # We can't execute two continuous scans in parallel without changing speeds.
+        # This raises lots of questions so leave the behaviour undefined for now.
+        raise NotImplementedError("Executing continuous scans in parallel is not supported.")
 
     def __repr__(self):
         return "Continous scan from {} to {} at speed={}".format(self.start, self.stop, self.speed)

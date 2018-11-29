@@ -37,12 +37,15 @@ class Motion(object):
 
     """
 
-    def __init__(self, getter, setter, title, low=None, high=None):
+    def __init__(self, getter, setter, title, low=None, high=None, velocity_getter=None, velocity_setter=None):
         self.getter = getter
         self.setter = setter
         self.title = title
         self._low = low
         self._high = high
+
+        self._velocity_getter = velocity_getter
+        self._velocity_setter = velocity_setter
 
     def __call__(self, x=None):
         if x is None:
@@ -121,6 +124,14 @@ class Motion(object):
     def high(self, x):
         self._high = x
 
+    @property
+    def velocity(self):
+        return self._velocity_getter()
+
+    @velocity.setter
+    def velocity(self, vel):
+        self._velocity_setter(vel)
+
 
 class BlockMotion(Motion):
     """
@@ -142,14 +153,19 @@ class BlockMotion(Motion):
         Motion.__init__(self,
                         lambda: g.cget(block)["value"],
                         lambda x: g.cset(block, x),
-                        block)
+                        block,
+                        # Workaround until a better solution to get fields from blocks is implemented in IBEX.
+                        velocity_getter=lambda: g.get_pv("CS:SB:{}.VELO".format(block), is_local=True),
+                        velocity_setter=lambda vel: g.set_pv("CS:SB:{}.VELO".format(block), vel, is_local=True))
 
 
 def pv_motion(pv_str, name):
     """Create a motion object around a PV string."""
     return Motion(lambda: g.get_pv(pv_str),
                   lambda x: g.set_pv(pv_str, x),
-                  name)
+                  name,
+                  velocity_getter=lambda: g.get_pv("{}.VELO".format(pv_str)),
+                  velocity_setter=lambda x: g.set_pv("{}.VELO".format(pv_str), x))
 
 
 def populate():
