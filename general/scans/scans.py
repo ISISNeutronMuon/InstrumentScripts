@@ -201,7 +201,7 @@ class Scan(object):
         except KeyboardInterrupt:  # pragma: no cover
             pass
         if save:
-            axis.savefig(save)
+            fig.savefig(save)
 
         return action_remainder
 
@@ -317,6 +317,9 @@ class ContinuousMove(object):
         self.stop = stop
         self.speed = speed
 
+    def __repr__(self):
+        return "Continuous move from {} to {} at speed {}".format(self.start, self.stop, self.speed)
+
 
 @contextmanager
 def temporarily_change_motor_speed(motion, temporary_speed):
@@ -345,6 +348,7 @@ class ContinuousScan(Scan):
         Args:
             motion: the axis to move
             moves: a list of ContinuousMove objects describing the motion to be performed.
+            defaults: the defaults class to use when constructing this scan.
         """
         super(Scan, self).__init__()
         self.motion = motion
@@ -426,7 +430,7 @@ class ContinuousScan(Scan):
             pass
 
         if save:
-            axis.savefig(save)
+            fig.savefig(save)
 
         return action_remainder
 
@@ -631,7 +635,7 @@ class ProductScan(Scan):
         except KeyboardInterrupt:
             pass
         if save:
-            axis.savefig(save)
+            fig.savefig(save)
 
         return action_remainder
 
@@ -797,7 +801,7 @@ of trying to fake a detector."""
         if action:
             action_remainder = action(xs, ys, axis)
         if save:
-            axis.savefig(save)
+            fig.savefig(save)
 
         plt.draw()
 

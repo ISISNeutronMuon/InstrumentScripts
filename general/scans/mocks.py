@@ -18,6 +18,20 @@ g.get_period.side_effect = lambda: g.period
 g.get_frames.side_effect = lambda: g.frames
 
 
+PVS = {}
+
+
+def set_pv(pv, value, **kwargs):
+    PVS[pv] = value
+
+
+def get_pv(pv, **kwargs):
+    return PVS.get(pv, 0)
+
+g.set_pv = set_pv
+g.get_pv = get_pv
+
+
 def cget(block):
     """Fake cget for the fake genie_python"""
     if block in instrument:

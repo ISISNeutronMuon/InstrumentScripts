@@ -314,27 +314,14 @@ class GaussianFit(CurveFit):
         This is the model for a gaussian with the mean at center, a
         standard deviation of sigma, and a peak of amplitude over a base of
         background.
-
         """
         return background + amplitude * np.exp(-((xs - cen) / sigma /
                                                  np.sqrt(2)) ** 2)
 
     @staticmethod
     def guess(x, y):
-        # Assume that amplitude is the difference between largest and smallest Y values.
-        amplitude = np.max(y) - np.min(y)
-
-        # guess that centre is the X value at which the highest Y value occurs.
-        cen = x[np.argmax(y)]
-
-        # Guess that the minimum Y value is representative of the background.
-        background = np.min(y)
-
-        # Predict a narrow peak somewhere within the scan. Estimating this much too large
-        # can lead to an incorrect fit.
-        sigma = (np.max(x) - np.min(x)) / 100
-
-        return [cen, sigma, amplitude, background]
+        return [np.mean(x), np.max(x)-np.min(x),
+                np.max(y) - np.min(y), np.min(y)]
 
     def readable(self, fit):
         return {"center": fit[0], "sigma": fit[1],
@@ -346,6 +333,7 @@ class GaussianFit(CurveFit):
         return (self._title + ": " +
                 "y={amplitude:.3g}*exp((x-{center:.3g})$^2$" +
                 "/{sigma:.3g})+{background:.1g}").format(**params)
+
 
 
 class DampedOscillatorFit(CurveFit):
@@ -489,6 +477,8 @@ class CentreOfMassFit(Fit):
     """
     def __init__(self):
         super(Fit, self).__init__()
+        import warnings
+        warnings.simplefilter("ignore", RuntimeWarning)
 
     def fit(self, x, y):
         raw_data = np.array([(float(x_point), float(y_point)) for x_point, y_point in zip(x, y)])
