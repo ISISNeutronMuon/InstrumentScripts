@@ -481,11 +481,11 @@ class CentreOfMassFit(Fit):
         warnings.simplefilter("ignore", RuntimeWarning)
 
     def fit(self, x, y):
+        if not x or not y:
+            return [np.nan]
+
         raw_data = np.array([
             (float(x_point), float(y_point)) for x_point, y_point in zip(x, y)])
-
-        if not raw_data:
-            return [np.nan]
 
         # Sort data to ascending x (keeping the Y values with their associated
         # X values).
@@ -499,11 +499,15 @@ class CentreOfMassFit(Fit):
         # Interpolate values in-between where necessary.
         interpolated_x = np.array(np.arange(
             np.min(x), np.max(x), float(np.max(x) - np.min(x))/len(raw_data)))
+
         interpolated_y = np.interp(interpolated_x, sorted_x, sorted_y)
 
         # Subtract background (assumed to be the minimum Y value)
-        if not interpolated_y:
-            interpolated_y -= np.min(interpolated_y)
+        # pylint: disable=len-as-condition
+        if len(interpolated_x) == 0 or len(interpolated_y) == 0:
+            return [np.nan]
+
+        interpolated_y -= np.min(interpolated_y)
 
         # Calculate "centre of mass"
         centre_of_mass = np.sum(
