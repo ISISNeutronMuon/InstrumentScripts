@@ -12,16 +12,6 @@ from __future__ import print_function, division, unicode_literals
 from general.scans.detector import BlockDetector
 from general.scans.scans import ContinuousScan, ContinuousMove
 
-try:
-    from contextlib import contextmanager
-except ImportError:
-    from contextlib2 import contextmanager  # Python 2
-
-try:
-    # pylint: disable=import-error
-    from genie_python import genie as g
-except ImportError:
-    from general.scans.mocks import g
 from general.scans.defaults import Defaults
 from general.scans.motion import BlockMotion, Motion
 from general.scans.util import local_wrapper
@@ -41,17 +31,15 @@ class LoqSampleChanger(Defaults):
             now.year, now.month, now.day, now.hour, now.minute, now.second)
 
     def scan(self, motion, centre=None, size=None, time=None, iterations=1):
-
-        if isinstance(motion, Motion):
-            pass
-        elif isinstance(motion, str):
+        # pylint: disable=arguments-differ
+        if isinstance(motion, str):
             motion = BlockMotion(motion)
+        elif isinstance(motion, Motion):
+            pass
         else:
-            raise TypeError(
-                "Cannot run scan on axis {}. Try a string or a motion "
-                "object instead.  It's also possible that you may "
-                "need to rerun populate() to recreate your motion "
-                "axes.".format(motion))
+            raise TypeError("Cannot run scan on axis {}. Argument should be "
+                            "either a Motion object or an IBEX block name."
+                            .format(motion))
 
         if centre is None:
             raise TypeError("Scan centre must be provided")
@@ -69,10 +57,12 @@ class LoqSampleChanger(Defaults):
         start = centre + size/2.0
         stop = centre - size/2.0
 
+        # pylint: disable=redefined-outer-name
         scan = ContinuousScan(motion, [], self)
 
         for _ in range(iterations):
-            scan += ContinuousScan(motion, [ContinuousMove(start, stop, speed)], self).and_back
+            scan += ContinuousScan(motion, [ContinuousMove(start, stop, speed)],
+                                   self).and_back
 
         return scan
 

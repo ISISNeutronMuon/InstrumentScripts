@@ -96,6 +96,9 @@ class Average(Monoid):
 
 
 class Exact(Average):
+    """
+    A monoid representing an exact measurement.
+    """
     def err(self):
         return 0
 

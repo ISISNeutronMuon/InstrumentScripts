@@ -31,20 +31,22 @@ class DetectorManager(object):
 
 
 class BlockDetector(DetectorManager):
+    """
+    A helper class for using an IBEX block as a detector.
+    """
     def __init__(self, blockname):
-        super(DetectorManager, self).__init__()
         self.blockname = blockname
         self._f = lambda: g.cget(self.blockname)["value"]
+        DetectorManager.__init__(self, self._f)
 
-    def __call__(self, *args, **kwargs):
+    def __call__(self, scan, **kwargs):
         return self
 
     def __enter__(self):
         return self._f
 
-    def __exit__(self, *args, **kwargs):
+    def __exit__(self, typ, value, traceback):
         pass
-
 
 
 class DaePeriods(DetectorManager):

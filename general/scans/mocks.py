@@ -21,12 +21,20 @@ g.get_frames.side_effect = lambda: g.frames
 PVS = {}
 
 
-def set_pv(pv, value, **kwargs):
-    PVS[pv] = value
+def set_pv(pv_name, value, **kwargs):
+    """
+    Fake set_pv for mock genie_python
+    """
+    # pylint: disable=unused-argument
+    PVS[pv_name] = value
 
 
-def get_pv(pv, **kwargs):
-    return PVS.get(pv, 0)
+def get_pv(pv_name, **kwargs):
+    """
+    Fake get_pv for mock genie_python
+    """
+    # pylint: disable=unused-argument
+    return PVS.get(pv_name, 0)
 
 g.set_pv = set_pv
 g.get_pv = get_pv
