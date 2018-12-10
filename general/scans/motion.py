@@ -27,6 +27,9 @@ class Motion(object):
     parameter, it returns the current position.  Being called with a
     parameter causes the position to update.
 
+    We can also define getters and setters for velocity of the motor,
+    and a getter for the tolerance of the motor.
+
     Example:
     Assume that we have some motion object Foo
 
@@ -171,7 +174,9 @@ class BlockMotion(Motion):
                         lambda x: g.cset(block, x),
                         block,
                         # Workarounds until a better solution to get fields
-                        # from blocks is implemented in IBEX.
+                        # from blocks is implemented in IBEX. Note that IBEX
+                        # blocks must point at AXIS:MTR rather than AXIS for
+                        # this to work.
                         velocity_getter=lambda: g.get_pv(
                             "CS:SB:{}.VELO".format(block), is_local=True),
                         velocity_setter=lambda vel: g.set_pv(

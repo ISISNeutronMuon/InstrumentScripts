@@ -30,13 +30,23 @@ class DetectorManager(object):
         pass
 
 
+def get_block(name):
+    """
+    A simple wrapper around g.cget to give a better exception message.
+    """
+    try:
+        return g.cget(name)["value"]
+    except AttributeError:
+        raise ValueError("Could not get block '{}'".format(name))
+
+
 class BlockDetector(DetectorManager):
     """
     A helper class for using an IBEX block as a detector.
     """
     def __init__(self, blockname):
         self.blockname = blockname
-        self._f = lambda: g.cget(self.blockname)["value"]
+        self._f = lambda: get_block(self.blockname)
         DetectorManager.__init__(self, self._f)
 
     def __call__(self, scan, **kwargs):

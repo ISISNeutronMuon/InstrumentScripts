@@ -474,6 +474,19 @@ class TopHatFit(CurveFit):
 class CentreOfMassFit(Fit):
     """
     A fit that calculates the 'centre of mass' of a peak over a background.
+
+    The algorithm implemented by this class is as follows:
+        - Take the minimum Y value as the background, and subtract this from all
+            y values
+        - Interpolate X and Y values so that all points are continuously spaced
+            accross the range we're interested in
+        - Find the average X position, weighted by the corresponding Y value
+
+    If the fit fails (for example, no data was provided) then NaN is returned as
+    the centre of mass.
+
+    The interpolation is needed because otherwise the point density may not be
+    constant.
     """
     def __init__(self):
         Fit.__init__(self, degree=1, title="Centre of mass")
@@ -497,8 +510,8 @@ class CentreOfMassFit(Fit):
         # Re-bin the points so that we have the same number of points,
         # but evenly spaced over the interval [min(data), max(data)]
         # Interpolate values in-between where necessary.
-        interpolated_x = np.array(np.arange(
-            np.min(x), np.max(x), float(np.max(x) - np.min(x))/len(raw_data)))
+        interpolated_x = np.array(np.linspace(
+            np.min(x), np.max(x), len(raw_data)))
 
         interpolated_y = np.interp(interpolated_x, sorted_x, sorted_y)
 

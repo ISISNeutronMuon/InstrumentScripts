@@ -31,6 +31,20 @@ class LoqSampleChanger(Defaults):
             now.year, now.month, now.day, now.hour, now.minute, now.second)
 
     def scan(self, motion, centre=None, size=None, time=None, iterations=1):
+        """
+        Scans an axis continuously about a centre point with a given move
+         size and move time. Optionally, performs more than one iteration.
+
+         Args:
+            motion: the axis to move. Either a motion object or str to use an
+                    IBEX block. Note, the block must point at AXIS:MTR rather
+                    than just AXIS.
+            centre: the centre point of the scan
+            size: the total amplitude of the scan
+            time: the time for a scan to move to a position and back again
+            iterations (optional): the number of times to repeat the moves
+
+        """
         # pylint: disable=arguments-differ
         if isinstance(motion, str):
             motion = BlockMotion(motion)

@@ -198,14 +198,17 @@ Motor Objects
   Traceback (most recent call last):
       ...
   RuntimeError: Position 2.5 is above upper limit 2 of motor Theta
+
   >>> theta.high = None
 
   Motor objects can also get and set the velocity of a motor:
+
   >>> theta.velocity = 20
   >>> theta.velocity
   20
 
   And find out about the tolerance of a motor:
+
   >>> theta.tolerance
   0
 
@@ -221,10 +224,12 @@ Motor Objects
   Taking a count at theta=6.00 and two theta=0.00
   Taking a count at theta=8.00 and two theta=0.00
   Taking a count at theta=10.00 and two theta=0.00
+
   >>> scan("theta", start=0, stop=10, stride=2, frames=5)
   Traceback (most recent call last):
       ...
   RuntimeError: Unknown block theta.  Does the capitalisation match IBEX?
+
   >>> scan(True, start=0, stop=10, count=5) # doctest: +NORMALIZE_WHITESPACE
   Traceback (most recent call last):
       ...

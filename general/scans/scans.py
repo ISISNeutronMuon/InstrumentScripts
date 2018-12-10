@@ -498,11 +498,7 @@ class ContinuousScan(Scan):
             self.motion, self.moves + other.moves, self.defaults)
 
     def __mul__(self, other):
-        if not isinstance(other, self.__class__):
-            raise ValueError("The product of a continuous and non-continuous "
-                             "scan is not supported.")
-        return ContinuousScan(self.motion, [itertools.product(
-            self.moves, other.moves)], self.defaults)
+        raise ValueError("Products of continuous scans are not supported.")
 
     def __and__(self, other):
         # We can't execute two continuous scans in parallel without changing
