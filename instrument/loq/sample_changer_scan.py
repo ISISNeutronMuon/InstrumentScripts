@@ -75,8 +75,8 @@ class LoqSampleChanger(Defaults):
         scan = ContinuousScan(motion, [], self)
 
         for _ in range(iterations):
-            scan += ContinuousScan(motion, [ContinuousMove(start, stop, speed)],
-                                   self).and_back
+            scan += ContinuousScan(
+                motion, [ContinuousMove(start, stop, speed)], self).and_back
 
         return scan
 

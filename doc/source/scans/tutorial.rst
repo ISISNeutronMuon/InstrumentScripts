@@ -468,7 +468,9 @@ Perform continuous scans
 ------------------------
 
   The scans library has some ability to perform continuous scans. That
-  is, the motor will keep moving at a set speed while data is being taken.
+  is, the motor will keep moving at a set speed while data is being taken. This
+  is implemented by polling the motor for it's position at a frequency (by
+  default, 5Hz) while the move is in progress.
 
   Continuous scans currently have some limitations - for example, they can
   only be combined with each other, and not with other non-continuous scans.
@@ -485,9 +487,9 @@ Perform continuous scans
   a run is unlikely to be suitable except for very slow scans.
 
   Continuous scans can be combined with each other (using python's `+` operator)
-  and reversed using the `.and_back` property just like step scans. They can also
-  be run forever using the `.forever` property. However, combinations of step and
-  continuous scans are currently not implemented.
+  and reversed using the `.and_back` property just like step scans. They can
+  also be run forever using the `.forever` property. However, combinations of
+  step and continuous scans are currently not implemented.
 
 
 Estimate time

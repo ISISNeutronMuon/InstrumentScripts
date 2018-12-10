@@ -289,8 +289,8 @@ class CurveFit(Fit):
         pass
 
     def fit(self, x, y):
-        # raise maxfev to 10,000, this allows scipy to make more function calls,
-        # improving the chances of getting a good/correct fit.
+        # raise maxfev to 10,000, this allows scipy to make more function
+        # calls, improving the chances of getting a good/correct fit.
         return curve_fit(self._model, x, y, self.guess(x, y), maxfev=10000)[0]
 
     def get_y(self, x, fit):
@@ -333,7 +333,6 @@ class GaussianFit(CurveFit):
         return (self._title + ": " +
                 "y={amplitude:.3g}*exp((x-{center:.3g})$^2$" +
                 "/{sigma:.3g})+{background:.1g}").format(**params)
-
 
 
 class DampedOscillatorFit(CurveFit):
@@ -476,14 +475,14 @@ class CentreOfMassFit(Fit):
     A fit that calculates the 'centre of mass' of a peak over a background.
 
     The algorithm implemented by this class is as follows:
-        - Take the minimum Y value as the background, and subtract this from all
-            y values
+        - Take the minimum Y value as the background, and subtract this from
+        all y values
         - Interpolate X and Y values so that all points are continuously spaced
-            accross the range we're interested in
+        across the range we're interested in
         - Find the average X position, weighted by the corresponding Y value
 
-    If the fit fails (for example, no data was provided) then NaN is returned as
-    the centre of mass.
+    If the fit fails (for example, no data was provided) then NaN is returned
+    as the centre of mass.
 
     The interpolation is needed because otherwise the point density may not be
     constant.
@@ -498,7 +497,8 @@ class CentreOfMassFit(Fit):
             return [np.nan]
 
         raw_data = np.array([
-            (float(x_point), float(y_point)) for x_point, y_point in zip(x, y)])
+            (float(x_point), float(y_point))
+            for x_point, y_point in zip(x, y)])
 
         # Sort data to ascending x (keeping the Y values with their associated
         # X values).

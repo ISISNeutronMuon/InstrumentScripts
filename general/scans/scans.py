@@ -12,7 +12,6 @@ from __future__ import absolute_import, print_function
 from abc import ABCMeta, abstractmethod
 from collections import Iterable, OrderedDict
 from contextlib import contextmanager
-import itertools
 import time
 import six
 import numpy as np
@@ -334,7 +333,7 @@ def temporarily_change_motor_speed(motion, temporary_speed):
 
     Args:
         motion: the motion object
-        temporary_speed: the temporary speed to set within this context manager.
+        temporary_speed: the temporary speed to set within this context manager
     """
     old_speed = motion.velocity
     try:
@@ -376,8 +375,10 @@ class ContinuousScan(Scan):
         """
         return ForeverContinuousScan(self.motion, self.moves, self.defaults)
 
-    def plot(self, detector=None, save=None, action=None, **kwargs):
-        """Run over a continuous range """
+    def plot(self, detector=None, save=None, action=None,
+             update_freq=0.2, **kwargs):
+        """Run over a continuous range, plotting every update_freq seconds"""
+        # pylint: disable=arguments-differ
         import warnings
         warnings.simplefilter("ignore", UserWarning)
 
@@ -400,7 +401,7 @@ class ContinuousScan(Scan):
                         self.motion(move.start)
                         while abs(self.motion() - move.start) > \
                                 self.motion.tolerance:
-                            time.sleep(0.1)
+                            time.sleep(update_freq)
 
                     with temporarily_change_motor_speed(self.motion,
                                                         move.speed):
@@ -445,7 +446,7 @@ class ContinuousScan(Scan):
                             # Note: a galil's MAX update frequency is 40ms so
                             # there is no benefit in making this number smaller
                             # than 0.04
-                            time.sleep(0.2)
+                            time.sleep(update_freq)
 
         except KeyboardInterrupt:  # pragma: no cover
             pass
@@ -502,8 +503,8 @@ class ContinuousScan(Scan):
 
     def __and__(self, other):
         # We can't execute two continuous scans in parallel without changing
-        # speeds. This raises lots of questions so leave the behaviour undefined
-        # for now.
+        # speeds. This raises lots of questions so leave the behaviour
+        # undefined for now.
         raise ValueError(
             "Executing continuous scans in parallel is not supported.")
 
