@@ -237,6 +237,9 @@ Motor Objects
   object instead.  It's also possible that you may need to rerun
   populate() to recreate your motion axes.
 
+  The block needs to point at the underlying motor, e.g. `MOT:MTR0101`, 
+  and not an axis PV.
+
 Perform Fits
 ------------
 
