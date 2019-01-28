@@ -5,7 +5,7 @@ from technique.sans.genie import gen
 from technique.sans.util import dae_setter  # noqa: F401
 from general.scans.util import local_wrapper
 
-pv_origin = "IN:LOQ"
+pv_origin = "IN:LOQ"  # FIXME
 
 
 class LOQ(ScanningInstrument):
@@ -33,40 +33,46 @@ class LOQ(ScanningInstrument):
 
     @dae_setter("SANS", "sans")
     def setup_dae_event(self):
-        pass  # FIXME
+        raise NotImplementedError("DAE mode event unwritten for LOQ")  # FIXME
 
     @dae_setter("SANS", "sans")
     def setup_dae_histogram(self):
-        pass  # FIXME
+        raise NotImplementedError(
+            "DAE mode histogram unwritten for LOQ")  # FIXME
 
     @dae_setter("TRANS", "transmission")
     def setup_dae_transmission(self):
-        pass  # FIXME
+        raise NotImplementedError(
+            "DAE mode transmission unwritten for LOQ")  # FIXME
 
     @dae_setter("SANS", "sans")
     def setup_dae_bsalignment(self):
-        pass  # FIXME
+        raise NotImplementedError(
+            "DAE mode bsalignment unwritten for LOQ")  # FIXME
 
     @dae_setter("SCAN", "scan")
     def setup_dae_scanning(self):
-        pass  # FIXME
+        raise NotImplementedError(
+            "DAE mode scanning unwritten for LOQ")  # FIXME
 
     @dae_setter("SCAN", "scan")
     def setup_dae_nr(self):
-        pass  # FIXME
+        raise NotImplementedError("DAE mode nr unwritten for LOQ")  # FIXME
 
     @dae_setter("SCAN", "scan")
     def setup_dae_nrscanning(self):
-        pass  # FIXME
+        raise NotImplementedError(
+            "DAE mode nrscanning unwritten for LOQ")  # FIXME
 
     @staticmethod
     def set_aperature(size):
-        pass
+        pass  # FIXME
 
     @staticmethod
     def _detector_is_on():
         """Is the detector currently on?"""
-        pass  # FIXME
+        # FIXME
+        raise NotImplementedError("Detector testing is not supported on LOQ")
 
     @staticmethod
     def _detector_turn_on(delay=True):
@@ -81,12 +87,10 @@ class LOQ(ScanningInstrument):
         #     gen.set_pv(pv_origin + ":CAEN:hv0:4:{}:pwonoff".format(x), "Off")
 
     def _configure_sans_custom(self):
-        # move the transmission monitor out
-        gen.set_pv(pv_origin + ":VACUUM:MONITOR:4:EXTRACT", "EXTRACT")
+        pass  # FIXME
 
     def _configure_trans_custom(self):
-        # move the transmission monitor in
-        gen.set_pv(pv_origin + ":VACUUM:MONITOR:4:INSERT", "INSERT")
+        pass  # FIXME
 
 
 obj = LOQ()
