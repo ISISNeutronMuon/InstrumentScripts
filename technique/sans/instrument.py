@@ -134,7 +134,6 @@ class ScanningInstrument(object):
         value stored in the journal for the next run, which should be
         set to the new value.
         """
-        pass  # pragma: no cover
 
     @abstractmethod
     def set_measurement_label(self, value):  # pragma: no cover
@@ -150,7 +149,6 @@ class ScanningInstrument(object):
         value stored in the journal for the next run, which should be
         set to the new value.
         """
-        pass  # pragma: no cover
 
     @abstractmethod
     def set_measurement_id(self, value):  # pragma: no cover
@@ -166,44 +164,36 @@ class ScanningInstrument(object):
         value stored in the journal for the next run, which should be
         set to the new value.
         """
-        pass
 
     @abstractmethod
     def setup_dae_scanning(self):  # pragma: no cover
         """Set the wiring tables for a scan"""
-        pass
 
     @abstractmethod
     def setup_dae_nr(self):  # pragma: no cover
         """Set the wiring tables for a neutron
         reflectivity measurement"""
-        pass
 
     @abstractmethod
     def setup_dae_nrscanning(self):  # pragma: no cover
         """Set the wiring tables for performing
         scans during neutron reflectivity"""
-        pass
 
     @abstractmethod
     def setup_dae_event(self):  # pragma: no cover
         """Set the wiring tables for event mode"""
-        pass
 
     @abstractmethod
     def setup_dae_histogram(self):  # pragma: no cover
         """Set the wiring tables for histogram mode"""
-        pass
 
     @abstractmethod
     def setup_dae_transmission(self):  # pragma: no cover
         """Set the wiring tables for a transmission measurement"""
-        pass
 
     @abstractmethod
     def setup_dae_bsalignment(self):  # pragma: no cover
         """Configure wiring tables for beamstop alignment."""
-        pass
 
     def _configure_sans_custom(self):
         """The specific actions required by the instrument
@@ -214,7 +204,6 @@ class ScanningInstrument(object):
         overwritten by other instruments to perform any actions they
         need to put the instrument into SANS mode.
         """
-        pass
 
     def _configure_trans_custom(self):
         """The specific actions required by the instrument
@@ -225,7 +214,6 @@ class ScanningInstrument(object):
         overwritten by other instruments to perform any actions they
         need to put the instrument into SANS mode.
         """
-        pass
 
     def _begin(self, *args, **kwargs):
         """Start a measurement."""
