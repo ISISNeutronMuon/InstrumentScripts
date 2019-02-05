@@ -44,9 +44,6 @@ def dae_setter(suffix, measurement_type):
         def wrapper(self, *args, **kwargs):
             """Memoize the dae mode"""
             request = inner.__name__[10:]
-            if request == self._dae_mode:  # pylint: disable=protected-access
-                debug("instrument was already set for {}".format(request))
-                return
             inner(self, *args, **kwargs)
             info("Setup {} for {}".format(type(self).__name__,
                                           request.replace("_", " ")))
