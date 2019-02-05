@@ -153,7 +153,6 @@ Plot Motor Scan
 	    ...
 	    RuntimeError: Unable to build a scan with that set of options.
 
-
 Motor Objects
 -------------
 
@@ -303,6 +302,33 @@ Perform Fits
   .. figure:: peak.png
      :alt: Fitting a peak
 
+
+Replaying Scans
+---------------
+
+It's fairly common to only realise that you should be fitting data
+*after* starting a scan.  Thankfully,
+:meth:`general.scans.scan.last_scan` allows you to replay the results
+of the previous measurement and perform fits on it.
+
+>>> from general.scans.scans import last_scan
+>>> fit = last_scan().fit(Gaussian, save="replay.png")
+>>> abs(fit["center"] - 1.0) < 0.2
+True
+
+  .. image:: replay.png
+     :alt: A repeat of the previous scan with a fit added over the top
+
+If you want to run an older scan, it's also possible to select the
+saved results of a scan file and load it instead.
+
+>>> fit = last_scan("mock_scan_02.dat").fit(Gaussian, save="replay2.png")
+>>> abs(fit["center"] - 1.0) < 0.2
+True
+
+
+  .. image:: replay2.png
+     :alt: A repeat of the of a much earlier scan
 
 Perform complex scans
 ---------------------

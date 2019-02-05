@@ -10,6 +10,7 @@ from .monoid import Average, MonoidList
 
 class DetectorManager(object):
     """Manage routines for pulling data from the instrument"""
+
     def __init__(self, f):
         self._f = f
         self.scan = None

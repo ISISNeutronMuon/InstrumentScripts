@@ -6,8 +6,6 @@
 Welcome to the Genie Python instrument scripts documentation
 ============================================================
 
-Contents:
-
 .. toctree::
    :maxdepth: 2
 
@@ -15,6 +13,13 @@ Contents:
    sans/index.rst
    contributing
    reference
+
+The Genie Python Instrument Scripts repository is a library for useful
+python scripts for all instruments at the ISIS Pulsed Neutron and Muon
+source.  This document serves as both a user a programmer's guide to
+the modules that are available.  If you're just starting out, the best
+option is to find the module that most closely matches what you're
+attempt to do and reading the corresponding tutorial.
 
 
 Indices and tables

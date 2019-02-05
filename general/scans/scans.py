@@ -14,7 +14,7 @@ from collections import Iterable, OrderedDict
 import numpy as np
 from six import add_metaclass
 import six
-from .monoid import ListOfMonoids, Monoid
+from .monoid import ListOfMonoids, Monoid, Average
 from .detector import DetectorManager
 from .fit import Fit, ExactFit
 
@@ -25,7 +25,6 @@ except ImportError:
     # We must be in a test environment
     from .mocks import g
 from .multiplot import NBPlot
-from .monoid import Average
 
 TIME_KEYS = ["frames", "uamps", "seconds", "minutes", "hours"]
 
@@ -173,7 +172,8 @@ class Scan(object):
                     else:
                         xs.append(position)
                         ys.append(value)
-                    logfile.write("{}\t{}\n".format(xs[-1], str(ys[-1])))
+                    logfile.write("{}\t{}\t{}\n".format(xs[-1], str(ys[-1]),
+                                                        str(ys[-1].err())))
                     axis.clear()
                     axis.set_xlabel(label)
                     if isinstance(self.min(), tuple):
@@ -256,6 +256,7 @@ class Scan(object):
 
 class SimpleScan(Scan):
     """SimpleScan is a scan along a single axis for a fixed set of values"""
+
     def __init__(self, action, values, defaults):
         self.action = action
         self.values = values
@@ -301,6 +302,7 @@ class SimpleScan(Scan):
 
 class SumScan(Scan):
     """The SumScan performs two separate scans sequentially"""
+
     def __init__(self, first, second):
         self.first = first
         self.second = second
@@ -341,6 +343,7 @@ class SumScan(Scan):
 class ProductScan(Scan):
     """ProductScan performs every possible combination of the positions of
     its two constituent scans."""
+
     def __init__(self, outer, inner):
         self.outer = outer
         self.inner = inner
@@ -419,7 +422,8 @@ class ProductScan(Scan):
                         values[ys.index(y)][xs.index(x)] += value
                     else:
                         values[ys.index(y)][xs.index(x)] = value
-                    logfile.write("{}\t{}\n".format(xs[-1], str(values[-1])))
+                    logfile.write(
+                        "{}\t{}\n".format(xs[-1], str(values[-1])))
                     axis.clear()
                     axis.set_xlabel(keys[1])
                     axis.set_ylabel(keys[0])
@@ -466,6 +470,7 @@ class ProductScan(Scan):
 class ParallelScan(Scan):
     """ParallelScan runs two scans alongside each other, performing both
     sets of position adjustments before each step of the scan."""
+
     def __init__(self, first, second):
         self.first = first
         self.second = second
@@ -508,6 +513,7 @@ class ForeverScan(Scan):  # pragma: no cover
     ForeverScan repeats the same scan over and over again to improve
     the statistics until the user manually halts the scan.
     """
+
     def __init__(self, scan):
         self.scan = scan
         self.defaults = scan.defaults
@@ -535,3 +541,84 @@ class ForeverScan(Scan):  # pragma: no cover
 
     def max(self):
         return self.scan.max()
+
+
+class ReplayScan(Scan):
+    """A Scan that merely repeated the output of a previous scan"""
+
+    def __init__(self, xs, ys, axis):
+        self.xs = xs
+        self.ys = ys
+        self.axis = axis
+        # self.defaults = ReplayDetector(xs, ys)
+
+    def min(self):
+        return min(self.xs)
+
+    def max(self):
+        return max(self.xs)
+
+    @property
+    def reverse(self):
+        return ReplayScan(self.xs[::-1], self.ys[::-1], self.axis)
+
+    def map(self, func):
+        return ReplayScan(map(func, self.xs), self.ys, self.axis)
+
+    def __len__(self):
+        return min(len(self.xs), len(self.ys))
+
+    def __iter__(self):
+        for x, _ in zip(self.xs, self.ys):
+            dic = OrderedDict()
+            dic[self.axis] = x
+            yield dic
+
+    def plot(self, detector=None, save=None,
+             action=None, **kwargs):
+        """Overload the scan method for the replay scan.  Since we aren't
+actually detecting anything, we can run the code much simpler instead
+of trying to fake a detector."""
+        action_remainder = None
+        xs = self.xs
+        ys = ListOfMonoids(self.ys)
+        axis = NBPlot()
+        axis.clear()
+        if isinstance(self.min(), tuple):
+            rng = [1.05*self.min()[0] - 0.05 * self.max()[0],
+                   1.05*self.max()[0] - 0.05 * self.min()[0]]
+        else:
+            rng = [1.05*self.min() - 0.05 * self.max(),
+                   1.05*self.max() - 0.05 * self.min()]
+        axis.set_xlabel(self.axis)
+        axis.set_xlim(rng[0], rng[1])
+        rng = _plot_range(ys)
+        axis.set_ylim(rng[0], rng[1])
+        ys.plot(axis, xs)
+        if action:
+            action_remainder = action(xs, ys, axis)
+        if save:
+            axis.savefig(save)
+
+        return action_remainder
+
+
+def last_scan(path=None, axis="replay"):
+    """Load the last run scan and replay that scan
+
+    PARAMETERS
+    ----------
+    path
+      The log file to replay.  If None, replay the most recent scan
+    axis
+      The label for the x axis
+
+    """
+    import os
+    if path is None:
+        path = max([f for f in os.listdir(os.getcwd()) if f[-4:] == ".dat"],
+                   key=os.path.getctime)
+    with open(path, "r") as infile:
+        xs, ys, errs = np.loadtxt(infile, unpack=True)
+        ys = [Average((y/e)**2, y/e**2) for y, e in zip(ys, errs)]
+        return ReplayScan(xs, ys, axis)
