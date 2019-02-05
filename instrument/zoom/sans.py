@@ -51,6 +51,7 @@ class Zoom(ScanningInstrument):
     @dae_setter("SANS", "sans")
     def setup_dae_histogram(self):
         self._generic_scan(
+            detector=r"detector_1det_1dae3card.dat",
             spectra=r"spec2det_130218.txt",
             wiring=r"wiring1det_histogram_200218.dat")
 

@@ -5,14 +5,8 @@ contained in this module
 
 """
 from __future__ import print_function
-try:
-    # pylint: disable=import-error
-    from genie_python import genie as g
-except ImportError:
-    g = None
 from general.scans.defaults import Defaults
-from general.scans.detector import dae_periods, specific_spectra
-from general.scans.monoid import Sum
+from general.scans.detector import specific_spectra
 from general.scans.util import local_wrapper
 
 

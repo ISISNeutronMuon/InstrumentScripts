@@ -1,7 +1,7 @@
 """Useful utilities for scriping"""
 from functools import wraps
 import logging
-from logging import info, debug
+from logging import info
 from .genie import SwitchGenie
 
 
