@@ -29,14 +29,12 @@ class Monoid(object):
 
         x + x.zero() == x
         """
-        pass
 
     @abstractmethod
     def err(self):
         """
         Return the uncertainty of the current value
         """
-        pass
 
     @abstractmethod
     def __add__(self, x):

@@ -247,7 +247,6 @@ class ScanningInstrument(object):
           The aperature size.  e.g. "Small" or "Medium"
           A blank string (the default value) results in
           the aperature not being changed."""
-        pass
 
     def detector_lock(self, state=None):
         """Query or activate the detector lock
