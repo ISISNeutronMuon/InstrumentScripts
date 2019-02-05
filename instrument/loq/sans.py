@@ -33,7 +33,7 @@ class LOQ(ScanningInstrument):
 
     @dae_setter("SANS", "sans")
     def setup_dae_event(self):
-        raise NotImplementedError("DAE mode event unwritten for LOQ")  # FIXME
+        raise NotImplementedError("LOQ does not support event mode")
 
     @dae_setter("SANS", "sans")
     def setup_dae_histogram(self):
@@ -47,8 +47,7 @@ class LOQ(ScanningInstrument):
 
     @dae_setter("SANS", "sans")
     def setup_dae_bsalignment(self):
-        raise NotImplementedError(
-            "DAE mode bsalignment unwritten for LOQ")  # FIXME
+        raise NotImplementedError("DAE mode bsalignment unwritten for LOQ")
 
     @dae_setter("SCAN", "scan")
     def setup_dae_scanning(self):
@@ -57,12 +56,11 @@ class LOQ(ScanningInstrument):
 
     @dae_setter("SCAN", "scan")
     def setup_dae_nr(self):
-        raise NotImplementedError("DAE mode nr unwritten for LOQ")  # FIXME
+        raise NotImplementedError("LOQ cannot perform reflectometry")
 
     @dae_setter("SCAN", "scan")
     def setup_dae_nrscanning(self):
-        raise NotImplementedError(
-            "DAE mode nrscanning unwritten for LOQ")  # FIXME
+        raise NotImplementedError("LOQ cannot perform reflectometry")
 
     @staticmethod
     def set_aperature(size):
