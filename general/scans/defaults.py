@@ -30,7 +30,6 @@ class Defaults(object):
         as keyword arguments.
 
         """
-        pass
 
     @staticmethod
     @abstractmethod
@@ -38,7 +37,6 @@ class Defaults(object):
         """
         Returns the name of a unique log file where the scan data can be saved.
         """
-        pass
 
     def scan(self, motion, start=None, stop=None, step=None, frames=None,
              **kwargs):

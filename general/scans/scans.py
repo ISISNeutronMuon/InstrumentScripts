@@ -97,23 +97,19 @@ class Scan(object):
         """The map function returns a modified scan that performs the given
         function on all of the original positions to return the new positions.
         """
-        pass
 
     @property
     @abstractmethod
     def reverse(self):
         """Create a new scan that runs in the opposite direction"""
-        pass
 
     @abstractmethod
     def min(self):
         """Find the smallest point in a scan"""
-        pass
 
     @abstractmethod
     def max(self):
         """Find the largest point in a scan"""
-        pass
 
     def __iter__(self):
         pass

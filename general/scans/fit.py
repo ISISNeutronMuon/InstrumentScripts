@@ -275,7 +275,6 @@ class CurveFit(Fit):
         """
         This is the mathematical model to be fit by the subclass
         """
-        pass
 
     @staticmethod
     @abstractmethod
@@ -284,7 +283,6 @@ class CurveFit(Fit):
         Given a set of x and y values, make a guess as to the initial
         parameters of the fit.
         """
-        pass
 
     def fit(self, x, y):
         return curve_fit(self._model, x, y, self.guess(x, y))[0]
