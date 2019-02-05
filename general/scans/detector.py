@@ -129,12 +129,17 @@ def specific_spectra(spectra_list, preconfig=lambda: None):
         g.waitfor(**local_kwargs)
         g.pause()
 
-        base = sum(g.get_spectrum(1, period=g.get_period())["signal"])*100.0
+        spec = None
+        while spec is None:
+            spec = g.get_spectrum(1, g.get_period())
+        base = sum(spec["signal"])*100.0
         pols = [Average(0, base) for _ in spectra_list]
         for idx, spectra in enumerate(spectra_list):
             for channel in spectra:
-                temp = sum(g.get_spectrum(channel,
-                                          period=g.get_period())["signal"])
+                spec = None
+                while spec is None:
+                    spec = g.get_spectrum(channel, g.get_period())
+                temp = sum(spec["signal"])
                 pols[idx] += Average(temp*100.0, 0.0)
         if len(pols) == 1:
             return pols[0]
