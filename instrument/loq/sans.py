@@ -66,7 +66,14 @@ class LOQ(ScanningInstrument):
 
     @staticmethod
     def set_aperature(size):
-        pass  # FIXME
+        if size.upper() == "SMALL":
+            gen.cset(Aperature_2="SMALL")
+        elif size.upper() == "MEDIUM":
+            gen.cset(Aperature_2="MEDIUM")
+        elif size.upper() == "LARGE":
+            gen.cset(Aperature_2="LARGE")
+        else:
+            RuntimeError("Slit size {} is undefined".format(size))
 
     @staticmethod
     def _detector_is_on():
@@ -87,10 +94,11 @@ class LOQ(ScanningInstrument):
         #     gen.set_pv(pv_origin + ":CAEN:hv0:4:{}:pwonoff".format(x), "Off")
 
     def _configure_sans_custom(self):
-        pass  # FIXME
+        gen.cset(Tx_Mon="OUT")
 
     def _configure_trans_custom(self):
-        pass  # FIXME
+        gen.cset(Aperature_2="SMALL")
+        gen.cset(Tx_Mon="IN")
 
 
 obj = LOQ()
