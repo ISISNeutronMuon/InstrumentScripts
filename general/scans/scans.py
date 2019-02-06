@@ -400,8 +400,8 @@ axis is moving"""
                                > self.motion.tolerance):
                             sleep(0.1)
 
-                    with temporarily_change_motor_speed(
-                        self.motion, move.speed):
+                    with temporarily_change_motor_speed(self.motion,
+                                                        move.speed):
                         self.motion(move.stop)
 
                         while (abs(self.motion() - move.stop)
