@@ -12,16 +12,6 @@ from __future__ import print_function, division, unicode_literals
 from general.scans.detector import BlockDetector
 from general.scans.scans import ContinuousScan, ContinuousMove
 
-try:
-    from contextlib import contextmanager
-except ImportError:
-    from contextlib2 import contextmanager  # Python 2
-
-try:
-    # pylint: disable=import-error
-    from genie_python import genie as g
-except ImportError:
-    from general.scans.mocks import g
 from general.scans.defaults import Defaults
 from general.scans.motion import BlockMotion, Motion
 from general.scans.util import local_wrapper
@@ -72,7 +62,9 @@ class LoqSampleChanger(Defaults):
         scan = ContinuousScan(motion, [], self)
 
         for _ in range(iterations):
-            scan += ContinuousScan(motion, [ContinuousMove(start, stop, speed)], self).and_back
+            scan += ContinuousScan(motion,
+                                   [ContinuousMove(start, stop, speed)],
+                                   self).and_back
 
         return scan
 

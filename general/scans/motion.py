@@ -38,7 +38,8 @@ class Motion(object):
     """
 
     def __init__(self, getter, setter, title, low=None, high=None,
-                 velocity_getter=None, velocity_setter=None, tolerance_getter=None):
+                 velocity_getter=None, velocity_setter=None,
+                 tolerance_getter=None):
         self.getter = getter
         self.setter = setter
         self.title = title
@@ -161,10 +162,14 @@ class BlockMotion(Motion):
                         lambda: g.cget(block)["value"],
                         lambda x: g.cset(block, x),
                         block,
-                        # Workarounds until a better solution to get fields from blocks is implemented in IBEX.
-                        velocity_getter=lambda: g.get_pv("CS:SB:{}.VELO".format(block), is_local=True),
-                        velocity_setter=lambda vel: g.set_pv("CS:SB:{}.VELO".format(block), vel, is_local=True),
-                        tolerance_getter=lambda: g.get_pv("CS:SB:{}.RDBD".format(block), is_local=True),)
+                        # Workarounds until a better solution to get
+                        # fields from blocks is implemented in IBEX.
+                        velocity_getter=lambda: g.get_pv(
+                            "CS:SB:{}.VELO".format(block), is_local=True),
+                        velocity_setter=lambda vel: g.set_pv(
+                            "CS:SB:{}.VELO".format(block), vel, is_local=True),
+                        tolerance_getter=lambda: g.get_pv(
+                            "CS:SB:{}.RDBD".format(block), is_local=True),)
 
 
 def pv_motion(pv_str, name):
@@ -172,9 +177,12 @@ def pv_motion(pv_str, name):
     return Motion(lambda: g.get_pv(pv_str),
                   lambda x: g.set_pv(pv_str, x),
                   name,
-                  velocity_getter=lambda: g.get_pv("{}.VELO".format(pv_str)),
-                  velocity_setter=lambda x: g.set_pv("{}.VELO".format(pv_str), x),
-                  tolerance_getter=lambda: g.get_pv("{}.RDBD".format(pv_str)))
+                  velocity_getter=lambda: g.get_pv(
+                      "{}.VELO".format(pv_str)),
+                  velocity_setter=lambda x: g.set_pv(
+                      "{}.VELO".format(pv_str), x),
+                  tolerance_getter=lambda: g.get_pv(
+                      "{}.RDBD".format(pv_str)))
 
 
 def populate():

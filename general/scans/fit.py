@@ -28,7 +28,8 @@ if platform == "win32":
         _thread.interrupt_main()
         return 1
 
-    BASEPATH = os.path.join(os.path.dirname(sys.executable), "Lib", "site-packages", "numpy", "core")
+    BASEPATH = os.path.join(os.path.dirname(sys.executable),
+                            "Lib", "site-packages", "numpy", "core")
     ctypes.CDLL(os.path.join(BASEPATH, "libmmd.dll"))
     ctypes.CDLL(os.path.join(BASEPATH, "libifcoremd.dll"))
     routine = ctypes.WINFUNCTYPE(ctypes.c_int, ctypes.c_uint)(handler)
@@ -288,8 +289,9 @@ class CurveFit(Fit):
         pass
 
     def fit(self, x, y):
-        # raise maxfev to 10,000, this allows scipy to make more function calls,
-        # improving the chances of getting a good/correct fit.
+        # raise maxfev to 10,000, this allows scipy to make more
+        # function calls, improving the chances of getting a
+        # good/correct fit.
         return curve_fit(self._model, x, y, self.guess(x, y), maxfev=10000)[0]
 
     def get_y(self, x, fit):
@@ -332,7 +334,6 @@ class GaussianFit(CurveFit):
         return (self._title + ": " +
                 "y={amplitude:.3g}*exp((x-{center:.3g})$^2$" +
                 "/{sigma:.3g})+{background:.1g}").format(**params)
-
 
 
 class DampedOscillatorFit(CurveFit):
@@ -480,12 +481,14 @@ class CentreOfMassFit(Fit):
         warnings.simplefilter("ignore", RuntimeWarning)
 
     def fit(self, x, y):
-        raw_data = np.array([(float(x_point), float(y_point)) for x_point, y_point in zip(x, y)])
+        raw_data = np.array([(float(x_point), float(y_point))
+                             for x_point, y_point in zip(x, y)])
 
         if len(raw_data) == 0:
             return [np.nan]
 
-        # Sort data to ascending x (keeping the Y values with their associated X values).
+        # Sort data to ascending x (keeping the Y values with their
+        # associated X values).
         sorted_data = sorted(raw_data, key=lambda row: row[0])
 
         sorted_x = np.array([i[0] for i in sorted_data])
@@ -494,7 +497,9 @@ class CentreOfMassFit(Fit):
         # Re-bin the points so that we have the same number of points,
         # but evenly spaced over the interval [min(data), max(data)]
         # Interpolate values in-between where necessary.
-        interpolated_x = np.array(np.arange(np.min(x), np.max(x), float(np.max(x) - np.min(x))/len(raw_data)))
+        interpolated_x = np.array(
+            np.arange(np.min(x), np.max(x),
+                      float(np.max(x) - np.min(x))/len(raw_data)))
         interpolated_y = np.interp(interpolated_x, sorted_x, sorted_y)
 
         # Subtract background (assumed to be the minimum Y value)
@@ -502,7 +507,8 @@ class CentreOfMassFit(Fit):
             interpolated_y -= np.min(interpolated_y)
 
         # Calculate "centre of mass"
-        centre_of_mass = np.sum(interpolated_x * interpolated_y) / np.sum(interpolated_y)
+        centre_of_mass = np.sum(interpolated_x * interpolated_y)
+        centre_of_mass /= np.sum(interpolated_y)
         return [centre_of_mass]
 
     def get_y(self, x, fit):

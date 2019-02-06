@@ -46,7 +46,6 @@ class BlockDetector(DetectorManager):
         pass
 
 
-
 class DaePeriods(DetectorManager):
     """This helper class aids in making detector managers that perform all
     of their measurements in a single DAE run, instead of constantly

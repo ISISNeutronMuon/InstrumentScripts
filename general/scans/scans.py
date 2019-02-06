@@ -94,7 +94,8 @@ class Scan(object):
         if not detector:
             detector = self.defaults.detector
         if not isinstance(detector, DetectorManager):
-            raise ValueError("fjiosfdjiosfdjisfdjisfdjiosfd {}".format(detector.__class__))
+            raise ValueError(
+                "fjiosfdjiosfdjisfdjisfdjiosfd {}".format(detector.__class__))
             detector = DetectorManager(detector)
         return detector
 
@@ -235,7 +236,8 @@ class Scan(object):
         result = self.plot(action=fit.fit_plot_action(), **kwargs)
 
         if result is None:
-            raise RuntimeError("Could not get result from plot. Perhaps the fit failed?")
+            raise RuntimeError(
+                "Could not get result from plot. Perhaps the fit failed?")
         elif isinstance(result[0], Iterable) and not isinstance(fit, ExactFit):
             result = np.array([x for x in result if x is not None])
             result = np.median(result, axis=0)
@@ -318,17 +320,19 @@ class ContinuousMove(object):
         self.speed = speed
 
     def __repr__(self):
-        return "Continuous move from {} to {} at speed {}".format(self.start, self.stop, self.speed)
+        return "Continuous move from {} to {} at speed {}".format(
+            self.start, self.stop, self.speed)
 
 
 @contextmanager
 def temporarily_change_motor_speed(motion, temporary_speed):
-    """
-    Context manager to temporarily change motor velocity, and put it back on exit.
+    """Context manager to temporarily change motor velocity, and put it
+    back on exit.
 
     Args:
         motion: the motion object
-        temporary_speed: the temporary speed to set within this context manager.
+        temporary_speed: the temporary speed to set within the context manager.
+
     """
     old_speed = motion.velocity
     try:
@@ -339,7 +343,8 @@ def temporarily_change_motor_speed(motion, temporary_speed):
 
 
 class ContinuousScan(Scan):
-    """A continuous scan that starts motion and then collects while the axis is moving"""
+    """A continuous scan that starts motion and then collects while the
+axis is moving"""
 
     def __init__(self, motion, moves, defaults):
         """
@@ -347,7 +352,7 @@ class ContinuousScan(Scan):
 
         Args:
             motion: the axis to move
-            moves: a list of ContinuousMove objects describing the motion to be performed.
+            moves: a list of ContinuousMove objects describing the motion.
             defaults: the defaults class to use when constructing this scan.
         """
         super(Scan, self).__init__()
@@ -356,7 +361,9 @@ class ContinuousScan(Scan):
 
         for move in self.moves:
             if abs(move.start - move.stop) <= 0.005:
-                raise ValueError("Cannot have start={} and stop={} within motor tolerance of each other (tol={})")
+                raise ValueError(
+                    "Cannot have start={} and stop={} within "
+                    "motor tolerance of each other (tol={})")
 
         self.defaults = defaults
 
@@ -389,23 +396,30 @@ class ContinuousScan(Scan):
                     # Set initial motor position to correct value.
                     if abs(self.motion() - move.start) > self.motion.tolerance:
                         self.motion(move.start)
-                        while abs(self.motion() - move.start) > self.motion.tolerance:
+                        while (abs(self.motion() - move.start)
+                               > self.motion.tolerance):
                             time.sleep(0.1)
 
-                    with temporarily_change_motor_speed(self.motion, move.speed):
+                    with temporarily_change_motor_speed(
+                            self.motion, move.speed):
                         self.motion(move.stop)
 
-                        while abs(self.motion() - move.stop) > self.motion.tolerance:
-                            position, value = self.motion(), Exact(detect(**just_times(kwargs)))
+                        while (abs(self.motion() - move.stop)
+                               > self.motion.tolerance):
+                            position = self.motion()
+                            value = Exact(detect(**just_times(kwargs)))
                             xs.append(position)
                             ys.append(value)
 
-                            logfile.write("{}\t{}\n".format(xs[-1], str(ys[-1])))
+                            logfile.write(
+                                "{}\t{}\n".format(xs[-1], str(ys[-1])))
                             axis.clear()
 
                             if isinstance(self.min(), tuple):
-                                rng = [1.05 * self.min()[0] - 0.05 * self.max()[0],
-                                       1.05 * self.max()[0] - 0.05 * self.min()[0]]
+                                rng = [1.05 * self.min()[0]
+                                       - 0.05 * self.max()[0],
+                                       1.05 * self.max()[0]
+                                       - 0.05 * self.min()[0]]
                             else:
                                 rng = [1.05 * self.min() - 0.05 * self.max(),
                                        1.05 * self.max() - 0.05 * self.min()]
@@ -418,12 +432,14 @@ class ContinuousScan(Scan):
 
                             plt.draw()
 
-                            # If we plot in a tight loop, matplotlib can't keep up.
-                            # Taking data at 5Hz during the move seems the right
-                            # balance of "continuous" and "pragmatic"
+                            # If we plot in a tight loop, matplotlib
+                            # can't keep up.  Taking data at 5Hz
+                            # during the move seems the right balance
+                            # of "continuous" and "pragmatic"
                             #
-                            # Note: a galil's MAX update frequency is 40ms so there
-                            # is no benefit in making this number smaller than 0.04
+                            # Note: a galil's MAX update frequency is
+                            # 40ms so there is no benefit in making
+                            # this number smaller than 0.04
                             time.sleep(0.2)
 
         except KeyboardInterrupt:  # pragma: no cover
@@ -435,11 +451,13 @@ class ContinuousScan(Scan):
         return action_remainder
 
     def map(self, func):
-        # The mapping function translates positions. What do we do about speed?
-        # Keep it constant, so the scan time changes, or keep the scan time constant?
-        # What are the implications of either approach? Until there is a clear use case
-        # I think leaving this behaviour undefined is sensible.
-        raise NotImplementedError("Mapping a continuous scan is not yet supported.")
+        # The mapping function translates positions. What do we do
+        # about speed?  Keep it constant, so the scan time changes, or
+        # keep the scan time constant?  What are the implications of
+        # either approach? Until there is a clear use case I think
+        # leaving this behaviour undefined is sensible.
+        raise NotImplementedError(
+            "Mapping a continuous scan is not yet supported.")
 
     def min(self):
         return min(min(move.start, move.stop) for move in self.moves)
@@ -449,13 +467,17 @@ class ContinuousScan(Scan):
 
     @property
     def reverse(self):
-        moves = [ContinuousMove(start=move.stop, stop=move.start, speed=move.speed) for move in self][::-1]
+        moves = [ContinuousMove(start=move.stop,
+                                stop=move.start,
+                                speed=move.speed)
+                 for move in self][::-1]
         return ContinuousScan(self.motion, moves=moves, defaults=self.defaults)
 
     def __len__(self):
-        # Slightly different meaning - this is the number of continuous moves that this scan will perform
-        # not the number of points at which data will be taken. This meaning seems to make the most sense
-        # given the existing framework.
+        # Slightly different meaning - this is the number of
+        # continuous moves that this scan will perform not the number
+        # of points at which data will be taken. This meaning seems to
+        # make the most sense given the existing framework.
         return len(self.moves)
 
     def __iter__(self):
@@ -464,21 +486,31 @@ class ContinuousScan(Scan):
 
     def __add__(self, other):
         if not isinstance(other, self.__class__):
-            # We probably could do this in the future, but this would need a bigger
-            # refactoring so that Continuous moves and points could be added together in the
-            # same list.
-            raise ValueError("Adding a continuous and non-continuous scan together is not supported.")
-        return ContinuousScan(self.motion, self.moves + other.moves, self.defaults)
+            # We probably could do this in the future, but this would
+            # need a bigger refactoring so that Continuous moves and
+            # points could be added together in the same list.
+            raise ValueError(
+                "Adding a continuous and non-continuous "
+                "scan together is not supported.")
+        return ContinuousScan(self.motion,
+                              self.moves + other.moves,
+                              self.defaults)
 
     def __mul__(self, other):
         if not isinstance(other, self.__class__):
-            raise ValueError("The product of a continuous and non-continuous scan is not supported.")
-        return ContinuousScan(self.motion, [itertools.product(self.moves, other.moves)], self.defaults)
+            raise ValueError(
+                "The product of a continuous and "
+                "non-continuous scan is not supported.")
+        return ContinuousScan(self.motion,
+                              [itertools.product(self.moves, other.moves)],
+                              self.defaults)
 
     def __and__(self, other):
-        # We can't execute two continuous scans in parallel without changing speeds.
-        # This raises lots of questions so leave the behaviour undefined for now.
-        raise NotImplementedError("Executing continuous scans in parallel is not supported.")
+        # We can't execute two continuous scans in parallel without
+        # changing speeds.  This raises lots of questions so leave the
+        # behaviour undefined for now.
+        raise NotImplementedError(
+            "Executing continuous scans in parallel is not supported.")
 
     def __repr__(self):
         return self.__class__.__name__
@@ -735,7 +767,8 @@ class ForeverContinuousScan(ContinuousScan):
     A special case of a forever scan that can operate with continuous moves.
     """
     def __len__(self):
-        raise ValueError("Can't get length of continuous scan that runs forever.")
+        raise ValueError(
+            "Can't get length of continuous scan that runs forever.")
 
     def __iter__(self):
         while True:
