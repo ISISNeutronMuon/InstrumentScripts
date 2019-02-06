@@ -401,7 +401,7 @@ axis is moving"""
                             sleep(0.1)
 
                     with temporarily_change_motor_speed(
-                            self.motion, move.speed):
+                        self.motion, move.speed):
                         self.motion(move.stop)
 
                         while (abs(self.motion() - move.stop)
@@ -645,19 +645,19 @@ class ProductScan(Scan):
                     axis.clear()
                     axis.set_xlabel(keys[1])
                     axis.set_ylabel(keys[0])
-                    miny, minx = self.min()
+                    mins = self.min()
                     maxy, maxx = self.max()
-                    rng = [1.05*minx - 0.05 * maxx,
-                           1.05*maxx - 0.05 * minx]
+                    rng = [1.05*mins[1] - 0.05 * maxx,
+                           1.05*maxx - 0.05 * mins[1]]
                     axis.set_xlim(rng[0], rng[1])
-                    rng = [1.05*miny - 0.05 * maxy,
-                           1.05*maxy - 0.05 * miny]
+                    rng = [1.05*mins[0] - 0.05 * maxy,
+                           1.05*maxy - 0.05 * mins[0]]
                     axis.set_ylim(rng[0], rng[1])
                     axis.pcolor(
                         self._estimate_locations(xs, len(self.inner),
-                                                 minx, maxx),
+                                                 mins[1], maxx),
                         self._estimate_locations(ys, len(self.outer),
-                                                 miny, maxy),
+                                                 mins[0], maxy),
                         np.array([[float(z) for z in row]
                                   for row in values]))
                     if action:
