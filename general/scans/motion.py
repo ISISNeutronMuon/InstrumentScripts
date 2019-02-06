@@ -46,8 +46,7 @@ class Motion(object):
         self._low = low
         self._high = high
 
-        self._velocity_getter = velocity_getter
-        self._velocity_setter = velocity_setter
+        self._velocity = (velocity_getter, velocity_setter)
 
         self._tolerance_getter = tolerance_getter
 
@@ -130,14 +129,17 @@ class Motion(object):
 
     @property
     def velocity(self):
-        return self._velocity_getter()
+        """The motion's requested speed"""
+        return self._velocity[0]()
 
     @velocity.setter
     def velocity(self, vel):
-        self._velocity_setter(vel)
+        """Set the motion's speed"""
+        self._velocity[1](vel)
 
     @property
     def tolerance(self):
+        """The motion's tolerance"""
         return self._tolerance_getter()
 
 
@@ -183,6 +185,19 @@ def pv_motion(pv_str, name):
                       "{}.VELO".format(pv_str), x),
                   tolerance_getter=lambda: g.get_pv(
                       "{}.RDBD".format(pv_str)))
+
+
+def normalise_motion(motion):
+    """Ensure that our motion is a true motion object."""
+    if isinstance(motion, Motion):
+        return motion
+    if isinstance(motion, str):
+        return BlockMotion(motion)
+    raise TypeError(
+        "Cannot run scan on axis {}. Try a string or a motion "
+        "object instead.  It's also possible that you may "
+        "need to rerun populate() to recreate your motion "
+        "axes." .format(motion))
 
 
 def populate():

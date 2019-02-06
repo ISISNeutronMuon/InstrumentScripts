@@ -31,19 +31,17 @@ class DetectorManager(object):
 
 
 class BlockDetector(DetectorManager):
+    """A detector for a scan whose value comes from an IBEX block."""
     def __init__(self, blockname):
         super(DetectorManager, self).__init__()
         self.blockname = blockname
         self._f = lambda: g.cget(self.blockname)["value"]
 
-    def __call__(self, *args, **kwargs):
+    def __call__(self, _, **kwargs):
         return self
 
     def __enter__(self):
         return self._f
-
-    def __exit__(self, *args, **kwargs):
-        pass
 
 
 class DaePeriods(DetectorManager):

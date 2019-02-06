@@ -484,7 +484,7 @@ class CentreOfMassFit(Fit):
         raw_data = np.array([(float(x_point), float(y_point))
                              for x_point, y_point in zip(x, y)])
 
-        if len(raw_data) == 0:
+        if not raw_data.size:
             return [np.nan]
 
         # Sort data to ascending x (keeping the Y values with their
@@ -497,13 +497,11 @@ class CentreOfMassFit(Fit):
         # Re-bin the points so that we have the same number of points,
         # but evenly spaced over the interval [min(data), max(data)]
         # Interpolate values in-between where necessary.
-        interpolated_x = np.array(
-            np.arange(np.min(x), np.max(x),
-                      float(np.max(x) - np.min(x))/len(raw_data)))
+        interpolated_x = np.linspace(np.min(x), np.max(x), raw_data.size)
         interpolated_y = np.interp(interpolated_x, sorted_x, sorted_y)
 
         # Subtract background (assumed to be the minimum Y value)
-        if len(interpolated_y) > 0:
+        if interpolated_y.size:
             interpolated_y -= np.min(interpolated_y)
 
         # Calculate "centre of mass"

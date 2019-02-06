@@ -96,6 +96,7 @@ class Average(Monoid):
 
 
 class Exact(Average):
+    """A Monoid of Exact numbers with no uncertainty"""
     def err(self):
         return 0
 

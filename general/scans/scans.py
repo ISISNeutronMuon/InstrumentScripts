@@ -12,15 +12,16 @@ from __future__ import absolute_import, print_function
 from abc import ABCMeta, abstractmethod
 from collections import Iterable, OrderedDict
 from contextlib import contextmanager
-
-import numpy as np
 import itertools
+from time import sleep
+
+import matplotlib.pyplot as plt
+import numpy as np
 from six import add_metaclass
 import six
 from .monoid import ListOfMonoids, Monoid, Average, Exact
 from .detector import DetectorManager
 from .fit import Fit, ExactFit
-import time
 
 try:
     # pylint: disable=import-error
@@ -29,7 +30,6 @@ except ImportError:
     # We must be in a test environment
     from .mocks import g
 
-import matplotlib.pyplot as plt
 
 TIME_KEYS = ["frames", "uamps", "seconds", "minutes", "hours"]
 
@@ -96,7 +96,6 @@ class Scan(object):
         if not isinstance(detector, DetectorManager):
             raise ValueError(
                 "fjiosfdjiosfdjisfdjisfdjiosfd {}".format(detector.__class__))
-            detector = DetectorManager(detector)
         return detector
 
     @abstractmethod
@@ -314,6 +313,7 @@ class SimpleScan(Scan):
 
 
 class ContinuousMove(object):
+    """A string to hold the data representing a continuous motion."""
     def __init__(self, start, stop, speed):
         self.start = start
         self.stop = stop
@@ -398,7 +398,7 @@ axis is moving"""
                         self.motion(move.start)
                         while (abs(self.motion() - move.start)
                                > self.motion.tolerance):
-                            time.sleep(0.1)
+                            sleep(0.1)
 
                     with temporarily_change_motor_speed(
                             self.motion, move.speed):
@@ -440,7 +440,7 @@ axis is moving"""
                             # Note: a galil's MAX update frequency is
                             # 40ms so there is no benefit in making
                             # this number smaller than 0.04
-                            time.sleep(0.2)
+                            sleep(0.2)
 
         except KeyboardInterrupt:  # pragma: no cover
             pass
@@ -774,6 +774,14 @@ class ForeverContinuousScan(ContinuousScan):
         while True:
             for move in self.moves:
                 yield move
+
+    def __and__(self, _):
+        raise ValueError(
+            "Cannot safely run continuous scans in parallel.")
+
+    def map(self, _):
+        raise ValueError(
+            "Cannot map over continuous domain.")
 
 
 class ReplayScan(Scan):

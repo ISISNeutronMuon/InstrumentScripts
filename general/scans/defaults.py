@@ -13,7 +13,7 @@ in the middle of a user run when a missing method is called.
 from abc import ABCMeta, abstractmethod
 from six import add_metaclass
 from .scans import SimpleScan
-from .motion import Motion, BlockMotion
+from .motion import normalise_motion
 from .util import get_points, TIME_KEYS
 
 
@@ -125,16 +125,7 @@ class Defaults(object):
         if frames:
             kwargs["frames"] = frames
 
-        if isinstance(motion, Motion):
-            pass
-        elif isinstance(motion, str):
-            motion = BlockMotion(motion)
-        else:
-            raise TypeError(
-                "Cannot run scan on axis {}. Try a string or a motion "
-                "object instead.  It's also possible that you may "
-                "need to rerun populate() to recreate your motion "
-                "axes." .format(motion))
+        motion = normalise_motion(motion)
 
         points = get_points(motion(), **kwargs)
 
