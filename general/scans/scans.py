@@ -376,7 +376,7 @@ class ContinuousScan(Scan):
         return ForeverContinuousScan(self.motion, self.moves, self.defaults)
 
     def plot(self, detector=None, save=None, action=None,
-             update_freq=0.2, **kwargs):
+             update_freq=1.0, **kwargs):
         """Run over a continuous range, plotting every update_freq seconds"""
         # pylint: disable=arguments-differ
         import warnings

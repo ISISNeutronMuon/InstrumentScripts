@@ -19,9 +19,9 @@ from general.scans.util import local_wrapper
 
 class LoqSampleChanger(Defaults):
     """
-    This class represents the default functions for the Larmor instrument.
+    This class represents the default functions for the Loq instrument.
     """
-    detector = BlockDetector("intensity")
+    detector = BlockDetector("sample_changer_scan_intensity")
 
     @staticmethod
     def log_file():
@@ -84,7 +84,7 @@ class LoqSampleChanger(Defaults):
         return "{}()".format(self.__class__.__name__)
 
 
-axis = BlockMotion("axis")
+axis = BlockMotion("sample_changer_scan_axis")
 
 _loq_sample_changer = LoqSampleChanger()
 
