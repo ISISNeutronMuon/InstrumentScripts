@@ -335,7 +335,7 @@ Perform Fits
   Taking a count at theta=1.60 and two theta=0.00
   Taking a count at theta=1.80 and two theta=0.00
   Taking a count at theta=2.00 and two theta=0.00
-  >>> 0.98 <= fit["Centre_of_mass"] <= 1.02
+  >>> 1.07 <= fit["Centre_of_mass"] <= 1.08
   True
 
 
