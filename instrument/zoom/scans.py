@@ -5,31 +5,14 @@ contained in this module
 
 """
 from __future__ import print_function
-try:
-    # pylint: disable=import-error
-    from genie_python import genie as g
-except ImportError:
-    g = None
 from general.scans.defaults import Defaults
-from general.scans.detector import dae_periods
-from general.scans.monoid import Sum
+from general.scans.detector import specific_spectra
 from general.scans.util import local_wrapper
 
 
 def zoom_monitor(spectrum):
     """A generating function for detectors for monitor spectra"""
-    @dae_periods()
-    def monitor(**kwargs):
-        """A simple detector for monitor number {}""".format(spectrum)
-        g.resume()
-        g.waitfor(**kwargs)
-        spec = g.get_spectrum(spectrum)
-        while not spec:
-            spec = g.get_spectrum(spectrum)
-        temp = sum(spec["signal"])
-        g.pause()
-        return Sum(temp)
-    return monitor
+    return specific_spectra([[spectrum]])
 
 
 class Zoom(Defaults):
