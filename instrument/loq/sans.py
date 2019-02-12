@@ -43,11 +43,11 @@ class LOQ(ScanningInstrument):
         ScanningInstrument._generic_scan(
             base+detector, base+spectra, base+wiring, tcbs)
 
-    @dae_setter("SANS", "sans")
+    @dae_setter("SANS/TRANS", "sans")
     def setup_dae_event(self):
         self.setup_dae_histogram()
 
-    @dae_setter("SANS", "sans")
+    @dae_setter("SANS/TRANS", "sans")
     def setup_dae_histogram(self):
         return self._generic_scan(
             detector="detector35576_M4.dat",
