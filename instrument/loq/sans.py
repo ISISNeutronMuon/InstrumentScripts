@@ -11,6 +11,19 @@ pv_origin = "IN:LOQ"  # FIXME
 class LOQ(ScanningInstrument):
     """This class handles the LOQ beamline"""
 
+    def __init__(self):
+        ScanningInstrument.__init__(self)
+        self.setup_sans = self.setup_dae_histogram
+
+    _poslist = ['AB', 'BB', 'CB', 'DB', 'EB', 'FB', 'GB', 'HB', 'IB', 'JB',
+                'KB', 'LB', 'MB', 'NB', 'OB', 'PB', 'QB', 'RB', 'SB', 'TB',
+                'C1B', 'C2B', 'C3B', 'C4B', 'C5B', 'C6B', 'C7B',
+                'C8B', 'C9B', 'C10B', 'C11B', 'C12B', 'C13B', 'C14B',
+                'C1T', 'C2T', 'C3T', 'C4T', 'C5T', 'C6T', 'C7T',
+                'C8T', 'C9T', 'C10T', 'C11T', 'C12T', 'C13T', 'C14T',
+                'W1B', 'W2B', 'W3B', 'W4B', 'W5B', 'W6B', 'W7B', 'W8B',
+                'W9B', 'W10B', 'W11B', 'W12B', 'W13B', 'W14B', 'W15B', 'W16B']
+
     def set_measurement_type(self, value):
         gen.set_pv(pv_origin + ":PARS:SAMPLE:MEAS:TYPE", value)
 
@@ -20,30 +33,31 @@ class LOQ(ScanningInstrument):
     def set_measurement_id(self, value):
         gen.set_pv(pv_origin + ":PARS:SAMPLE:MEAS:ID", value)
 
-    # FIXME
     @staticmethod
     def _generic_scan(  # pylint: disable=dangerous-default-value
             detector, spectra,
-            wiring=r"card.dat",
-            tcbs=[{"low": 5.0, "high": 100000.0, "step": 200.0,
-                   "trange": 1, "log": 0}]):
+            wiring=r"wiring35576_M4.dat",
+            tcbs=[{"low": 3500.0, "high": 43500.0, "step": 0.025,
+                   "log": True}]):
         base = r"C:\Instrument\Settings\config\NDXLOQ\configurations\tables\\"
         ScanningInstrument._generic_scan(
             base+detector, base+spectra, base+wiring, tcbs)
 
     @dae_setter("SANS", "sans")
     def setup_dae_event(self):
-        raise NotImplementedError("LOQ does not support event mode")
+        self.setup_dae_histogram()
 
     @dae_setter("SANS", "sans")
     def setup_dae_histogram(self):
-        raise NotImplementedError(
-            "DAE mode histogram unwritten for LOQ")  # FIXME
+        return self._generic_scan(
+            detector="detector35576_M4.dat",
+            spectra="spectra35576_M4.dat")
 
     @dae_setter("TRANS", "transmission")
     def setup_dae_transmission(self):
-        raise NotImplementedError(
-            "DAE mode transmission unwritten for LOQ")  # FIXME
+        return self._generic_scan(
+            detector="detector35576_M4.dat",
+            spectra="spectra35576_M4.dat")
 
     @dae_setter("SANS", "sans")
     def setup_dae_bsalignment(self):
@@ -51,8 +65,10 @@ class LOQ(ScanningInstrument):
 
     @dae_setter("SCAN", "scan")
     def setup_dae_scanning(self):
-        raise NotImplementedError(
-            "DAE mode scanning unwritten for LOQ")  # FIXME
+        # guess to be the same as histogram
+        return self._generic_scan(
+            detector="detector35576_M4.dat",
+            spectra="spectra35576_M4.dat")
 
     @dae_setter("SCAN", "scan")
     def setup_dae_nr(self):
@@ -63,21 +79,27 @@ class LOQ(ScanningInstrument):
         raise NotImplementedError("LOQ cannot perform reflectometry")
 
     @staticmethod
+    def _move_pos(pos):
+        """Move the sample changer to a labelled position"""
+        return gen.cset(Changer=pos)
+
+    @staticmethod
     def set_aperture(size):
-        if size.upper() == "SMALL":
+        if size == "":
+            pass
+        elif size.upper() == "SMALL":
             gen.cset(Aperture_2="SMALL")
         elif size.upper() == "MEDIUM":
             gen.cset(Aperture_2="MEDIUM")
         elif size.upper() == "LARGE":
             gen.cset(Aperture_2="LARGE")
         else:
-            RuntimeError("Slit size {} is undefined".format(size))
+            raise RuntimeError("Slit size {} is undefined".format(size))
 
     @staticmethod
     def _detector_is_on():
         """Is the detector currently on?"""
-        # FIXME
-        raise NotImplementedError("Detector testing is not supported on LOQ")
+        return gen.get_pv("IN:LOQ:MOXA12XX_02:CH0:AI:RBV") > 2
 
     @staticmethod
     def _detector_turn_on(delay=True):
@@ -93,9 +115,11 @@ class LOQ(ScanningInstrument):
 
     def _configure_sans_custom(self):
         gen.cset(Tx_Mon="OUT")
+        gen.waitfor_move()
 
     def _configure_trans_custom(self):
         gen.cset(Aperture_2="SMALL")
+        gen.waitfor_move()
         gen.cset(Tx_Mon="IN")
 
 
@@ -104,3 +128,30 @@ for method in dir(obj):
     if method[0] != "_" and method not in locals() and \
        callable(getattr(obj, method)):
         locals()[method] = local_wrapper(obj, method)
+
+
+# pylint: disable=invalid-name
+def J1(temperature_1, temperature_2):
+    """Run off Julabo 1"""
+    gen.cset(Julabo_1_Circulator="OFF")
+    gen.cset(Julabo_2_Circulator="OFF")
+    gen.cset(Valve="J1")
+    gen.cset(Julabo_1_Sensor="External")
+    gen.cset(Julabo_2_Sensor="Internal")
+    gen.cset(Internal_Setpoint_1=temperature_1)
+    gen.cset(Internal_Setpoint_2=temperature_2)
+    gen.cset(Julabo_1_Circulator="ON")
+    gen.cset(Julabo_2_Circulator="ON")
+
+
+def J2(temperature_1, temperature_2):
+    """Run off Julabo 2"""
+    gen.cset(Julabo_1_Circulator="OFF")
+    gen.cset(Julabo_2_Circulator="OFF")
+    gen.cset(Valve="J2")
+    gen.cset(Julabo_1_Sensor="Internal")
+    gen.cset(Julabo_2_Sensor="External")
+    gen.cset(Internal_Setpoint_1=temperature_1)
+    gen.cset(Internal_Setpoint_2=temperature_2)
+    gen.cset(Julabo_1_Circulator="ON")
+    gen.cset(Julabo_2_Circulator="ON")
