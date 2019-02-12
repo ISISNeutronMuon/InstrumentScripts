@@ -65,7 +65,9 @@ class LOQ(ScanningInstrument):
 
     @dae_setter("SCAN", "scan")
     def setup_dae_scanning(self):
-        # guess to be the same as histogram
+        # FIXME: LOQ doesn't have a history of scanning, so it's not
+        # certain what mode should be used.  For now, we'll guess it
+        # to be the same as histogram
         return self._generic_scan(
             detector="detector35576_M4.dat",
             spectra="spectra35576_M4.dat")
@@ -77,6 +79,11 @@ class LOQ(ScanningInstrument):
     @dae_setter("SCAN", "scan")
     def setup_dae_nrscanning(self):
         raise NotImplementedError("LOQ cannot perform reflectometry")
+
+    @dae_setter("SANS/TRANS", "sans")
+    def setup_dae_fifty(self):
+        """A dae mode for LOQ at 50 hz."""
+        raise NotImplementedError("DAE mode for 50 Hz unwritten for LOQ")
 
     @staticmethod
     def _move_pos(pos):

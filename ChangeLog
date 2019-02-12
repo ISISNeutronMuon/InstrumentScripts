@@ -1,5 +1,8 @@
 2019-02-12    <adam.washington@stfc.ac.uk>
 
+	* instrument/loq/sans.py (LOQ.setup_dae_fifty): Start adding 50Hz mode to LOQ
+	(LOQ.setup_dae_event): Change LOQ run label to "SANS/TRANS"
+
 	* technique/sans/instrument.py: Add _move_pos function to allow instruments to support sample changer motor axes beyond "SamplePos".
 
 	* Adjust LOQ SANS support based on beamline experience.
