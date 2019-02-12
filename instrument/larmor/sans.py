@@ -316,7 +316,7 @@ class Larmor(ScanningInstrument):  # pylint: disable=too-many-public-methods
             gtotal = get_total()
 
     @staticmethod
-    def set_aperature(size):
+    def set_aperture(size):
         if size.upper() == "MEDIUM":
             gen.cset(a1hgap=20.0, a1vgap=20.0, s1hgap=14.0, s1vgap=14.0)
 
@@ -420,7 +420,7 @@ class Larmor(ScanningInstrument):  # pylint: disable=too-many-public-methods
 
     @staticmethod
     def homea1():
-        """Rehome aperature 1."""
+        """Rehome aperture 1."""
         info("Homing a1")
         gen.cset(a1hgap=40, a1vgap=40)
         Larmor._generic_home_slit("IN:LARMOR:MOT:JAWS2:")

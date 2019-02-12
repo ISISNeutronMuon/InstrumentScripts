@@ -238,15 +238,15 @@ class ScanningInstrument(object):
 
     @staticmethod
     @abstractmethod
-    def set_aperature(size):  # pragma: no cover
-        """Set the beam aperature to the desired size
+    def set_aperture(size):  # pragma: no cover
+        """Set the beam aperture to the desired size
 
         Parameters
         ----------
         size : str
-          The aperature size.  e.g. "Small" or "Medium"
+          The aperture size.  e.g. "Small" or "Medium"
           A blank string (the default value) results in
-          the aperature not being changed."""
+          the aperture not being changed."""
 
     def detector_lock(self, state=None):
         """Query or activate the detector lock
@@ -347,6 +347,11 @@ class ScanningInstrument(object):
             return False
         return True
 
+    @staticmethod
+    def _move_pos(pos):
+        """Move the sample changer to a labelled position"""
+        return gen.cset(SamplePos=pos)
+
     def _setup_measurement(self, trans, blank):
         """Perform all of the software setup for a measurement
 
@@ -373,7 +378,7 @@ class ScanningInstrument(object):
             self._configure_sans_custom()
 
     def measure(self, title, pos=None, thickness=1.0, trans=False,
-                dae=None, blank=False, aperature="", **kwargs):
+                dae=None, blank=False, aperture="", **kwargs):
         """Take a sample measurement.
 
         Parameters
@@ -405,9 +410,9 @@ class ScanningInstrument(object):
           >>> measure("Test", frames=10)
           To get a full list of the supported dae modes, run
           >>> enumerate_dae()
-        aperature : str
-          The aperature size.  e.g. "Small" or "Medium" A blank string
-          (the default value) results in the aperature not being
+        aperture : str
+          The aperture size.  e.g. "Small" or "Medium" A blank string
+          (the default value) results in the aperture not being
           changed.
         blank : bool
           If this sample should be considered a blank/can/solvent measurement
@@ -443,12 +448,12 @@ class ScanningInstrument(object):
         self.set_default_dae(dae, trans)
         self._setup_measurement(trans, blank)
         self.set_measurement_label(title)
-        self.set_aperature(aperature)
+        self.set_aperture(aperture)
         if pos:
             if isinstance(pos, str):
                 if self.check_move_pos(pos=pos):
                     info("Moving to sample changer position {}".format(pos))
-                    gen.cset(SamplePos=pos)
+                    self._move_pos(pos)
                 else:
                     raise RuntimeError(
                         "Position {} does not exist".format(pos))
@@ -479,7 +484,7 @@ class ScanningInstrument(object):
         self._end()
 
     def do_sans(self, title, pos=None, thickness=1.0, dae=None, blank=False,
-                aperature="", **kwargs):
+                aperture="", **kwargs):
         """A wrapper around ``measure`` which ensures that the instrument is
 not in transmission mode
 
@@ -488,11 +493,11 @@ of parameters accepted. """
         if "trans" in kwargs:
             del kwargs["trans"]
         self.measure(title, trans=False, pos=pos, thickness=thickness,
-                     dae=dae, blank=blank, aperature=aperature,
+                     dae=dae, blank=blank, aperture=aperture,
                      **kwargs)
 
     def do_trans(self, title, pos=None, thickness=1.0, dae=None, blank=False,
-                 aperature="", **kwargs):
+                 aperture="", **kwargs):
         """A wrapper around ``measure`` which ensures that the instrument is
 not in transmission mode.
 
@@ -501,7 +506,7 @@ of parameters accepted. """
         if "trans" in kwargs:
             del kwargs["trans"]
         self.measure(title, trans=True, pos=pos, thickness=thickness,
-                     dae=dae, blank=blank, aperature=aperature,
+                     dae=dae, blank=blank, aperture=aperture,
                      **kwargs)
 
     def measure_file(self, file_path, forever=False):

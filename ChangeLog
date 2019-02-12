@@ -1,0 +1,8 @@
+2019-02-12    <adam.washington@stfc.ac.uk>
+
+	* technique/sans/instrument.py: Add _move_pos function to allow instruments to support sample changer motor axes beyond "SamplePos".
+
+	* Adjust LOQ SANS support based on beamline experience.
+
+	* Change all references in SANS scripts from "aperature" to the
+	correctly spelled "aperture".
