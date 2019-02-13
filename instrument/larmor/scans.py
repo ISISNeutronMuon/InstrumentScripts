@@ -72,48 +72,6 @@ def get_user_dir():
 get_user_dir()
 
 
-@dae_periods(setup_dae_scanning, lambda x: 2*len(x))
-def pol_measure(**kwargs):
-    """
-    Get a single polarisation measurement
-    """
-    slices = [slice(222, 666), slice(222, 370), slice(370, 518),
-              slice(518, 666)]
-
-    i = g.get_period()
-
-    g.change(period=i+1)
-    flipper1(1)
-    g.waitfor_move()
-    gfrm = g.get_frames()
-    g.resume()
-    g.waitfor(frames=gfrm+kwargs["frames"])
-    g.pause()
-
-    flipper1(0)
-    g.change(period=i+2)
-    gfrm = g.get_frames()
-    g.resume()
-    g.waitfor(frames=gfrm+kwargs["frames"])
-    g.pause()
-
-    pols = [Polarisation.zero() for _ in slices]
-    for channel in [11, 12]:
-        mon1 = g.get_spectrum(1, i+1)
-        spec1 = g.get_spectrum(channel, i+1)
-        mon2 = g.get_spectrum(1, i+2)
-        spec2 = g.get_spectrum(channel, i+2)
-        for idx, slc in enumerate(slices):
-            ups = Average(
-                np.sum(spec1["signal"][slc])*100.0,
-                np.sum(mon1["signal"])*100.0)
-            down = Average(
-                np.sum(spec2["signal"][slc])*100.0,
-                np.sum(mon2["signal"])*100.0)
-            pols[idx] += Polarisation(ups, down)
-    return MonoidList(pols)
-
-
 @dae_periods()
 def fast_pol_measure(**kwargs):
     """
@@ -141,6 +99,51 @@ def fast_pol_measure(**kwargs):
                 np.sum(mon1["signal"])*100.0)
             pols[idx] += ups
     return MonoidList(pols)
+    
+def generic_pol(spectra, preconfig=lambda : None):
+    """Create a polarised detector object over a list of spectra"""
+    @dae_periods(preconfig, lambda x: 2*len(x))
+    def inner_pol(**kwargs):
+        """
+        Get a single polarisation measurement
+        """
+        slices = [slice(222, 666), slice(222, 370), slice(370, 518),
+                  slice(518, 666)]
+
+        i = g.get_period()
+
+        g.change(period=i+1)
+        flipper1(1)
+        g.waitfor_move()
+        gfrm = g.get_frames()
+        g.resume()
+        g.waitfor(frames=gfrm+kwargs["frames"])
+        g.pause()
+
+        flipper1(0)
+        g.change(period=i+2)
+        gfrm = g.get_frames()
+        g.resume()
+        g.waitfor(frames=gfrm+kwargs["frames"])
+        g.pause()
+
+        pols = [Polarisation.zero() for _ in slices]
+        for channel in spectra:
+            mon1 = g.get_spectrum(1, i+1)
+            spec1 = g.get_spectrum(channel, i+1)
+            mon2 = g.get_spectrum(1, i+2)
+            spec2 = g.get_spectrum(channel, i+2)
+            for idx, slc in enumerate(slices):
+                ups = Average(
+                    np.sum(spec1["signal"][slc])*100.0,
+                    np.sum(mon1["signal"])*100.0)
+                down = Average(
+                    np.sum(spec2["signal"][slc])*100.0,
+                    np.sum(mon2["signal"])*100.0)
+                pols[idx] += Polarisation(ups, down)
+        return MonoidList(pols)
+    return inner_pol
+ 
 
 
 detector_trans = pv_motion("IN:LARMOR:MOT:MTD1501", "DetectorTranslation")
