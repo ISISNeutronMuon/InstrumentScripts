@@ -17,6 +17,7 @@ except ImportError:
     from general.scans.mocks import g
 from general.scans.defaults import Defaults
 from general.scans.detector import dae_periods, specific_spectra
+from general.scans.fit import DampedOscillator
 from general.scans.monoid import Polarisation, Average, MonoidList
 from general.scans.motion import pv_motion
 from general.scans.util import local_wrapper
@@ -149,7 +150,72 @@ def generic_pol(spectra, preconfig=lambda : None):
 detector_trans = pv_motion("IN:LARMOR:MOT:MTD1501", "DetectorTranslation")
 
 _lm = Larmor()
+semsans_pol = generic_pol(range(40971, 41226+1), preconfig=setup_dae_semsans)
+pol_measure = generic_pol([11,12], preconfig=setup_dae_echoscan)
+
 scan = local_wrapper(_lm, "scan")
 ascan = local_wrapper(_lm, "ascan")
 dscan = local_wrapper(_lm, "dscan")
 rscan = local_wrapper(_lm, "rscan")
+
+### Echo Tuning
+
+def auto_tune(axis, **kwargs):
+    """
+    Perform an echo scan on a given instrument parameter, then set
+    the instrument to echo.
+    
+    Parameters
+    ==========
+    axis
+      The motor axis to scan, as a string.  You likely was "Echo_Coil_SP"
+    startval
+      The first value of the scan
+    endval
+      The last value of the scan
+    npoints
+      The number of points for the scan. This is one more than the number of steps
+    frms
+      The number of frames per spin state.  There are ten frames per second
+    rtitle
+      The title of the run.  This is important when the run is saved
+    save
+      If True, save the scan in the log.
+      
+    Returns
+    =======
+    The best fit for the center of the echo value.
+    """
+    g.cset(m4trans=200)
+    g.waitfor_move()
+    fit = scan(axis, fit=DampedOscillator, detector=pol_measure, **kwargs)
+    axis(fit["center"])
+    return True 
+
+def angle_and_tune(theta, scan_range=(5000,7800), l2=1188, pts=37, save=True, mhz=1):
+    """Set the magnet angle and tune the instrument
+    
+    Parameters
+    ==========
+    theta : float
+      The angle for the magnet
+    scan_range : tuple
+      The initial and final coil values.  The values should be in mA
+    pts : int
+      How many data points to measure
+    save : bool
+      Whether to save the run in the journal
+    mhz : float
+      The frequency for the flipping magnets
+    """
+    for retries in range(2):
+        #l2=1188 is the best value for 1 MHz
+        #l2=1179 is the best value for 0.5 MHz
+        #set_poleshoe_angle(theta=theta,l2=l2)
+        ss.set_poleshoe_angle(theta=-theta,l2=l2, MHz=mhz)
+        #set_poleshoe_angle(theta=theta,l2=1179)
+        if ss.theta_near(-theta):
+			break
+            
+    #new_set_pos(2)
+    auto_tune(Echo_Coil_SP, start=scan_range[0], stop=scan_range[1], count=pts, frames=50, title="Echo scan at {} degrees".format(theta), save=save)
