@@ -191,7 +191,7 @@ class Scan(object):
                                                   axis)
         except KeyboardInterrupt:  # pragma: no cover
             pass
-        if save:
+        if isinstance(save, str):
             axis.savefig(save)
 
         return action_remainder

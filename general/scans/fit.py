@@ -287,6 +287,11 @@ class CurveFit(Fit):
         pass
 
     def fit(self, x, y):
+        x = np.array(x)
+        y = np.array(y)
+        mask = np.logical_and(np.isfinite(y), np.isfinite(y))
+        x = x[mask]
+        y = y[mask]
         return curve_fit(self._model, x, y, self.guess(x, y))[0]
 
     def get_y(self, x, fit):

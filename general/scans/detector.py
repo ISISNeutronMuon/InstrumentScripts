@@ -70,6 +70,7 @@ class DaePeriods(DetectorManager):
         kwargs = self._kwargs
         if "title" in kwargs:
             title = kwargs["title"]
+            self._save = True
         else:
             title = "Scan"
         g.change_title(title)
