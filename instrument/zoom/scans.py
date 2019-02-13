@@ -11,9 +11,8 @@ try:
 except ImportError:
     g = None
 from general.scans.defaults import Defaults
-from general.scans.detector import dae_periods, specific_spectra
+from general.scans.detector import specific_spectra
 from general.scans.motion import populate
-from general.scans.monoid import Sum
 from general.scans.util import local_wrapper
 
 
