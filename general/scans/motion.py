@@ -198,13 +198,6 @@ def pv_motion(pv_str, name):
                       "{}.RDBD".format(pv_str)))
 
 
-def pv_motion(pv_str, name):
-    """Create a motion object around a PV string."""
-    return Motion(lambda: g.get_pv(pv_str),
-                  lambda x: g.set_pv(pv_str, x),
-                  name)
-
-
 def populate():
     """Create Motion objects in the GLOBAL namespace for each
     block registered with IBEX."""

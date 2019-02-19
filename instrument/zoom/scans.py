@@ -5,9 +5,9 @@ contained in this module
 
 """
 from __future__ import print_function
+from datetime import datetime
 from general.scans.defaults import Defaults
 from general.scans.detector import specific_spectra
-from general.scans.motion import populate
 from general.scans.util import local_wrapper
 
 
@@ -25,7 +25,6 @@ class Zoom(Defaults):
 
     @staticmethod
     def log_file():
-        from datetime import datetime
         now = datetime.now()
         return "U:/zoom_scan_{}_{}_{}_{}_{}_{}.dat".format(
             now.year, now.month, now.day, now.hour, now.minute, now.second)

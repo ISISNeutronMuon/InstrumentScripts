@@ -92,7 +92,10 @@ class Larmor(ScanningInstrument):  # pylint: disable=too-many-public-methods
                    "trange": 1, "log": 0}])
 
     @dae_setter("SCAN", "scan")
-    def setup_dae_echoscan(self):
+    @staticmethod
+    def setup_dae_echoscan():
+        """Set the wiring tables for performing a spin echo tuning scan.  This
+involves only having two spectra covering the entire main detecor."""
         Larmor._generic_scan(
             spectra=r"C:\Instrument\Settings\Tables\spectra_scanning_12.dat",
             tcbs=[{"low": 5.0, "high": 100000.0, "step": 100.0,
