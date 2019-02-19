@@ -82,7 +82,10 @@ class Average(Monoid):
     def err(self):
         if self.count == 0:
             return np.nan
-        return np.sqrt(self.total)/self.count
+        if self.total == 0:
+            return 0
+        return np.sqrt(self.total**2 / self.count**2
+                       * (1 / self.total + 1 / self.count))
 
     def __str__(self):
         if self.count == 0:
