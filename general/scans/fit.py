@@ -287,6 +287,11 @@ class CurveFit(Fit):
         """
 
     def fit(self, x, y):
+        x = np.array(x)
+        y = np.array(y)
+        mask = np.logical_and(np.isfinite(y), np.isfinite(y))
+        x = x[mask]
+        y = y[mask]
         # raise maxfev to 10,000, this allows scipy to make more function
         # calls, improving the chances of getting a good/correct fit.
         return curve_fit(self._model, x, y, self.guess(x, y), maxfev=10000)[0]

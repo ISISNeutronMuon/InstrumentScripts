@@ -2,7 +2,7 @@
 from technique.sans.instrument import ScanningInstrument
 from technique.sans.genie import gen
 # pylint: disable=unused-import
-from technique.sans.util import dae_setter, user_script  # noqa: F401
+from technique.sans.util import dae_setter  # noqa: F401
 from general.scans.util import local_wrapper
 
 

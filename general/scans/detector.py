@@ -101,6 +101,7 @@ class DaePeriods(DetectorManager):
         kwargs = self._kwargs
         if "title" in kwargs:
             title = kwargs["title"]
+            self._save = True
         else:
             title = "Scan"
         g.change_title(title)
@@ -159,13 +160,15 @@ def specific_spectra(spectra_list, preconfig=lambda: None):
         g.waitfor(**local_kwargs)
         g.pause()
 
+        # Ensure that get_spectrum actually returns a value
         spec = None
         while spec is None:
             spec = g.get_spectrum(1, g.get_period())
-        base = sum(spec["signal"])*100.0
+        base = sum(g.get_spectrum(1, period=g.get_period())["signal"])*100.0
         pols = [Average(0, base) for _ in spectra_list]
         for idx, spectra in enumerate(spectra_list):
             for channel in spectra:
+                # Ensure that get_spectrum actually returns a value
                 spec = None
                 while spec is None:
                     spec = g.get_spectrum(channel, g.get_period())

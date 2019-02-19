@@ -193,7 +193,7 @@ class Scan(object):
                     plt.draw()
         except KeyboardInterrupt:  # pragma: no cover
             pass
-        if save:
+        if isinstance(save, str):
             fig.savefig(save)
 
         return action_remainder
