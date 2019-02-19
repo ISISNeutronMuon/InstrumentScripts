@@ -1,0 +1,23 @@
+2019-02-19    <tomwillemsen1995@gmail.com>
+
+	* instrument/loq/sample_changer_scan.py (LoqSampleChanger): Add
+	the sample changer scan for LOQ.
+
+	* general/scans/scans.py (ContinuousScan): Add ContinuousMove
+	scanning functionality.
+
+	* general/scans/multiplot.py: Remove multiplot code, as this is
+	now handled by IBEX internal plotting.
+
+	* general/scans/motion.py (Motion): Add velocity support to Motion
+	objects.
+
+	* general/scans/monoid.py (Exact): Add an Exact Monoid for values
+	with no uncertainty.
+
+	* general/scans/fit.py: No longer hard code location of the Numpy
+	library for fixing the interrupt handler.
+	(CentreOfMassFit): Add new centre of mass fitting method
+
+	* general/scans/detector.py (BlockDetector): Add BlockDetector for
+	performing scans on black values, instead of detector values.
