@@ -8,6 +8,7 @@ from abc import ABCMeta, abstractmethod
 from sys import platform
 import ctypes
 import os
+import sys
 import numpy as np
 from six import add_metaclass
 from scipy.special import erf  # pylint: disable=no-name-in-module
@@ -27,7 +28,8 @@ if platform == "win32":
         _thread.interrupt_main()
         return 1
 
-    BASEPATH = r"C:\Instrument\Apps\Python\Lib\site-packages\numpy\core"
+    BASEPATH = os.path.join(os.path.dirname(sys.executable), "Lib",
+                            "site-packages", "numpy", "core")
     ctypes.CDLL(os.path.join(BASEPATH, "libmmd.dll"))
     ctypes.CDLL(os.path.join(BASEPATH, "libifcoremd.dll"))
     routine = ctypes.WINFUNCTYPE(ctypes.c_int, ctypes.c_uint)(handler)
@@ -98,7 +100,7 @@ class Fit(object):
         -------
         A function to call in the plotting loop
         """
-        def action(x, y, fig):
+        def action(x, y, axis):
             """Fit and plot the data within the plotting loop
 
             Parameters
@@ -107,8 +109,8 @@ class Fit(object):
               The x positions measured thus far
             y : Array of Float
               The y positions measured thus far
-            fig : matplotlib.figure.Figure
-              The figure on which to plot
+            axis : matplotlib.axis.Axis
+              The axis on which to plot
 
             Returns
             -------
@@ -130,17 +132,17 @@ class Fit(object):
                         params.append(None)
                         continue
                     fity = self.get_y(plot_x, params[-1])
-                    fig.plot(plot_x, fity, "-",
-                             label="{} fit".format(self.title(params[-1])))
+                    axis.plot(plot_x, fity, "-",
+                              label="{} fit".format(self.title(params[-1])))
             else:
                 try:
                     params = self.fit(x, values)
                 except RuntimeError:
                     return None
                 fity = self.get_y(plot_x, params)
-                fig.plot(plot_x, fity, "-",
-                         label="{} fit".format(self.title(params)))
-            fig.legend()
+                axis.plot(plot_x, fity, "-",
+                          label="{} fit".format(self.title(params)))
+            axis.legend()
             return params
         return action
 
@@ -275,7 +277,6 @@ class CurveFit(Fit):
         """
         This is the mathematical model to be fit by the subclass
         """
-        pass
 
     @staticmethod
     @abstractmethod
@@ -284,7 +285,6 @@ class CurveFit(Fit):
         Given a set of x and y values, make a guess as to the initial
         parameters of the fit.
         """
-        pass
 
     def fit(self, x, y):
         x = np.array(x)
@@ -292,7 +292,9 @@ class CurveFit(Fit):
         mask = np.logical_and(np.isfinite(y), np.isfinite(y))
         x = x[mask]
         y = y[mask]
-        return curve_fit(self._model, x, y, self.guess(x, y))[0]
+        # raise maxfev to 10,000, this allows scipy to make more function
+        # calls, improving the chances of getting a good/correct fit.
+        return curve_fit(self._model, x, y, self.guess(x, y), maxfev=10000)[0]
 
     def get_y(self, x, fit):
         return self._model(x, *fit)
@@ -315,7 +317,6 @@ class GaussianFit(CurveFit):
         This is the model for a gaussian with the mean at center, a
         standard deviation of sigma, and a peak of amplitude over a base of
         background.
-
         """
         return background + amplitude * np.exp(-((xs - cen) / sigma /
                                                  np.sqrt(2)) ** 2)
@@ -472,6 +473,100 @@ class TopHatFit(CurveFit):
         return "Top Hat at {center:.3g} of width {width:.3g}".format(**params)
 
 
+class CentreOfMassFit(Fit):
+    """
+    A fit that calculates the 'centre of mass' of a peak over a background.
+
+    The algorithm implemented by this class is as follows:
+        - Take the minimum Y value as the background, and subtract this from
+        all y values
+        - Interpolate X and Y values so that all points are continuously spaced
+        across the range we're interested in
+        - Find the average X position, weighted by the corresponding Y value
+
+    If the fit fails (for example, no data was provided) then NaN is returned
+    as the centre of mass.
+
+    The interpolation is needed because otherwise the point density may not be
+    constant.
+    """
+    def __init__(self):
+        Fit.__init__(self, degree=1, title="Centre of mass")
+        import warnings
+        warnings.simplefilter("ignore", RuntimeWarning)
+
+    def fit(self, x, y):
+        if not x or not y:
+            return [np.nan]
+
+        raw_data = np.array([
+            (float(x_point), float(y_point))
+            for x_point, y_point in zip(x, y)])
+
+        # Sort data to ascending x (keeping the Y values with their associated
+        # X values).
+        sorted_data = sorted(raw_data, key=lambda row: row[0])
+
+        sorted_x = np.array([i[0] for i in sorted_data])
+        sorted_y = np.array([i[1] for i in sorted_data])
+
+        # Re-bin the points so that we have the same number of points,
+        # but evenly spaced over the interval [min(data), max(data)]
+        # Interpolate values in-between where necessary.
+        interpolated_x = np.array(np.linspace(
+            np.min(x), np.max(x), len(raw_data)))
+
+        interpolated_y = np.interp(interpolated_x, sorted_x, sorted_y)
+
+        # Subtract background (assumed to be the minimum Y value)
+        # pylint: disable=len-as-condition
+        if len(interpolated_x) == 0 or len(interpolated_y) == 0:
+            return [np.nan]
+
+        interpolated_y -= np.min(interpolated_y)
+
+        # Calculate "centre of mass"
+        centre_of_mass = np.sum(
+            interpolated_x * interpolated_y) / np.sum(interpolated_y)
+
+        return [centre_of_mass]
+
+    def get_y(self, x, fit):
+        return np.zeros(len(x))
+
+    def title(self, params):
+        return "Centre of mass = {}".format(params[0])
+
+    def readable(self, fit):
+        return {"Centre_of_mass": fit[0]}
+
+    def fit_plot_action(self):
+        def action(x, y, axis):
+            """Fit and plot the data within the plotting loop
+
+            Parameters
+            ----------
+            x : Array of Float
+              The x positions measured thus far
+            y : Array of Float
+              The y positions measured thus far
+            axis : matplotlib.axis.Axis
+              The axis on which to plot
+
+            Returns
+            -------
+            line : None or dict
+                Either None if the fit is not possible or a dict of the fit
+                parameters if the fit was performed
+
+            """
+            params = self.fit(x, y)
+            axis.axvline(x=params[0])
+            axis.legend([self.title(params)])
+            return params
+        return action
+
+
 #: A linear regression
 Linear = PolyFit(1, title="Linear")
 
@@ -486,5 +581,7 @@ TopHat = TopHatFit()
 
 ExactPoints = ExactFit()
 
+CentreOfMass = CentreOfMassFit()
+
 __all__ = ["PolyFit", "Linear", "Gaussian", "DampedOscillator", "PeakFit",
-           "Erf", "TopHat", "ExactPoints"]
+           "Erf", "TopHat", "ExactPoints", "CentreOfMass"]

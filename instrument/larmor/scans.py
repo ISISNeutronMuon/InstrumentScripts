@@ -23,7 +23,7 @@ from general.scans.motion import pv_motion
 from general.scans.util import local_wrapper
 # pylint: disable=no-name-in-module
 from instrument.larmor.sans import setup_dae_transmission, setup_dae_semsans
-from instrument.larmor.sans import setup_dae_echoscan
+from instrument.larmor.sans import setup_dae_echoscan, setup_dae_scanning
 from instrument.larmor.SESANSroutines import set_poleshoe_angle, theta_near
 from .util import flipper1
 
@@ -75,8 +75,8 @@ def get_user_dir():
 get_user_dir()
 
 
-@dae_periods()
-def fast_pol_measure(**kwargs):
+@dae_periods(setup_dae_scanning, lambda x: 2*len(x))
+def pol_measure(**kwargs):
     """
     Get a single polarisation measurement
     """
@@ -86,13 +86,21 @@ def fast_pol_measure(**kwargs):
     i = g.get_period()
 
     g.change(period=i+1)
+    flipper1(1)
     g.waitfor_move()
     gfrm = g.get_frames()
     g.resume()
     g.waitfor(frames=gfrm+kwargs["frames"])
     g.pause()
 
-    pols = [Average.zero() for _ in slices]
+    flipper1(0)
+    g.change(period=i+2)
+    gfrm = g.get_frames()
+    g.resume()
+    g.waitfor(frames=gfrm+kwargs["frames"])
+    g.pause()
+
+    pols = [Polarisation.zero() for _ in slices]
     for channel in [11, 12]:
         mon1 = g.get_spectrum(1, i+1)
         spec1 = g.get_spectrum(channel, i+1)
@@ -148,6 +156,8 @@ def generic_pol(spectra, preconfig=lambda: None):
         return MonoidList(pols)
     return inner_pol
 
+
+detector_trans = pv_motion("IN:LARMOR:MOT:MTD1501", "DetectorTranslation")
 
 detector_trans = pv_motion("IN:LARMOR:MOT:MTD1501", "DetectorTranslation")
 

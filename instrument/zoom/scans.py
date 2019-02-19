@@ -5,15 +5,15 @@ contained in this module
 
 """
 from __future__ import print_function
-try:
-    # pylint: disable=import-error
-    from genie_python import genie as g
-except ImportError:
-    g = None
 from general.scans.defaults import Defaults
 from general.scans.detector import specific_spectra
 from general.scans.motion import populate
 from general.scans.util import local_wrapper
+
+
+def zoom_monitor(spectrum):
+    """A generating function for detectors for monitor spectra"""
+    return specific_spectra([[spectrum]])
 
 
 class Zoom(Defaults):
@@ -39,7 +39,10 @@ scan = local_wrapper(_zm, "scan")
 ascan = local_wrapper(_zm, "ascan")
 dscan = local_wrapper(_zm, "dscan")
 rscan = local_wrapper(_zm, "rscan")
-populate()
-monitor2 = specific_spectra([[2]])
-monitor3 = specific_spectra([[3]])
-monitor4 = specific_spectra([[4]])
+
+print("Remember to populate")
+monitor1 = zoom_monitor(1)
+monitor2 = zoom_monitor(2)
+monitor3 = zoom_monitor(3)
+monitor4 = zoom_monitor(4)
+monitor5 = zoom_monitor(5)

@@ -9,19 +9,6 @@ from general.scans.util import local_wrapper
 class Zoom(ScanningInstrument):
     """This class handles the Zoom beamline"""
 
-    _poslist = ['AB', 'BB', 'CB', 'DB', 'EB', 'FB', 'GB', 'HB', 'IB', 'JB',
-                'KB', 'LB', 'MB', 'NB', 'OB', 'PB', 'QB', 'RB', 'SB', 'TB',
-                'AT', 'BT', 'CT', 'DT', 'ET', 'FT', 'GT', 'HT', 'IT', 'JT',
-                'KT', 'LT', 'MT', 'NT', 'OT', 'PT', 'QT', 'RT', 'ST', 'TT',
-                '1CB', '2CB', '3CB', '4CB', '5CB', '6CB', '7CB',
-                '8CB', '9CB', '10CB', '11CB', '12CB', '13CB', '14CB',
-                '1CT', '2CT', '3CT', '4CT', '5CT', '6CT', '7CT',
-                '8CT', '9CT', '10CT', '11CT', '12CT', '13CT', '14CT',
-                '1WB', '2WB', '3WB', '4WB', '5WB', '6WB', '7WB',
-                '8WB', '9WB', '10WB', '11WB', '12WB', '13WB', '14WB',
-                '1WT', '2WT', '3WT', '4WT', '5WT', '6WT', '7WT',
-                '8WT', '9WT', '10WT', '11WT', '12WT', '13WT', '14WT']
-
     def set_measurement_type(self, value):
         gen.set_pv("IN:ZOOM:PARS:SAMPLE:MEAS:TYPE", value)
 
@@ -57,21 +44,23 @@ class Zoom(ScanningInstrument):
     @dae_setter("SANS", "sans")
     def setup_dae_event(self):
         self._generic_scan(
-            r"spec2det_280318_to_test_18_1.txt",
-            r"wiring1det_event_200218.dat")
+            detector=r"detector_1det_1dae3card.dat",
+            spectra=r"spec2det_280318_to_test_18_1.txt",
+            wiring=r"wiring1det_event_200218.dat")
 
     @dae_setter("SANS", "sans")
     def setup_dae_histogram(self):
         self._generic_scan(
-            r"spec2det_130218.txt",
-            r"wiring1det_histogram_200218.dat")
+            detector=r"detector_1det_1dae3card.dat",
+            spectra=r"spec2det_130218.txt",
+            wiring=r"wiring1det_histogram_200218.dat")
 
     @dae_setter("TRANS", "transmission")
     def setup_dae_transmission(self):
         self._generic_scan(
-            r"spectrum_8mon_1dae3card_00.dat",
-            r"wiring_8mon_1dae3card_00_hist.dat",
-            r"detector_8mon_1dae3card_00.dat")
+            spectra=r"spectrum_8mon_1dae3card_00.dat",
+            wiring=r"wiring_8mon_1dae3card_00_hist.dat",
+            detector=r"detector_8mon_1dae3card_00.dat")
 
     @dae_setter("SANS", "sans")
     def setup_dae_bsalignment(self):

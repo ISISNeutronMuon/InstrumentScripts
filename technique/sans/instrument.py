@@ -8,7 +8,7 @@ any generic scripts.
 
 """
 
-from abc import ABCMeta, abstractmethod, abstractproperty
+from abc import ABCMeta, abstractmethod
 from logging import info, warning
 from six import add_metaclass
 from .genie import gen
@@ -102,11 +102,18 @@ class ScanningInstrument(object):
             gen.change_tcb(**tcb)
         gen.change_finish()
 
-    @abstractproperty
-    def _poslist(self):  # pragma: no cover
-        """The list of named positions that the instrument can run through in
-        the sample changer"""
-        return []
+    _poslist = ['AB', 'BB', 'CB', 'DB', 'EB', 'FB', 'GB', 'HB', 'IB', 'JB',
+                'KB', 'LB', 'MB', 'NB', 'OB', 'PB', 'QB', 'RB', 'SB', 'TB',
+                'AT', 'BT', 'CT', 'DT', 'ET', 'FT', 'GT', 'HT', 'IT', 'JT',
+                'KT', 'LT', 'MT', 'NT', 'OT', 'PT', 'QT', 'RT', 'ST', 'TT',
+                '1CB', '2CB', '3CB', '4CB', '5CB', '6CB', '7CB',
+                '8CB', '9CB', '10CB', '11CB', '12CB', '13CB', '14CB',
+                '1CT', '2CT', '3CT', '4CT', '5CT', '6CT', '7CT',
+                '8CT', '9CT', '10CT', '11CT', '12CT', '13CT', '14CT',
+                '1WB', '2WB', '3WB', '4WB', '5WB', '6WB', '7WB',
+                '8WB', '9WB', '10WB', '11WB', '12WB', '13WB', '14WB',
+                '1WT', '2WT', '3WT', '4WT', '5WT', '6WT', '7WT',
+                '8WT', '9WT', '10WT', '11WT', '12WT', '13WT', '14WT']
 
     @staticmethod
     def _needs_setup():
@@ -127,7 +134,6 @@ class ScanningInstrument(object):
         value stored in the journal for the next run, which should be
         set to the new value.
         """
-        pass  # pragma: no cover
 
     @abstractmethod
     def set_measurement_label(self, value):  # pragma: no cover
@@ -143,7 +149,6 @@ class ScanningInstrument(object):
         value stored in the journal for the next run, which should be
         set to the new value.
         """
-        pass  # pragma: no cover
 
     @abstractmethod
     def set_measurement_id(self, value):  # pragma: no cover
@@ -159,44 +164,36 @@ class ScanningInstrument(object):
         value stored in the journal for the next run, which should be
         set to the new value.
         """
-        pass
 
     @abstractmethod
     def setup_dae_scanning(self):  # pragma: no cover
         """Set the wiring tables for a scan"""
-        pass
 
     @abstractmethod
     def setup_dae_nr(self):  # pragma: no cover
         """Set the wiring tables for a neutron
         reflectivity measurement"""
-        pass
 
     @abstractmethod
     def setup_dae_nrscanning(self):  # pragma: no cover
         """Set the wiring tables for performing
         scans during neutron reflectivity"""
-        pass
 
     @abstractmethod
     def setup_dae_event(self):  # pragma: no cover
         """Set the wiring tables for event mode"""
-        pass
 
     @abstractmethod
     def setup_dae_histogram(self):  # pragma: no cover
         """Set the wiring tables for histogram mode"""
-        pass
 
     @abstractmethod
     def setup_dae_transmission(self):  # pragma: no cover
         """Set the wiring tables for a transmission measurement"""
-        pass
 
     @abstractmethod
     def setup_dae_bsalignment(self):  # pragma: no cover
         """Configure wiring tables for beamstop alignment."""
-        pass
 
     def _configure_sans_custom(self):
         """The specific actions required by the instrument
@@ -207,7 +204,6 @@ class ScanningInstrument(object):
         overwritten by other instruments to perform any actions they
         need to put the instrument into SANS mode.
         """
-        pass
 
     def _configure_trans_custom(self):
         """The specific actions required by the instrument
@@ -218,7 +214,6 @@ class ScanningInstrument(object):
         overwritten by other instruments to perform any actions they
         need to put the instrument into SANS mode.
         """
-        pass
 
     def _begin(self, *args, **kwargs):
         """Start a measurement."""
@@ -252,7 +247,6 @@ class ScanningInstrument(object):
           The aperature size.  e.g. "Small" or "Medium"
           A blank string (the default value) results in
           the aperature not being changed."""
-        pass
 
     def detector_lock(self, state=None):
         """Query or activate the detector lock

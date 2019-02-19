@@ -153,7 +153,6 @@ Plot Motor Scan
 	    ...
 	    RuntimeError: Unable to build a scan with that set of options.
 
-
 Motor Objects
 -------------
 
@@ -199,7 +198,19 @@ Motor Objects
   Traceback (most recent call last):
       ...
   RuntimeError: Position 2.5 is above upper limit 2 of motor Theta
+
   >>> theta.high = None
+
+  Motor objects can also get and set the velocity of a motor:
+
+  >>> theta.velocity = 20
+  >>> theta.velocity
+  20
+
+  And find out about the tolerance of a motor:
+
+  >>> theta.tolerance
+  0
 
   If there is no Motion object for a specific axis, the user can give
   the name in a string and use that.  If the axis isn't a string or a
@@ -213,16 +224,21 @@ Motor Objects
   Taking a count at theta=6.00 and two theta=0.00
   Taking a count at theta=8.00 and two theta=0.00
   Taking a count at theta=10.00 and two theta=0.00
+
   >>> scan("theta", start=0, stop=10, stride=2, frames=5)
   Traceback (most recent call last):
       ...
   RuntimeError: Unknown block theta.  Does the capitalisation match IBEX?
+
   >>> scan(True, start=0, stop=10, count=5) # doctest: +NORMALIZE_WHITESPACE
   Traceback (most recent call last):
       ...
   TypeError: Cannot run scan on axis True. Try a string or a motion
   object instead.  It's also possible that you may need to rerun
   populate() to recreate your motion axes.
+
+  The block needs to point at the underlying motor, e.g. `MOT:MTR0101`, 
+  and not an axis PV.
 
 Perform Fits
 ------------
@@ -303,6 +319,52 @@ Perform Fits
   .. figure:: peak.png
      :alt: Fitting a peak
 
+  An alternative 'fitting' method is a "centre of mass" fit. For a set of
+  data points (x, y) it calculates the centre of mass as sum(x*y)/sum(y).
+  The background is subtracted before this calculation is done.
+
+  >>> fit = scan(theta, start=0, stop=2, count=11, fit=CentreOfMass, frames=5, save="centre_of_mass.png")
+  Taking a count at theta=0.00 and two theta=0.00
+  Taking a count at theta=0.20 and two theta=0.00
+  Taking a count at theta=0.40 and two theta=0.00
+  Taking a count at theta=0.60 and two theta=0.00
+  Taking a count at theta=0.80 and two theta=0.00
+  Taking a count at theta=1.00 and two theta=0.00
+  Taking a count at theta=1.20 and two theta=0.00
+  Taking a count at theta=1.40 and two theta=0.00
+  Taking a count at theta=1.60 and two theta=0.00
+  Taking a count at theta=1.80 and two theta=0.00
+  Taking a count at theta=2.00 and two theta=0.00
+  >>> 1.07 <= fit["Centre_of_mass"] <= 1.08
+  True
+
+
+Replaying Scans
+---------------
+
+It's fairly common to only realise that you should be fitting data
+*after* starting a scan.  Thankfully,
+:meth:`general.scans.scan.last_scan` allows you to replay the results
+of the previous measurement and perform fits on it.
+
+>>> from general.scans.scans import last_scan
+>>> fit = last_scan().fit(Gaussian, save="replay.png")
+>>> abs(fit["center"] - 1.0) < 0.2
+True
+
+  .. image:: replay.png
+     :alt: A repeat of the previous scan with a fit added over the top
+
+If you want to run an older scan, it's also possible to select the
+saved results of a scan file and load it instead.
+
+>>> fit = last_scan("mock_scan_02.dat").fit(Gaussian, save="replay2.png")
+>>> abs(fit["center"] - 1.0) < 0.2
+True
+
+
+  .. image:: replay2.png
+     :alt: A repeat of the of a much earlier scan
 
 Perform complex scans
 ---------------------
@@ -403,6 +465,35 @@ Perform complex scans
   improving the statistics until the use manually kills the scan.
 
   >>> scan(theta, start=0, stop=1, stride=0.5).forever.fit(Gaussian, frames=5) #doctest: +SKIP
+
+
+Perform continuous scans
+------------------------
+
+  The scans library has some ability to perform continuous scans. That
+  is, the motor will keep moving at a set speed while data is being taken. This
+  is implemented by polling the motor for it's position at a frequency (by
+  default, 5Hz) while the move is in progress.
+
+  Continuous scans currently have some limitations - for example, they can
+  only be combined with each other, and not with other non-continuous scans.
+
+  Instead of taking a set of points, a continuous scan takes a collection of
+  `ContinuousMove` objects:
+
+  >>> from general.scans.scans import ContinuousMove
+  >>> ContinuousMove(start=-5, stop=5, speed=0.05)
+  Continuous move from -5 to 5 at speed 0.05
+
+  When using continuous scans, the detector function should ideally return
+  quickly. For example, reading the value of a block is suitable, but beginning
+  a run is unlikely to be suitable except for very slow scans.
+
+  Continuous scans can be combined with each other (using python's `+` operator)
+  and reversed using the `.and_back` property just like step scans. They can
+  also be run forever using the `.forever` property. However, combinations of
+  step and continuous scans are currently not implemented.
+
 
 Estimate time
 -------------

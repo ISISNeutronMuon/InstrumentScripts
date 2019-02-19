@@ -11,10 +11,14 @@ treated as private.
 from __future__ import absolute_import, print_function
 from abc import ABCMeta, abstractmethod
 from collections import Iterable, OrderedDict
+from contextlib import contextmanager
+import time
+import six
 import numpy as np
 from six import add_metaclass
-import six
-from .monoid import ListOfMonoids, Monoid
+import matplotlib.pyplot as plt
+
+from .monoid import ListOfMonoids, Monoid, Average, Exact
 from .detector import DetectorManager
 from .fit import Fit, ExactFit
 
@@ -24,8 +28,6 @@ try:
 except ImportError:
     # We must be in a test environment
     from .mocks import g
-from .multiplot import NBPlot
-from .monoid import Average
 
 TIME_KEYS = ["frames", "uamps", "seconds", "minutes", "hours"]
 
@@ -98,23 +100,19 @@ class Scan(object):
         """The map function returns a modified scan that performs the given
         function on all of the original positions to return the new positions.
         """
-        pass
 
     @property
     @abstractmethod
     def reverse(self):
         """Create a new scan that runs in the opposite direction"""
-        pass
 
     @abstractmethod
     def min(self):
         """Find the smallest point in a scan"""
-        pass
 
     @abstractmethod
     def max(self):
         """Find the largest point in a scan"""
-        pass
 
     def __iter__(self):
         pass
@@ -153,7 +151,9 @@ class Scan(object):
         warnings.simplefilter("ignore", UserWarning)
 
         detector = self._normalise_detector(detector)
-        axis = NBPlot()
+
+        fig, axis = plt.subplots()
+        plt.show()
 
         xs = []
         ys = ListOfMonoids()
@@ -161,7 +161,7 @@ class Scan(object):
         action_remainder = None
         try:
             with open(self.defaults.log_file(), "w") as logfile, \
-                 detector(self, save, **kwargs) as detect:
+                 detector(self, save=save, **kwargs) as detect:
                 for x in self:
                     # FIXME: Handle multidimensional plots
                     (label, position) = next(iter(x.items()))
@@ -173,7 +173,8 @@ class Scan(object):
                     else:
                         xs.append(position)
                         ys.append(value)
-                    logfile.write("{}\t{}\n".format(xs[-1], str(ys[-1])))
+                    logfile.write("{}\t{}\t{}\n".format(xs[-1], str(ys[-1]),
+                                                        str(ys[-1].err())))
                     axis.clear()
                     axis.set_xlabel(label)
                     if isinstance(self.min(), tuple):
@@ -189,10 +190,11 @@ class Scan(object):
                     if action:
                         action_remainder = action(xs, ys,
                                                   axis)
+                    plt.draw()
         except KeyboardInterrupt:  # pragma: no cover
             pass
         if isinstance(save, str):
-            axis.savefig(save)
+            fig.savefig(save)
 
         return action_remainder
 
@@ -225,13 +227,17 @@ class Scan(object):
 
         result = self.plot(action=fit.fit_plot_action(), **kwargs)
 
-        if isinstance(result[0], Iterable) and not isinstance(fit, ExactFit):
+        if result is None:
+            raise RuntimeError(
+                "Could not get result from plot. Perhaps the fit failed?")
+        elif isinstance(result[0], Iterable) and not isinstance(fit, ExactFit):
             result = np.array([x for x in result if x is not None])
             result = np.median(result, axis=0)
 
         return fit.readable(result)
 
     def calculate(self, time=False, pad=0, **kwargs):
+        # pylint: disable=redefined-outer-name
         """Calculate the expected time needed to perform a scan.
         Additionally, print the expected time of completion.
 
@@ -256,6 +262,7 @@ class Scan(object):
 
 class SimpleScan(Scan):
     """SimpleScan is a scan along a single axis for a fixed set of values"""
+
     def __init__(self, action, values, defaults):
         self.action = action
         self.values = values
@@ -299,8 +306,211 @@ class SimpleScan(Scan):
                                                repr(self.defaults))
 
 
+class ContinuousMove(object):
+    """
+    An object representing a continuous move from start to stop at a constant
+    speed.
+    """
+    def __init__(self, start, stop, speed):
+        self.start = start
+        self.stop = stop
+        self.speed = speed
+
+    def __repr__(self):
+        return "Continuous move from {} to {} at speed {}".format(
+            self.start, self.stop, self.speed)
+
+
+@contextmanager
+def temporarily_change_motor_speed(motion, temporary_speed):
+    """
+    Context manager to temporarily change motor velocity, and put it back on
+    exit.
+
+    Args:
+        motion: the motion object
+        temporary_speed: the temporary speed to set within this context manager
+    """
+    old_speed = motion.velocity
+    try:
+        motion.velocity = temporary_speed
+        yield
+    finally:
+        motion.velocity = old_speed
+
+
+class ContinuousScan(Scan):
+    """A continuous scan that starts motion and then collects while the axis is
+    moving"""
+
+    def __init__(self, motion, moves, defaults):
+        """
+        Initialize a continuous scan object
+
+        Args:
+            motion: the axis to move
+            moves: a list of ContinuousMove objects describing the motion to be
+            performed.
+            defaults: the defaults class to use when constructing this scan.
+        """
+        Scan.__init__(self)
+        self.motion = motion
+        self.moves = moves
+
+        for move in self.moves:
+            if abs(move.start - move.stop) <= 0.005:
+                raise ValueError("Cannot have start={} and stop={} within "
+                                 "motor tolerance of each other (tol={})")
+
+        self.defaults = defaults
+
+    @property
+    def forever(self):
+        """
+        Create a scan that will cycle until stopped by the user.
+        """
+        return ForeverContinuousScan(self.motion, self.moves, self.defaults)
+
+    def plot(self, detector=None, save=None, action=None,
+             update_freq=1.0, **kwargs):
+        """Run over a continuous range, plotting every update_freq seconds"""
+        # pylint: disable=arguments-differ
+        import warnings
+        warnings.simplefilter("ignore", UserWarning)
+
+        detector = self._normalise_detector(detector)
+        fig, axis = plt.subplots()
+        plt.show()
+
+        xs = []
+        ys = ListOfMonoids()
+
+        action_remainder = None
+
+        try:
+            with open(self.defaults.log_file(), "w") as logfile, \
+                    detector(self, save=save, **kwargs) as detect:
+
+                for move in self:
+                    # Set initial motor position to correct value.
+                    if abs(self.motion() - move.start) > self.motion.tolerance:
+                        self.motion(move.start)
+                        while abs(self.motion() - move.start) > \
+                                self.motion.tolerance:
+                            time.sleep(update_freq)
+
+                    with temporarily_change_motor_speed(self.motion,
+                                                        move.speed):
+
+                        self.motion(move.stop)
+
+                        while abs(self.motion() - move.stop) > \
+                                self.motion.tolerance:
+
+                            position, value = self.motion(), Exact(
+                                detect(**just_times(kwargs)))
+
+                            xs.append(position)
+                            ys.append(value)
+
+                            logfile.write("{}\t{}\n".format(xs[-1],
+                                                            str(ys[-1])))
+                            axis.clear()
+
+                            if isinstance(self.min(), tuple):
+                                rng = [1.05 * self.min()[0] -
+                                       0.05 * self.max()[0],
+
+                                       1.05 * self.max()[0] -
+                                       0.05 * self.min()[0]]
+                            else:
+                                rng = [1.05 * self.min() - 0.05 * self.max(),
+                                       1.05 * self.max() - 0.05 * self.min()]
+                            axis.set_xlim(rng[0], rng[1])
+                            rng = _plot_range(ys)
+                            axis.set_ylim(rng[0], rng[1])
+                            ys.plot(axis, xs)
+                            if action:
+                                action_remainder = action(xs, ys, axis)
+
+                            plt.draw()
+
+                            # If we plot in a tight loop, matplotlib can't keep
+                            # up. Taking data at 5Hz during the move seems the
+                            # right balance of "continuous" and "pragmatic"
+                            #
+                            # Note: a galil's MAX update frequency is 40ms so
+                            # there is no benefit in making this number smaller
+                            # than 0.04
+                            time.sleep(update_freq)
+
+        except KeyboardInterrupt:  # pragma: no cover
+            pass
+
+        if save:
+            fig.savefig(save)
+
+        return action_remainder
+
+    def map(self, func):
+        # The mapping function translates positions. What do we do about speed?
+        # Keep it constant, so the scan time changes, or keep the scan time
+        # constant?
+        # What are the implications of either approach? Until there is a clear
+        # use case I think leaving this behaviour undefined is sensible.
+        raise ValueError(
+            "Mapping a continuous scan is not yet supported.")
+
+    def min(self):
+        return min(min(move.start, move.stop) for move in self.moves)
+
+    def max(self):
+        return max(max(move.start, move.stop) for move in self.moves)
+
+    @property
+    def reverse(self):
+        moves = [ContinuousMove(start=move.stop, stop=move.start,
+                                speed=move.speed) for move in self][::-1]
+        return ContinuousScan(self.motion, moves=moves, defaults=self.defaults)
+
+    def __len__(self):
+        # Slightly different meaning - this is the number of continuous moves
+        # that this scan will perform not the number of points at which data
+        # will be taken. This meaning seems to make the most sense given the
+        # existing framework.
+        return len(self.moves)
+
+    def __iter__(self):
+        for move in self.moves:
+            yield move
+
+    def __add__(self, other):
+        if not isinstance(other, self.__class__):
+            # We probably could do this in the future, but this would need a
+            # bigger refactoring so that Continuous moves and points could be
+            # added together in the same list.
+            raise ValueError("Adding a continuous and non-continuous scan "
+                             "together is not supported.")
+        return ContinuousScan(
+            self.motion, self.moves + other.moves, self.defaults)
+
+    def __mul__(self, other):
+        raise ValueError("Products of continuous scans are not supported.")
+
+    def __and__(self, other):
+        # We can't execute two continuous scans in parallel without changing
+        # speeds. This raises lots of questions so leave the behaviour
+        # undefined for now.
+        raise ValueError(
+            "Executing continuous scans in parallel is not supported.")
+
+    def __repr__(self):
+        return self.__class__.__name__
+
+
 class SumScan(Scan):
     """The SumScan performs two separate scans sequentially"""
+
     def __init__(self, first, second):
         self.first = first
         self.second = second
@@ -341,6 +551,7 @@ class SumScan(Scan):
 class ProductScan(Scan):
     """ProductScan performs every possible combination of the positions of
     its two constituent scans."""
+
     def __init__(self, outer, inner):
         self.outer = outer
         self.inner = inner
@@ -378,6 +589,7 @@ class ProductScan(Scan):
 
     def plot(self, detector=None, save=None,
              action=None, **kwargs):
+        # pylint: disable=too-many-locals
         """An overloading of Scan.plot to handle multidimensional
         scans."""
         import warnings
@@ -388,7 +600,9 @@ class ProductScan(Scan):
                                " Current state is: " + str(g.get_runstate()))
 
         detector = self._normalise_detector(detector)
-        axis = NBPlot()
+
+        fig, axis = plt.subplots()
+        plt.show()
 
         xs = []
         ys = []
@@ -419,7 +633,8 @@ class ProductScan(Scan):
                         values[ys.index(y)][xs.index(x)] += value
                     else:
                         values[ys.index(y)][xs.index(x)] = value
-                    logfile.write("{}\t{}\n".format(xs[-1], str(values[-1])))
+                    logfile.write(
+                        "{}\t{}\n".format(xs[-1], str(values[-1])))
                     axis.clear()
                     axis.set_xlabel(keys[1])
                     axis.set_ylabel(keys[0])
@@ -441,10 +656,11 @@ class ProductScan(Scan):
                     if action:
                         action_remainder = action(xs, values,
                                                   axis)
+                    plt.draw()
         except KeyboardInterrupt:
             pass
         if save:
-            axis.savefig(save)
+            fig.savefig(save)
 
         return action_remainder
 
@@ -466,6 +682,7 @@ class ProductScan(Scan):
 class ParallelScan(Scan):
     """ParallelScan runs two scans alongside each other, performing both
     sets of position adjustments before each step of the scan."""
+
     def __init__(self, first, second):
         self.first = first
         self.second = second
@@ -508,6 +725,7 @@ class ForeverScan(Scan):  # pragma: no cover
     ForeverScan repeats the same scan over and over again to improve
     the statistics until the user manually halts the scan.
     """
+
     def __init__(self, scan):
         self.scan = scan
         self.defaults = scan.defaults
@@ -518,20 +736,120 @@ class ForeverScan(Scan):  # pragma: no cover
                 yield x
 
     def __repr__(self):
-        return "ForeverScan(" + repr(self.scan) + ")"
+        return "{}({})".format(self.__class__.__name__, self.scan)
 
     def __len__(self):
         raise RuntimeError("Attempted to get the length of an infinite list")
 
     def map(self, func):
-        return ForeverScan(self.scan.map(func))
+        return self.__class__(self.scan.map(func))
 
     @property
     def reverse(self):
-        return ForeverScan(self.scan.reverse)
+        return self.__class__(self.scan.reverse)
 
     def min(self):
         return self.scan.min()
 
     def max(self):
         return self.scan.max()
+
+
+class ForeverContinuousScan(ContinuousScan):
+    """
+    A special case of a forever scan that can operate with continuous moves.
+    """
+    def __len__(self):
+        raise ValueError(
+            "Can't get length of continuous scan that runs forever.")
+
+    def __iter__(self):
+        while True:
+            for move in self.moves:
+                yield move
+
+
+class ReplayScan(Scan):
+    """A Scan that merely repeated the output of a previous scan"""
+
+    def __init__(self, xs, ys, axis):
+        self.xs = xs
+        self.ys = ys
+        self.axis = axis
+        # self.defaults = ReplayDetector(xs, ys)
+
+    def min(self):
+        return min(self.xs)
+
+    def max(self):
+        return max(self.xs)
+
+    @property
+    def reverse(self):
+        return ReplayScan(self.xs[::-1], self.ys[::-1], self.axis)
+
+    def map(self, func):
+        return ReplayScan(map(func, self.xs), self.ys, self.axis)
+
+    def __len__(self):
+        return min(len(self.xs), len(self.ys))
+
+    def __iter__(self):
+        for x, _ in zip(self.xs, self.ys):
+            dic = OrderedDict()
+            dic[self.axis] = x
+            yield dic
+
+    def plot(self, detector=None, save=None,
+             action=None, **kwargs):
+        """Overload the scan method for the replay scan.  Since we aren't
+actually detecting anything, we can run the code much simpler instead
+of trying to fake a detector."""
+        action_remainder = None
+        xs = self.xs
+        ys = ListOfMonoids(self.ys)
+
+        fig, axis = plt.subplots()
+        plt.show()
+
+        axis.clear()
+        if isinstance(self.min(), tuple):
+            rng = [1.05*self.min()[0] - 0.05 * self.max()[0],
+                   1.05*self.max()[0] - 0.05 * self.min()[0]]
+        else:
+            rng = [1.05*self.min() - 0.05 * self.max(),
+                   1.05*self.max() - 0.05 * self.min()]
+        axis.set_xlabel(self.axis)
+        axis.set_xlim(rng[0], rng[1])
+        rng = _plot_range(ys)
+        axis.set_ylim(rng[0], rng[1])
+        ys.plot(axis, xs)
+        if action:
+            action_remainder = action(xs, ys, axis)
+        if save:
+            fig.savefig(save)
+
+        plt.draw()
+
+        return action_remainder
+
+
+def last_scan(path=None, axis="replay"):
+    """Load the last run scan and replay that scan
+
+    PARAMETERS
+    ----------
+    path
+      The log file to replay.  If None, replay the most recent scan
+    axis
+      The label for the x axis
+
+    """
+    import os
+    if path is None:
+        path = max([f for f in os.listdir(os.getcwd()) if f[-4:] == ".dat"],
+                   key=os.path.getctime)
+    with open(path, "r") as infile:
+        xs, ys, errs = np.loadtxt(infile, unpack=True)
+        ys = [Average((y/e)**2, y/e**2) for y, e in zip(ys, errs)]
+        return ReplayScan(xs, ys, axis)
