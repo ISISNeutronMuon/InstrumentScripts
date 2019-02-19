@@ -93,6 +93,14 @@ class Average(Monoid):
         return "Average({}, count={})".format(self.total, self.count)
 
 
+class Exact(Average):
+    """
+    A monoid representing an exact measurement.
+    """
+    def err(self):
+        return 0
+
+
 class Sum(Monoid):
     """
     This monoid calculates the sum total of the values presented
