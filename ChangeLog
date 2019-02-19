@@ -1,3 +1,8 @@
+2019-02-19    <adam.washington@stfc.ac.uk>
+
+	* general/scans/monoid.py (Average.err): Account for uncertainty
+	in count alongside the uncertainty in the total.
+
 2019-02-19    <tomwillemsen1995@gmail.com>
 
 	* instrument/loq/sample_changer_scan.py (LoqSampleChanger): Add
