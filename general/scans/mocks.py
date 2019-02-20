@@ -18,6 +18,29 @@ g.get_period.side_effect = lambda: g.period
 g.get_frames.side_effect = lambda: g.frames
 
 
+PVS = {}
+
+
+def set_pv(pv_name, value, **kwargs):
+    """
+    Fake set_pv for mock genie_python
+    """
+    # pylint: disable=unused-argument
+    PVS[pv_name] = value
+
+
+def get_pv(pv_name, **kwargs):
+    """
+    Fake get_pv for mock genie_python
+    """
+    # pylint: disable=unused-argument
+    return PVS.get(pv_name, 0)
+
+
+g.set_pv = set_pv
+g.get_pv = get_pv
+
+
 def cget(block):
     """Fake cget for the fake genie_python"""
     if block in instrument:

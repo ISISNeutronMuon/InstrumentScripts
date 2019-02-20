@@ -1,5 +1,6 @@
 """This module adds a helper class for detectors."""
 from functools import wraps
+
 try:
     # pylint: disable=import-error
     from genie_python import genie as g
@@ -23,6 +24,35 @@ class DetectorManager(object):
         if g.get_runstate() != "SETUP":  # pragma: no cover
             raise RuntimeError("Cannot start scan while already in a run!" +
                                " Current state is: " + str(g.get_runstate()))
+        return self._f
+
+    def __exit__(self, typ, value, traceback):
+        pass
+
+
+def get_block(name):
+    """
+    A simple wrapper around g.cget to give a better exception message.
+    """
+    try:
+        return g.cget(name)["value"]
+    except AttributeError:
+        raise ValueError("Could not get block '{}'".format(name))
+
+
+class BlockDetector(DetectorManager):
+    """
+    A helper class for using an IBEX block as a detector.
+    """
+    def __init__(self, blockname):
+        self.blockname = blockname
+        self._f = lambda: get_block(self.blockname)
+        DetectorManager.__init__(self, self._f)
+
+    def __call__(self, scan, **kwargs):
+        return self
+
+    def __enter__(self):
         return self._f
 
     def __exit__(self, typ, value, traceback):
@@ -71,6 +101,7 @@ class DaePeriods(DetectorManager):
         kwargs = self._kwargs
         if "title" in kwargs:
             title = kwargs["title"]
+            self._save = True
         else:
             title = "Scan"
         g.change_title(title)
@@ -129,12 +160,19 @@ def specific_spectra(spectra_list, preconfig=lambda: None):
         g.waitfor(**local_kwargs)
         g.pause()
 
+        # Ensure that get_spectrum actually returns a value
+        spec = None
+        while spec is None:
+            spec = g.get_spectrum(1, g.get_period())
         base = sum(g.get_spectrum(1, period=g.get_period())["signal"])*100.0
         pols = [Average(0, base) for _ in spectra_list]
         for idx, spectra in enumerate(spectra_list):
             for channel in spectra:
-                temp = sum(g.get_spectrum(channel,
-                                          period=g.get_period())["signal"])
+                # Ensure that get_spectrum actually returns a value
+                spec = None
+                while spec is None:
+                    spec = g.get_spectrum(channel, g.get_period())
+                temp = sum(spec["signal"])
                 pols[idx] += Average(temp*100.0, 0.0)
         if len(pols) == 1:
             return pols[0]

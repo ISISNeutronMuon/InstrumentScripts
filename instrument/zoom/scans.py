@@ -5,31 +5,15 @@ contained in this module
 
 """
 from __future__ import print_function
-try:
-    # pylint: disable=import-error
-    from genie_python import genie as g
-except ImportError:
-    g = None
+from datetime import datetime
 from general.scans.defaults import Defaults
-from general.scans.detector import dae_periods
-from general.scans.monoid import Sum
+from general.scans.detector import specific_spectra
 from general.scans.util import local_wrapper
 
 
 def zoom_monitor(spectrum):
     """A generating function for detectors for monitor spectra"""
-    @dae_periods()
-    def monitor(**kwargs):
-        """A simple detector for monitor number {}""".format(spectrum)
-        g.resume()
-        g.waitfor(**kwargs)
-        spec = g.get_spectrum(spectrum)
-        while not spec:
-            spec = g.get_spectrum(spectrum)
-        temp = sum(spec["signal"])
-        g.pause()
-        return Sum(temp)
-    return monitor
+    return specific_spectra([[spectrum]])
 
 
 class Zoom(Defaults):
@@ -37,11 +21,10 @@ class Zoom(Defaults):
     This class represents the default functions for the Zoom instrument.
     """
 
-    detector = zoom_monitor(4)
+    detector = specific_spectra([[4]])
 
     @staticmethod
     def log_file():
-        from datetime import datetime
         now = datetime.now()
         return "U:/zoom_scan_{}_{}_{}_{}_{}_{}.dat".format(
             now.year, now.month, now.day, now.hour, now.minute, now.second)
@@ -55,6 +38,7 @@ scan = local_wrapper(_zm, "scan")
 ascan = local_wrapper(_zm, "ascan")
 dscan = local_wrapper(_zm, "dscan")
 rscan = local_wrapper(_zm, "rscan")
+
 print("Remember to populate")
 monitor1 = zoom_monitor(1)
 monitor2 = zoom_monitor(2)
