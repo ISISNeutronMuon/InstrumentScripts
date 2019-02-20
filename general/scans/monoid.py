@@ -82,7 +82,10 @@ class Average(Monoid):
     def err(self):
         if self.count == 0:
             return np.nan
-        return np.sqrt(self.total)/self.count
+        if self.total == 0:
+            return 0
+        return np.sqrt(self.total**2 / self.count**2
+                       * (1 / self.total + 1 / self.count))
 
     def __str__(self):
         if self.count == 0:
@@ -91,6 +94,14 @@ class Average(Monoid):
 
     def __repr__(self):
         return "Average({}, count={})".format(self.total, self.count)
+
+
+class Exact(Average):
+    """
+    A monoid representing an exact measurement.
+    """
+    def err(self):
+        return 0
 
 
 class Sum(Monoid):
@@ -132,7 +143,7 @@ class Polarisation(Monoid):
 
     def __float__(self):
         if float(self.ups) + float(self.downs) == 0:
-            return np.nan
+            return 0
         return (float(self.ups) - float(self.downs)) / \
             (float(self.ups) + float(self.downs))
 
