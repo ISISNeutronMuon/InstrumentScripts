@@ -153,6 +153,16 @@ Plot Motor Scan
 	    ...
 	    RuntimeError: Unable to build a scan with that set of options.
 
+  Given the flexibility of the scanning system, it's not too difficult
+  to accidentally request a scan that contains no data points.
+  Instead of plotting a pointless scan, the scanning system will raise
+  an exception, as this is almost never what the user intended.
+
+  >>> scan(theta, -2, -3, 0.2, 5)
+  Traceback (most recent call last):
+  ...
+  RuntimeError: Your requested scan contains no points.  Are you trying to move a negative distance with positive steps?
+
 Motor Objects
 -------------
 
