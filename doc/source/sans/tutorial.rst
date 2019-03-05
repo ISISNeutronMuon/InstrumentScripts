@@ -193,7 +193,7 @@ keyword parameter that is automatically passed to
 back into event mode.
 
 >>> enumerate_dae()
-['4periods', 'alanis', 'bsalignment', 'diffraction', 'echoscan', 'event', 'event_fastsave', 'histogram', 'monitorsonly', 'monotest', 'nr', 'nrscanning', 'polarised', 'resonantimaging', 'resonantimaging_choppers', 'scanning', 'semsans', 'sesans', 'transmission', 'tshift']
+['4periods', 'alanis', 'bsalignment', 'diffraction', 'echoscan', 'event', 'event_fastsave', 'histogram', 'monitorsonly', 'monotest', 'nr', 'nrscanning', 'polarised', 'resonantimaging', 'resonantimaging_choppers', 'scanning', 'scanning12', 'semsans', 'sesans', 'transmission', 'tshift']
 
 The :py:meth:`ScanningInstrument.enumerate_dae` function will list all
 of the supported dae modes on the current beamline.
