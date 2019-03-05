@@ -1,3 +1,7 @@
+2019-03-05    <adam.washington@stfc.ac.uk>
+
+	* doc/source/scans/tutorial.rst: Add documentation for scanning alternate detectors to the tutorial.
+
 2019-02-19    <adam.washington@stfc.ac.uk>
 
 	* general/scans/monoid.py (Average.err): Account for uncertainty
