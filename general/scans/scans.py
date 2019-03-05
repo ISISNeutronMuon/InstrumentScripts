@@ -230,7 +230,7 @@ class Scan(object):
         if result is None:
             raise RuntimeError(
                 "Could not get result from plot. Perhaps the fit failed?")
-        elif isinstance(result[0], Iterable) and not isinstance(fit, ExactFit):
+        if isinstance(result[0], Iterable) and not isinstance(fit, ExactFit):
             result = np.array([x for x in result if x is not None])
             result = np.median(result, axis=0)
 
