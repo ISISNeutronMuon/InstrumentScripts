@@ -2,6 +2,7 @@
 
 	* instrument/larmor/sans.py: Add scanning12 mode to Larmor and
 	make echoscan a synonym for it.
+	* doc/source/scans/tutorial.rst: Add documentation for scanning alternate detectors to the tutorial.
 
 2019-02-19    <adam.washington@stfc.ac.uk>
 
