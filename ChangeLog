@@ -4,6 +4,11 @@
 	make echoscan a synonym for it.
 	* doc/source/scans/tutorial.rst: Add documentation for scanning alternate detectors to the tutorial.
 
+2019-03-04    <adam.washington@stfc.ac.uk>
+
+	* general/scans/defaults.py (Defaults.scan): Throw an exception
+	when the user requests a scan with no points.
+
 2019-02-19    <adam.washington@stfc.ac.uk>
 
 	* general/scans/monoid.py (Average.err): Account for uncertainty

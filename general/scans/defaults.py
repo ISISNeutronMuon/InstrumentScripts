@@ -136,6 +136,12 @@ class Defaults(object):
 
         points = get_points(motion(), **kwargs)
 
+        if len(points) == 0:  # pylint: disable=len-as-condition
+            raise RuntimeError(
+                "Your requested scan contains no points.  Are you "
+                "trying to move a negative distance with positive "
+                "steps?")
+
         for point in points:
             motion.require(point)
 
