@@ -370,7 +370,7 @@ involves only having two spectra covering the entire main detecor."""
         Larmor._waitfor_sesans(u, d, **kwargs)
 
     @staticmethod
-    def set_aperature(size):
+    def set_aperture(size):
         if size.upper() == "MEDIUM":
             gen.cset(a1hgap=20.0, a1vgap=20.0, s1hgap=14.0, s1vgap=14.0)
 
@@ -474,7 +474,7 @@ involves only having two spectra covering the entire main detecor."""
 
     @staticmethod
     def homea1():
-        """Rehome aperature 1."""
+        """Rehome aperture 1."""
         info("Homing a1")
         gen.cset(a1hgap=40, a1vgap=40)
         Larmor._generic_home_slit("IN:LARMOR:MOT:JAWS2:")
