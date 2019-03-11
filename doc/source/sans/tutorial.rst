@@ -57,7 +57,7 @@ parameters that will be covered for measure can also be applied to
 ``do_sans`` and ``do_trans``. Below is an example of the extended
 information that can be passed to these functions.
 
->>> measure("Sample Name", "QT", aperature="Medium", blank=True, uamps=5)
+>>> measure("Sample Name", "QT", aperture="Medium", blank=True, uamps=5)
 Setup Larmor for event
 Moving to sample changer position QT
 Using the following Sample Parameters
@@ -80,7 +80,7 @@ A couple of things changed with this new command.
    the measurement.
 
 #. We specified the beam size.  The individual beamlines will have the
-   opportunity to decide their own aperature settings, but they should
+   opportunity to decide their own aperture settings, but they should
    hopefully reach a consensus on the names.
 
 #. The sample has been marked as a blank.  The MEASUREMENT:TYPE block
@@ -193,7 +193,7 @@ keyword parameter that is automatically passed to
 back into event mode.
 
 >>> enumerate_dae()
-['4periods', 'alanis', 'bsalignment', 'diffraction', 'echoscan', 'event', 'event_fastsave', 'histogram', 'monitorsonly', 'monotest', 'nr', 'nrscanning', 'polarised', 'resonantimaging', 'resonantimaging_choppers', 'scanning', 'semsans', 'sesans', 'transmission', 'tshift']
+['4periods', 'alanis', 'bsalignment', 'diffraction', 'echoscan', 'event', 'event_fastsave', 'histogram', 'monitorsonly', 'monotest', 'nr', 'nrscanning', 'polarised', 'resonantimaging', 'resonantimaging_choppers', 'scanning', 'scanning12', 'semsans', 'sesans', 'transmission', 'tshift']
 
 The :py:meth:`ScanningInstrument.enumerate_dae` function will list all
 of the supported dae modes on the current beamline.
@@ -596,7 +596,7 @@ Under the hood
 ==============
 
 >>> gen.reset_mock()
->>> measure("Test", "BT", dae="event", aperature="Medium", uamps=15)
+>>> measure("Test", "BT", dae="event", aperture="Medium", uamps=15)
 Setup Larmor for event
 Moving to sample changer position BT
 Using the following Sample Parameters

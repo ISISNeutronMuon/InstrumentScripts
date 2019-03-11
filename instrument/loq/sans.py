@@ -63,13 +63,13 @@ class LOQ(ScanningInstrument):
         raise NotImplementedError("LOQ cannot perform reflectometry")
 
     @staticmethod
-    def set_aperature(size):
+    def set_aperture(size):
         if size.upper() == "SMALL":
-            gen.cset(Aperature_2="SMALL")
+            gen.cset(Aperture_2="SMALL")
         elif size.upper() == "MEDIUM":
-            gen.cset(Aperature_2="MEDIUM")
+            gen.cset(Aperture_2="MEDIUM")
         elif size.upper() == "LARGE":
-            gen.cset(Aperature_2="LARGE")
+            gen.cset(Aperture_2="LARGE")
         else:
             RuntimeError("Slit size {} is undefined".format(size))
 
@@ -95,7 +95,7 @@ class LOQ(ScanningInstrument):
         gen.cset(Tx_Mon="OUT")
 
     def _configure_trans_custom(self):
-        gen.cset(Aperature_2="SMALL")
+        gen.cset(Aperture_2="SMALL")
         gen.cset(Tx_Mon="IN")
 
 
