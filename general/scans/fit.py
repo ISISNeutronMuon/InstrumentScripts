@@ -323,8 +323,10 @@ class GaussianFit(CurveFit):
 
     @staticmethod
     def guess(x, y):
-        return [np.mean(x), np.max(x)-np.min(x),
-                np.max(y) - np.min(y), np.min(y)]
+        mean = np.sum(x*y)/np.sum(y)
+        guess = [mean, np.sqrt(np.sum(y*(x - mean)**2)/np.sum(y)),
+                 np.max(y) - np.min(y), np.min(y)]
+        return guess
 
     def readable(self, fit):
         return {"center": fit[0], "sigma": fit[1],
