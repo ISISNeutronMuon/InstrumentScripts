@@ -92,13 +92,19 @@ class Larmor(ScanningInstrument):  # pylint: disable=too-many-public-methods
                    "trange": 1, "log": 0}])
 
     @dae_setter("SCAN", "scan")
-    def setup_dae_echoscan(self):  # pylint: disable=no-self-use
-        """Set the wiring tables for performing a spin echo tuning scan.  This
-involves only having two spectra covering the entire main detecor."""
+    def setup_dae_scanning12(self):  # pylint: disable=no-self-use
+        """Set the wiring tables for performing a scan where the entire main
+detector is contained in only two channels."""
         Larmor._generic_scan(
             spectra=r"C:\Instrument\Settings\Tables\spectra_scanning_12.dat",
             tcbs=[{"low": 5.0, "high": 100000.0, "step": 100.0,
                    "trange": 1, "log": 0}])
+
+    @dae_setter("SCAN", "scan")
+    def setup_dae_echoscan(self):  # pylint: disable=no-self-use
+        """Set the wiring tables for performing a spin echo tuning scan.  This
+involves only having two spectra covering the entire main detecor."""
+        self.setup_dae_scanning12()
 
     @dae_setter("SCAN", "scan")
     def setup_dae_nr(self):
@@ -364,7 +370,7 @@ involves only having two spectra covering the entire main detecor."""
         Larmor._waitfor_sesans(u, d, **kwargs)
 
     @staticmethod
-    def set_aperature(size):
+    def set_aperture(size):
         if size.upper() == "MEDIUM":
             gen.cset(a1hgap=20.0, a1vgap=20.0, s1hgap=14.0, s1vgap=14.0)
 
@@ -468,7 +474,7 @@ involves only having two spectra covering the entire main detecor."""
 
     @staticmethod
     def homea1():
-        """Rehome aperature 1."""
+        """Rehome aperture 1."""
         info("Homing a1")
         gen.cset(a1hgap=40, a1vgap=40)
         Larmor._generic_home_slit("IN:LARMOR:MOT:JAWS2:")
