@@ -46,6 +46,9 @@ CRISP_LOOKUP = {"S1S": "MOT:MTR0101",
                 "S4ROT": "MOT:MTR0606",
                 "MDHEIGHT": "MOT:MTR0607"}
 
+ENUM_SET = "Set"
+ENUM_USE = "Use"
+
 
 def zero_motor_at(axis_name, zero_value):
     """
@@ -59,12 +62,16 @@ def zero_motor_at(axis_name, zero_value):
     try:
         pv_lookup = CRISP_LOOKUP
         motor_pv = g.prefix_pv_name(pv_lookup[axis_name])
+        motor_set_pv = motor_pv + ".SET"
         curr_pos = g.get_pv(motor_pv)
         redef_pos = curr_pos - zero_value
-        g.set_pv(motor_pv + ".SET", 1)
+        g.set_pv(motor_set_pv, ENUM_SET)
+        g.adv.wait_for_pv(motor_set_pv, ENUM_SET)
         g.set_pv(motor_pv + ".VAL", redef_pos)
-        g.set_pv(motor_pv + ".SET", 0)
+        g.adv.wait_for_pv(motor_pv, redef_pos)
+        g.set_pv(motor_pv + ".SET", ENUM_USE)
+        g.adv.wait_for_pv(motor_set_pv, ENUM_USE)
     except KeyError:
         print("Motor axis {} does not exist.".format(axis_name))
     except Exception as e:
-        pass
+        print(e.message)
