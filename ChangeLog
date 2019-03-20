@@ -1,0 +1,82 @@
+2019-03-11    <thomas.lohnert@stfc.ac.uk>
+
+	* general/scans/fit.py (GaussianFit.guess): Use proper statistics
+	to estimate Gaussian width and center when guessing before curve
+	fitting.
+
+2019-03-05    <adam.washington@stfc.ac.uk>
+
+	* instrument/larmor/sans.py: Add scanning12 mode to Larmor and
+	make echoscan a synonym for it.
+	* doc/source/scans/tutorial.rst: Add documentation for scanning alternate detectors to the tutorial.
+
+2019-03-04    <adam.washington@stfc.ac.uk>
+
+	* general/scans/defaults.py (Defaults.scan): Throw an exception
+	when the user requests a scan with no points.
+
+2019-02-19    <adam.washington@stfc.ac.uk>
+
+	* general/scans/monoid.py (Average.err): Account for uncertainty
+	in count alongside the uncertainty in the total.
+
+2019-02-19    <tomwillemsen1995@gmail.com>
+
+	* instrument/loq/sample_changer_scan.py (LoqSampleChanger): Add
+	the sample changer scan for LOQ.
+
+	* general/scans/scans.py (ContinuousScan): Add ContinuousMove
+	scanning functionality.
+
+	* general/scans/multiplot.py: Remove multiplot code, as this is
+	now handled by IBEX internal plotting.
+
+	* general/scans/motion.py (Motion): Add velocity support to Motion
+	objects.
+
+	* general/scans/monoid.py (Exact): Add an Exact Monoid for values
+	with no uncertainty.
+
+	* general/scans/fit.py: No longer hard code location of the Numpy
+	library for fixing the interrupt handler.
+	(CentreOfMassFit): Add new centre of mass fitting method
+
+	* general/scans/detector.py (BlockDetector): Add BlockDetector for
+	performing scans on black values, instead of detector values.
+
+2019-02-13    <adam.washington@stfc.ac.uk>
+
+	* instrument/larmor/scans.py (fast_pol_measure): Replace
+	pol_measure with generic_pol. Create dedicated semsans_pol and
+	pol_measure detector objects on Larmor.
+	(auto_tune): Add Echo Tuning to larmor scans
+
+	* instrument/larmor/sans.py (Larmor.setup_dae_echoscan): Add
+	echoscan dae mode to larmor
+
+	* instrument/larmor/__init__.py: Larmor imports last_scan by default
+
+	* general/scans/scans.py (Scan.plot): Only attempt to safe a
+	figure from a scan if the save location is an actual string (and
+	not just a number or other weird value).
+
+	* general/scans/monoid.py (Polarisation.__float__): A polarisation
+	monoid with no data points is unpolarised.
+
+	* general/scans/fit.py (CurveFit.fit): Don't attempt to fit
+	non-finite date points.
+
+	* general/scans/detector.py (DaePeriods.__enter__): Automatically
+	save DaePeriods scans if the scan is given a title
+
+2019-02-12    <adam.washington@stfc.ac.uk>
+
+	* instrument/loq/sans.py (LOQ.setup_dae_fifty): Start adding 50Hz mode to LOQ
+	(LOQ.setup_dae_event): Change LOQ run label to "SANS/TRANS"
+
+	* technique/sans/instrument.py: Add _move_pos function to allow instruments to support sample changer motor axes beyond "SamplePos".
+
+	* Adjust LOQ SANS support based on beamline experience.
+
+	* Change all references in SANS scripts from "aperature" to the
+	correctly spelled "aperture".

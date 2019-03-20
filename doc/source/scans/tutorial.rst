@@ -153,6 +153,16 @@ Plot Motor Scan
 	    ...
 	    RuntimeError: Unable to build a scan with that set of options.
 
+  Given the flexibility of the scanning system, it's not too difficult
+  to accidentally request a scan that contains no data points.
+  Instead of plotting a pointless scan, the scanning system will raise
+  an exception, as this is almost never what the user intended.
+
+  >>> scan(theta, -2, -3, 0.2, 5)
+  Traceback (most recent call last):
+  ...
+  RuntimeError: Your requested scan contains no points.  Are you trying to move a negative distance with positive steps?
+
 Motor Objects
 -------------
 
@@ -198,7 +208,19 @@ Motor Objects
   Traceback (most recent call last):
       ...
   RuntimeError: Position 2.5 is above upper limit 2 of motor Theta
+
   >>> theta.high = None
+
+  Motor objects can also get and set the velocity of a motor:
+
+  >>> theta.velocity = 20
+  >>> theta.velocity
+  20
+
+  And find out about the tolerance of a motor:
+
+  >>> theta.tolerance
+  0
 
   If there is no Motion object for a specific axis, the user can give
   the name in a string and use that.  If the axis isn't a string or a
@@ -212,16 +234,21 @@ Motor Objects
   Taking a count at theta=6.00 and two theta=0.00
   Taking a count at theta=8.00 and two theta=0.00
   Taking a count at theta=10.00 and two theta=0.00
+
   >>> scan("theta", start=0, stop=10, stride=2, frames=5)
   Traceback (most recent call last):
       ...
   RuntimeError: Unknown block theta.  Does the capitalisation match IBEX?
+
   >>> scan(True, start=0, stop=10, count=5) # doctest: +NORMALIZE_WHITESPACE
   Traceback (most recent call last):
       ...
   TypeError: Cannot run scan on axis True. Try a string or a motion
   object instead.  It's also possible that you may need to rerun
   populate() to recreate your motion axes.
+
+  The block needs to point at the underlying motor, e.g. `MOT:MTR0101`, 
+  and not an axis PV.
 
 Perform Fits
 ------------
@@ -301,6 +328,25 @@ Perform Fits
 
   .. figure:: peak.png
      :alt: Fitting a peak
+
+  An alternative 'fitting' method is a "centre of mass" fit. For a set of
+  data points (x, y) it calculates the centre of mass as sum(x*y)/sum(y).
+  The background is subtracted before this calculation is done.
+
+  >>> fit = scan(theta, start=0, stop=2, count=11, fit=CentreOfMass, frames=5, save="centre_of_mass.png")
+  Taking a count at theta=0.00 and two theta=0.00
+  Taking a count at theta=0.20 and two theta=0.00
+  Taking a count at theta=0.40 and two theta=0.00
+  Taking a count at theta=0.60 and two theta=0.00
+  Taking a count at theta=0.80 and two theta=0.00
+  Taking a count at theta=1.00 and two theta=0.00
+  Taking a count at theta=1.20 and two theta=0.00
+  Taking a count at theta=1.40 and two theta=0.00
+  Taking a count at theta=1.60 and two theta=0.00
+  Taking a count at theta=1.80 and two theta=0.00
+  Taking a count at theta=2.00 and two theta=0.00
+  >>> 1.07 <= fit["Centre_of_mass"] <= 1.08
+  True
 
 
 Replaying Scans
@@ -429,6 +475,86 @@ Perform complex scans
   improving the statistics until the use manually kills the scan.
 
   >>> scan(theta, start=0, stop=1, stride=0.5).forever.fit(Gaussian, frames=5) #doctest: +SKIP
+
+Scan Alternate Detectors
+------------------------
+
+  The `scan` command, by default, scans an intensity on a detector
+  that has been chosen by the instrument scientist.  It is possible to
+  scan other detectors through the `detector` keyword.
+
+  >>> scan(theta, start=0, stop=1, stride=0.25, frames=50, detector=specific_spectra([[4]]))
+  Taking a count at theta=0.00 and two theta=3.00
+  Taking a count at theta=0.25 and two theta=3.00
+  Taking a count at theta=0.50 and two theta=3.00
+  Taking a count at theta=0.75 and two theta=3.00
+  Taking a count at theta=1.00 and two theta=3.00
+
+  The above uses the :meth:`general.scans.detector.specific_spectra`
+  to create a :math:`general.scans.detector.Detector` that looks at
+  spectrum number four.  Multiple channels can be combined together
+  into a single value by including them all within the inner list.
+  For example, to plots detector spectra four and one combined:
+
+  >>> scan(theta, start=0, stop=1, stride=0.25, frames=50, detector=specific_spectra([[4, 1]]))
+  Taking a count at theta=0.00 and two theta=3.00
+  Taking a count at theta=0.25 and two theta=3.00
+  Taking a count at theta=0.50 and two theta=3.00
+  Taking a count at theta=0.75 and two theta=3.00
+  Taking a count at theta=1.00 and two theta=3.00
+
+  It's also possible to plot different curves simultaneously by adding
+  more lists to be main list.  The example below plots both the
+  combined spectra 11 and 12 as well as a separate curve with detector
+  spectrum 4.
+
+  >>> scan(theta, start=0, stop=1, stride=0.25, frames=50, detector=specific_spectra([[4, 11, 12], [4, 1]]))
+  Taking a count at theta=0.00 and two theta=3.00
+  Taking a count at theta=0.00 and two theta=3.00
+  Taking a count at theta=0.25 and two theta=3.00
+  Taking a count at theta=0.25 and two theta=3.00
+  Taking a count at theta=0.50 and two theta=3.00
+  Taking a count at theta=0.50 and two theta=3.00
+  Taking a count at theta=0.75 and two theta=3.00
+  Taking a count at theta=0.75 and two theta=3.00
+  Taking a count at theta=1.00 and two theta=3.00
+  Taking a count at theta=1.00 and two theta=3.00
+
+  Beyond using the `specific_spectra` function, it's also possible to
+  scan across any arbitrary value.  The code below with plots twice
+  the current value of the theta motor (as an example).
+
+  >>> def example_detector(**kwargs):
+  ...   return Average(2*theta())
+  >>> scan(theta, start=0, stop=1, stride=0.25, frames=50, detector=example_detector)
+
+Perform continuous scans
+------------------------
+
+  The scans library has some ability to perform continuous scans. That
+  is, the motor will keep moving at a set speed while data is being taken. This
+  is implemented by polling the motor for it's position at a frequency (by
+  default, 5Hz) while the move is in progress.
+
+  Continuous scans currently have some limitations - for example, they can
+  only be combined with each other, and not with other non-continuous scans.
+
+  Instead of taking a set of points, a continuous scan takes a collection of
+  `ContinuousMove` objects:
+
+  >>> from general.scans.scans import ContinuousMove
+  >>> ContinuousMove(start=-5, stop=5, speed=0.05)
+  Continuous move from -5 to 5 at speed 0.05
+
+  When using continuous scans, the detector function should ideally return
+  quickly. For example, reading the value of a block is suitable, but beginning
+  a run is unlikely to be suitable except for very slow scans.
+
+  Continuous scans can be combined with each other (using python's `+` operator)
+  and reversed using the `.and_back` property just like step scans. They can
+  also be run forever using the `.forever` property. However, combinations of
+  step and continuous scans are currently not implemented.
+
 
 Estimate time
 -------------

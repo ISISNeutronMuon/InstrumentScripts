@@ -92,6 +92,21 @@ class Larmor(ScanningInstrument):  # pylint: disable=too-many-public-methods
                    "trange": 1, "log": 0}])
 
     @dae_setter("SCAN", "scan")
+    def setup_dae_scanning12(self):  # pylint: disable=no-self-use
+        """Set the wiring tables for performing a scan where the entire main
+detector is contained in only two channels."""
+        Larmor._generic_scan(
+            spectra=r"C:\Instrument\Settings\Tables\spectra_scanning_12.dat",
+            tcbs=[{"low": 5.0, "high": 100000.0, "step": 100.0,
+                   "trange": 1, "log": 0}])
+
+    @dae_setter("SCAN", "scan")
+    def setup_dae_echoscan(self):  # pylint: disable=no-self-use
+        """Set the wiring tables for performing a spin echo tuning scan.  This
+involves only having two spectra covering the entire main detecor."""
+        self.setup_dae_scanning12()
+
+    @dae_setter("SCAN", "scan")
     def setup_dae_nr(self):
         Larmor._generic_scan(
             spectra=r"C:\Instrument\Settings\Tables\spectra_nrscanning.dat",
@@ -315,8 +330,47 @@ class Larmor(ScanningInstrument):  # pylint: disable=too-many-public-methods
 
             gtotal = get_total()
 
+    @dae_setter("SEMSANS", "semsans")
+    def setup_dae_alanis(self):
+        """Setup the instrument for using the Alanis fibre detector"""
+        Larmor._generic_scan(
+            r"C:\Instrument\Settings\Tables\Alanis_Detector.dat",
+            r"C:\Instrument\Settings\Tables\Alanis_Spectra.dat",
+            r"C:\Instrument\Settings\Tables\Alanis_Wiring.dat",
+            [{"low": 5.0, "high": 100000.0, "step": self.step,
+              "trange": 1, "log": 0},
+             {"low": 0.0, "high": 0.0, "step": 0.0,
+              "trange": 2, "log": 0},
+             {"low": 5.0, "high": 100000.0, "step": 2.0, "trange": 1,
+              "log": 0, "regime": 2}])
+
+    @dae_setter("SEMSANS", "semsans")
+    def setup_dae_semsans(self):
+        """Setup the instrument for polarised SEMSANS on the fibre detector"""
+        Larmor._generic_scan(
+            r"C:\Instrument\Settings\Tables\Alanis_Detector.dat",
+            r"C:\Instrument\Settings\Tables\Alanis_Spectra.dat",
+            r"C:\Instrument\Settings\Tables\Alanis_Wiring.dat",
+            [{"low": 5.0, "high": 100000.0, "step": self.step,
+              "trange": 1, "log": 0},
+             {"low": 0.0, "high": 0.0, "step": 0.0,
+              "trange": 2, "log": 0},
+             {"low": 5.0, "high": 100000.0, "step": 2.0, "trange": 1,
+              "log": 0, "regime": 2}])
+
     @staticmethod
-    def set_aperature(size):
+    def _begin_semsans():
+        """Initialise a SEMSANS run"""
+        Larmor._begin_sesans()
+
+    @staticmethod
+    def _waitfor_semsans(u=600, d=600,
+                         **kwargs):  # pylint: disable=invalid-name
+        """Perform a SESANS run"""
+        Larmor._waitfor_sesans(u, d, **kwargs)
+
+    @staticmethod
+    def set_aperture(size):
         if size.upper() == "MEDIUM":
             gen.cset(a1hgap=20.0, a1vgap=20.0, s1hgap=14.0, s1vgap=14.0)
 
@@ -420,7 +474,7 @@ class Larmor(ScanningInstrument):  # pylint: disable=too-many-public-methods
 
     @staticmethod
     def homea1():
-        """Rehome aperature 1."""
+        """Rehome aperture 1."""
         info("Homing a1")
         gen.cset(a1hgap=40, a1vgap=40)
         Larmor._generic_home_slit("IN:LARMOR:MOT:JAWS2:")

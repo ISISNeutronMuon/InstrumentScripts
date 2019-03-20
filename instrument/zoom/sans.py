@@ -2,7 +2,7 @@
 from technique.sans.instrument import ScanningInstrument
 from technique.sans.genie import gen
 # pylint: disable=unused-import
-from technique.sans.util import dae_setter, user_script  # noqa: F401
+from technique.sans.util import dae_setter  # noqa: F401
 from general.scans.util import local_wrapper
 
 
@@ -67,7 +67,7 @@ class Zoom(ScanningInstrument):
         raise NotImplementedError("Beam Stop Alignment tables not yet set")
 
     @staticmethod
-    def set_aperature(size):
+    def set_aperture(size):
         if size.upper() == "MEDIUM":
             # change the line below to match ZOOM motors
             # gen.cset(a1hgap=20.0, a1vgap=20.0, s1hgap=14.0, s1vgap=14.0)
