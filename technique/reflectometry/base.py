@@ -8,7 +8,7 @@ from math import tan, radians, sin, fabs
 from six.moves import input
 from genie_python import genie as g
 
-from techniques.reflectometry.instrument_constants import get_instrument_constants
+from technique.reflectometry.instrument_constants import get_instrument_constants
 
 
 def run_angle(sample, angle, count_uamps=None, count_seconds=None, s1vg=None, s2vg=None, s3vg=None, s4vg=None,
