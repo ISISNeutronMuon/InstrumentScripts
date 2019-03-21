@@ -1,185 +1,398 @@
-from math import tan, radians, sin
+"""
+Base routine for reflectometry techniques
+"""
+from collections import OrderedDict
+from contextlib import contextmanager
+from math import tan, radians, sin, fabs
 
+from six.moves import input
 from genie_python import genie as g
 
-def SampleGenerator():
-    pass
-
-class Sample():
-    def __init__(self, title, subtitle, translation, coarse_nomirror, phi_offset, psi, height, resolution, footprint):
-        """
-
-        Args:
-            translation: The translation for the sample
-            coarse_nomirror: Height of the second stage with no mirror relative to the beam for this sample
-            phi_offset: offset from 0 for the sample in the phi direction
-            resolution: resolution for this sample
-        """
-        self.subtitle = subtitle
-        self.title = title
-        self.footprint = footprint
-        self.resolution = resolution
-        self.height = height
-        self.psi = psi
-        self.phi_offset = phi_offset
-        self.translation = translation
-        self.coarse_nomirror = coarse_nomirror
+from techniques.reflectometry.instrument_constants import get_instrument_constants
 
 
-class InstrumentConstant(object):
-    def __init__(self, s1s2, s2sa, maxTheta, s4max, SM_sa, s3max=None):
-
-        self.s1s2 = s1s2
-        self.s2sa = s2sa
-        self.maxTheta = maxTheta
-        self.s4max = s4max
-        self.SM_sa = SM_sa
-        if s3max is None:
-            self.s3max = s3max
-        else:
-            self.s3max = s3max
-
-
-INSTRUMENT_CONSTANTS = {
-    "INTER": InstrumentConstant(
-                s1s2 = 1940.5,
-                s2sa = 364.0,
-                maxTheta = 2.3, # usual maximum angle
-                s4max = 10.0, # max s4_vg at maxTheta
-                SM_sa = 1375.0),
-    "SURF": InstrumentConstant(
-                s1s2 = 1448.0,
-                s2sa = 389.0,
-                maxTheta = 1.8, # usual maximum angle
-                s4max = 10.0, # max s4vg at maxTheta
-                SM_sa = 1088.26),
-    "CRISP": InstrumentConstant(
-                s1s2 = 2596.0,
-                s2sa = 343.0,
-                maxTheta = 2, # usual maximum angle
-                s4max = 20.0, # max s4vg at maxTheta
-                SM_sa = 2311),
-    "DEFAULT": InstrumentConstant(
-                s1s2 = 1940.5,
-                s2sa = 364.0,
-                maxTheta = 2.3, # usual maximum angle
-                s4max = 10.0, # max s4_vg at maxTheta
-                SM_sa = 1385.0)
-}
-
-
-def run_angle(sample, angle, how_long, s1_vg=None, s2_vg=None, s3_vg=None, s4_vg=None, setup=False, mode=None, howlong_is_time=False, auto_height=False, dry_run=False):
+def run_angle(sample, angle, count_uamps=None, count_seconds=None, s1vg=None, s2vg=None, s3vg=None, s4vg=None,
+              smangle=None, mode=None, auto_height=False, dry_run=False):
     """
-    Do a run with a given theta
+    Move to a given theta with slits set. If a current or time are given then take a measurement otherwise just go to
+    the position.
+
     Args:
-        sample (Sample): sample
-        angle:
-        how_long:
-        s1_vg:
-        s2_vg:
-        s3_vg:
-        s4_vg:
-        setup:
-        mode:
-        howlong_is_time:
-        auto_height:
-        dry_run:
-
-    Returns:
-
+        sample (techniques.reflectometry.sample.Sample): The sample to measure
+        angle: The angle to measure at
+        count_uamps: the current to run the measurement for; None use count time
+            (if both counts are none then don't count)
+        count_seconds: the time to run the measurement for if uamps not set; None for use current
+            (if both counts are none then don't count)
+        s1vg: slit 1 vertical gap; None to use sample footprint and resolution
+        s2vg: slit 2 vertical gap; None to use sample footprint and resolution
+        s3vg: slit 3 vertical gap; None use fraction of maximum based on theta
+        s4vg: slit 4 vertical gap; None use fraction of maximum based on theta
+        smangle: the super mirror angle if set sm get put in; None don't move the super mirror unless the mode has
+            changed
+        mode: mode to run in; None don't change modes (means super mirror is not moved in or out for instance)
+        auto_height: if True when taking data run the auto-height routine (default False)
+        dry_run: True just print what is going to happend; False do the movement
     """
 
-    instrument = g.get_instrument()
-    try:
-        constants = INSTRUMENT_CONSTANTS[instrument]
-    except KeyError:
-        print("Instrument, '', not found in constants list using default")
-        constants = INSTRUMENT_CONSTANTS["DEFAULT"]
+    print("** Run angle {} **".format(sample.title))
 
-    # Move this first before the heights as this can cause some drift.
+    movement = _Movement(dry_run)
 
-    print("Translation to {}".format(sample.translation))
-    if not dry_run:
-        g.cset("TRANSLATION", sample.translation)
-        g.waitfor_move()
+    movement._dry_run_warning()
+    constants = get_instrument_constants()
+    movement._set_translation(sample.translation)  # Move this first before the heights as this can cause some drift.
+    mode = movement._change_to_mode(mode)
 
-    print("Change to mode: {}".format(mode))
-    if not dry_run:
-        if mode is not None:
-            g.cset("MODE", mode)
-        sm_angle=(2.3-angle)/2
-        if sm_angle > 0.001:
-            g.cset("SM_in", "IN")
-            g.cset("smangle", sm_angle)
-        else:
-            g.cset("SM_in", "OUT")
+    if mode is "LIQUID":
+        # Not being used on Crisp come back to this if loop
+        movement._set_smangle_if_not_none(angle)
+    else:
+        # assume angle sample can be set
+        movement._set_phi_psi(angle + sample.phi_offset, 0 + sample.psi_offset)
+        movement._set_smangle_if_not_none(smangle)
 
-        g.cset("height2_offset", sample.coarse_nomirror)
-        g.cset("phi", angle + sample.phi_offset)
-        g.cset("psi", sample.psi)
-
-    g.cset("theta", angle)
+    movement._set_height2_offset(sample.height2_offset, constants)
+    movement._set_theta(angle)
 
     if not auto_height:
-        g.cset("height", sample.height)
+        movement._set_height_offset(sample.height)
 
-    _set_slit_gaps(angle, constants, s1_vg, s2_vg, s3_vg, s4_vg, sample)
-
-    g.waitfor_move()
-
-    title = "{} {} th={}".format(sample.title, sample.subtitle, angle)
-    g.change_title(title)
+    movement._set_slit_gaps(angle, constants, s1vg, s2vg, s3vg, s4vg, sample)
+    movement._wait_for_move()
+    movement._update_title("{} {} th={}".format(sample.title, sample.subtitle, angle))
 
     # count
-    if not setup:
+    if count_seconds is None and count_uamps is None:
+        print("Setup only no measurement")
+    else:
         if auto_height:
             auto_height()
-        if howlong_is_time:
-            g.waitfor_time(seconds=how_long)
-        else:
-            g.waitfor_uamps(how_long)
+        if count_uamps is not None:
+            movement._count_for_uamps(count_uamps)
+        elif count_seconds is not None:
+            movement._count_for_time(count_seconds)
 
 
-def _set_slit_gaps(theta, constants, s1_vg, s2_vg, s3_vg, s4_vg, sample, dry_run):
+def transmission(sample, title, count_seconds, s1vg, s2vg, s1hg=None, s2hg=None, s3hg=None, s4hg=None,
+                 height_offset=None, smangle=None, mode=None, dry_run=False):
     """
-    Set the slit gaps either to user settings or calculated based on foot print and max slit size
+    Perform a transmission
     Args:
-        theta: angle theta is set to
-        constants: machine constants
-        s1_vg: s1 vertical gap set by user; None use footprint calculated gap
-        s2_vg: s2 vertical gap set by user; None use footprint calculated gap
-        s3_vg: s3 vertical gap set by user; None use percentage of maximum
-        s4_vg: s4 vertical gap set by user; None use percentage of maximum
-        sample: sample parameters
-        dry_run: True don't do anything just print; False print and go to
+        sample (techniques.reflectometry.sample.Sample): The sample to measure
+        title: Title to set
+        count_seconds: time to count for in seconds
+        s1vg: slit 1 vertical gap
+        s2vg: slit 2 vertical gap
+        s1hg: slit 1 horizontal gap; None to leave unchanged
+        s2hg: slit 2 horizontal gap; None to leave unchanged
+        s3hg: slit 3 horizontal gap; None to leave unchanged
+        s4hg: slit 4 horizontal gap; None to leave unchanged
+        height_offset: Height offset from normal to set the samepl to
+        smangle: super mirror angle; None for don't use a super mirror
+        mode: mode to run in; None don't change mode
+        dry_run: True to print what happens; False to do experiment
+    """
+
+    print("** Transmission {} **".format(title))
+
+    movement = _Movement(dry_run)
+
+    movement._dry_run_warning()
+    constants = get_instrument_constants()
+    movement._change_to_1_period()
+
+    movement._set_translation(sample.translation)  # Move this first before the heights as this can cause some drift.
+
+    with reset_hgaps(dry_run):
+        movement._change_to_mode(mode)
+
+        movement._set_smangle_if_not_none(smangle)
+
+        movement._set_height2_offset(sample.height2_offset, constants)
+        movement._set_theta(0.0)
+
+        if smangle is not None:
+            subtitle = "SM={}, ".format(smangle)
+        else:
+            subtitle = ""
+
+        if height_offset is None:
+            movement._set_height_offset(sample.height - 5)
+        elif height_offset < 10:  # if the height offset is less than can be achieved by the fine z use this
+            movement._set_height_offset(sample.height - height_offset)
+        else:
+            movement._set_height2_offset(sample.height2_offset - height_offset, constants)
+
+        movement._set_h_gaps(s1hg, s2hg, s3hg, s4hg)
+        movement._set_slit_gaps(0.0, constants, s1vg, s2vg, constants.s3max, constants.s3max, sample)
+        movement._wait_for_move()
+
+        title = "{} transmission {} VGs({} {}) HGs({} {} {} {})".format(title, subtitle, s1vg, s2vg,
+                                                                        s1hg, s2hg, s3hg, s4hg)
+        movement._update_title(title)
+        movement._count_for_time(count_seconds)
+
+        movement._set_height_offset(sample.height)
+        movement._set_height2_offset(sample.height2_offset, constants)
+        # Horizontal gaps reset by with reset_gaps
+
+
+@contextmanager
+def reset_hgaps(dry_run=False):
+    """
+    After the context is over reset the gaps back to the value before. If keyboard interupt give options for what to do.
+    Args:
+        dry_run: True print what will happen; False do reset
+
+    """
+    horizontal_gaps = OrderedDict()
+    for gap_name in ("S1HG", "S2HG", "S3HG", "S4HG"):
+        horizontal_gaps[gap_name] = g.cget(gap_name)["value"]
+
+    def _reset_gaps():
+        print("Reset horizontal gaps to {}".format(horizontal_gaps.items()))
+        if not dry_run:
+            for gap_name, gap_size in horizontal_gaps.items():
+                g.cset(gap_name, gap_size)
+            g.waitfor_move()
+
+    try:
+        yield
+        _reset_gaps()
+    except KeyboardInterrupt:
+        if not dry_run:
+            print("Not dry run pause")
+            g.pause()
+        while True:
+            choice = input("ctrl-c hit do you wish to (A)bort or (E)nd or (K)eep Counting?")
+            if choice is not None and choice.upper() in ["A", "E", "K"]:
+                break
+            print("Invalid choice try again!")
+
+        if choice.upper() == "A":
+            if not dry_run:
+                g.abort()
+            print("Setting horizontal slit gaps to pre-tranmission values.")
+            _reset_gaps()
+
+        elif choice.upper() == "E":
+            if not dry_run:
+                g.end()
+            _reset_gaps()
+        elif choice.upper() == "K":
+            print("Continuing counting, remember to set back horizontal slit gaps when the run is ended.")
+            g.resume()
+
+        if not dry_run:
+            g.waitfor_time(seconds=5)
+
+
+def contrast_change(valve_position, concentrations, flow, volume=None, seconds=None, wait=False, dry_run=False):
+    """
+    Perform a contrast change.
+    Args:
+        valve_position: valve_position to set for the Knaur valve
+        concentrations: Concentrations to set from A to D
+        flow: flow rate
+        volume: volume to pump; if None then pump for a time instead
+        seconds: number of seconds to pump; volume is pumped in preference
+        wait: True wait for completion; False don't wait
+        dry_run: True don't do anything just print what it will do; False otherwise
 
     Returns:
 
     """
-    s1sa = constants.s1s2 + constants.s2sa
-    footprint_at_theta = sample.footprint * sin(radians(theta))
-    s1 = 2 * s1sa * tan(radians(sample.resolution * theta)) - footprint_at_theta
-    s2 = constants.s1s2 * (footprint_at_theta + s1) / s1sa - s1
+    print("** Contrast change for valve{} **".format(valve_position))
+    movement = _Movement(dry_run)
+    movement._dry_run_warning()
+    if len(concentrations) != 4:
+        print("There must be 4 concentrations, you provided {}".format(len(concentrations)))
+    sum_of_concentrations = sum(concentrations)
+    if fabs(100 - sum_of_concentrations) > 0.01:
+        print("Concentrations don't add up to 100%! {} = {}".format(concentrations, sum_of_concentrations))
+    waiting = "" if wait else "NOT "
 
-    factor = theta / constants.maxTheta
-    s3 = constants.s3max * factor
-    s4 = constants.s4max * factor
+    print("Concentration: Valve {}, concentrations {}, flow {},  volume {}, time {}, and {}waiting for completion"
+          .format(valve_position, concentrations, flow, volume, seconds, waiting))
 
-    if s1_vg is not None:
-        s1 = s1_vg
-
-    if s2_vg is not None:
-        s2 = s2_vg
-
-    if s3_vg is not None:
-        s3 = s3_vg
-
-    if s4_vg is None:
-        s4 = s4_vg
-
-    print("Slits 1-4 set to: {}, {}, {}, {}".format(s1, s2, s3, s4))
     if not dry_run:
-        g.cset("S1VG", s1)
-        g.cset("S2VG", s2)
-        g.cset("S3VG", s3)
-        g.cset("S4VG", s4)
+        g.cset("knauer", valve_position)
+        g.cset("concA", concentrations[0])
+        g.cset("concB", concentrations[1])
+        g.cset("concC", concentrations[2])
+        g.cset("concD", concentrations[3])
+        g.cset("hplcflow", flow)
+        if volume is not None:
+            g.cset("pump_set_volume", volume)
+        if seconds is not None:
+            g.cset("pump_for_time", seconds)
+        else:
+            print("Error concentration not set neither volume or time set!")
+            return
+
+        g.waitfor_time(seconds=1)
+
+        if wait:
+            g.waitfor_block("Pump_Status", "PUMPING")
+        else:
+            g.waitfor_block("Pump_Status", "FINISHED")
+
+
+def slit_check(theta, footprint, resolution):
+    """
+    Check the slits values
+    Args:
+        theta: theta
+        footprint: desired footprint
+        resolution:  desired resolution
+
+    """
+    constants = get_instrument_constants()
+    movement = _Movement(True)
+    s1, s2 = movement._calculate_slit_gaps(theta, footprint, resolution, constants)
+    print("For a foortprint of {} and resolution of {} at an angle {}:".format(theta, footprint, resolution))
+    print("s1vg={}".format(s1))
+    print("s2vg={}".format(s2))
+
+
+class _Movement(object):
+    """
+    Encapsulate instrument changes
+    """
+
+    def __init__(self, dry_run):
+        self.dry_run = dry_run
+
+    def _change_to_mode(self, mode):
+        if mode is not None:
+            print("Change to mode: {}".format(mode))
+            if self.dry_run:
+                g.cset("MODE", mode)
+        else:
+            mode = g.cget("MODE")["value"]
+        return mode
+
+    def _dry_run_warning(self):
+        if self.dry_run:
+            print("Nothing will change this is a DRY RUN!!!")
+
+    def _set_theta(self, theta):
+        print("Theta set to: {}".format(theta))
+        if not self.dry_run:
+            g.cset("theta", theta)
+
+    def _update_title(self, title):
+        if self.dry_run:
+            print("New Title: {}".format(title))
+            g.change_title(title)
+
+    def _set_height_offset(self, height):
+        print("Sample: height offset from beam={}".format(height))
+        if not self.dry_run:
+            g.cset("HEIGHT_OFFSET", height)
+
+    def _set_height2_offset(self, height, constants):
+        if constants.has_height2:
+            print("Sample: height2 offset from beam={}".format(height))
+            if not self.dry_run:
+                g.cset("HEIGHT2_OFFSET", height)
+        elif height != 0:
+            print("ERROR: Height 2 off set is being ignored")
+
+    def _set_translation(self, translation):
+        print("Translation to {}".format(translation))
+        if not self.dry_run:
+            g.cset("TRANSLATION", translation)
+            g.waitfor_move()
+
+    def _set_slit_gaps(self, theta, constants, s1vg, s2vg, s3vg, s4vg, sample):
+        """
+        Set the slit gaps either to user settings or calculated based on foot print and max slit size
+        Args:
+            theta: angle theta is set to
+            constants: machine constants
+            s1vg: s1 vertical gap set by user; None use footprint calculated gap
+            s2vg: s2 vertical gap set by user; None use footprint calculated gap
+            s3vg: s3 vertical gap set by user; None use percentage of maximum
+            s4vg: s4 vertical gap set by user; None use percentage of maximum
+            sample: sample parameters
+        """
+        s1, s2 = self._calculate_slit_gaps(theta, sample.footprint, sample.resolution, constants)
+
+        factor = theta / constants.maxTheta
+        s3 = constants.s3max * factor
+        s4 = constants.s4max * factor
+
+        if s1vg is not None:
+            s1 = s1vg
+
+        if s2vg is not None:
+            s2 = s2vg
+
+        if s3vg is not None:
+            s3 = s3vg
+
+        if s4vg is not None:
+            s4 = s4vg
+
+        print("Slit gaps 1-4 set to: {}, {}, {}, {}".format(s1, s2, s3, s4))
+        if not self.dry_run:
+            g.cset("S1VG", s1)
+            g.cset("S2VG", s2)
+            g.cset("S3VG", s3)
+            g.cset("S4VG", s4)
+
+    def _calculate_slit_gaps(self, theta, footprint, resolution, constants):
+        s1sa = constants.s1s2 + constants.s2sa
+        footprint_at_theta = footprint * sin(radians(theta))
+        s1 = 2 * s1sa * tan(radians(resolution * theta)) - footprint_at_theta
+        s2 = (constants.s1s2 * (footprint_at_theta + s1) / s1sa) - s1
+        return s1, s2
+
+    def _set_h_gaps(self, s1hg, s2hg, s3hg, s4hg):
+        print("Setting hgaps to {} (None's are not changed)".format([s1hg, s2hg, s3hg, s4hg]))
+        if not self.dry_run:
+            if s1hg is not None:
+                g.cset("S1HG", s1hg)
+            if s2hg is not None:
+                g.cset("S2HG", s2hg)
+            if s3hg is not None:
+                g.cset("S3HG", s3hg)
+            if s4hg is not None:
+                g.cset("S4HG", s4hg)
+
+    def _change_to_1_period(self):
+        if not self.dry_run:
+            g.change_period(1)
+
+    def _count_for_time(self, seconds):
+        print("Measure for {} s".format(seconds))
+        if not self.dry_run:
+            g.begin()
+            g.waitfor_time(seconds=seconds)
+            g.end()
+
+    def _count_for_uamps(self, count_uamps):
+        print("Wait for {} uA".format(count_uamps))
+        if not self.dry_run:
+            g.begin()
+            g.waitfor_uamps(count_uamps)
+            g.end()
+
+    def _set_phi_psi(self, phi, psi):
+        print("Sample: Phi={}, Psi={}".format(phi, psi))
+        if not self.dry_run:
+            g.cset("PHI", phi)
+            g.cset("PSI", psi)
+
+    def _wait_for_move(self):
+        if not self.dry_run:
+            g.waitfor_move()
+
+    def _set_smangle_if_not_none(self, smangle):
+        if smangle is not None:
+            print("SM angle: {}".format(smangle))
+            if not self.dry_run:
+                g.cset("SMANGLE", smangle)
+                g.cset("SM_in", "IN")

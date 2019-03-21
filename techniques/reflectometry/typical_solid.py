@@ -84,27 +84,27 @@ def runscript(dry_run=False):
     standard_angles("D2O", samples[3], dry_run=dry_run)
     contrast_change(4, HDO_concentrations, 1.5, 30, dry_run=dry_run)
 
-
-    #### HDO contrasts:
+    # HDO contrasts:
     measure_and_change(samples, "HDO", H20_concentrations, dry_run=dry_run)
 
-    #### H2O contrasts:
+    # H2O contrasts:
     measure_and_change(samples, "H2O", None, dry_run=dry_run)
 
 
 def standard_angles(subtitle, sample, dry_run=False):
     """
     Measure the standard angles for a sample
-    :param subtitle: subtitle to use
-    :param sample: sample to measure
+
+    Args:
+        subtitle: subtitle to use
+        sample: sample to measure
+        dry_run: True to print changes; False perform changes
     """
     sample.subtitle = subtitle
     run_angle(sample, 0.3, 10, s3vg=5, s4vg=5, mode="NR", dry_run=dry_run)
-    input("pause ...")
     run_angle(sample, 1.0, 15, mode="NR", dry_run=dry_run)
-    input("pause ...")
     run_angle(sample, 2.3, 35, mode="NR", dry_run=dry_run)
-    input("pause ...")
+
 
 def measure_and_change(samples, subtitle, concern_to_set_after, dry_run=False):
     """
