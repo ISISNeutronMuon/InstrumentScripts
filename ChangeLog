@@ -1,3 +1,9 @@
+2019-05-07  <adam.washington@stfc.ac.uk>
+
+	* technique/sans/util.py (dae_setter.decorator.wrapper): Keep
+	track of DAE state to prevent constantly changing the wiring
+	tables.
+
 2019-03-11    <thomas.lohnert@stfc.ac.uk>
 
 	* general/scans/fit.py (GaussianFit.guess): Use proper statistics
