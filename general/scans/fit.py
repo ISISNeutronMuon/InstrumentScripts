@@ -516,7 +516,7 @@ class CentreOfMassFit(Fit):
         warnings.simplefilter("ignore", RuntimeWarning)
 
     def fit(self, x, y, err):
-        if not x or not y:
+        if not (x and y.size and err.size):
             return [np.nan]
 
         raw_data = np.array([
