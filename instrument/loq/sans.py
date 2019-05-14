@@ -81,9 +81,66 @@ class LOQ(ScanningInstrument):
         raise NotImplementedError("LOQ cannot perform reflectometry")
 
     @dae_setter("SANS/TRANS", "sans")
-    def setup_dae_fifty(self):
-        """A dae mode for LOQ at 50 hz."""
-        raise NotImplementedError("DAE mode for 50 Hz unwritten for LOQ")
+    @staticmethod
+    def setup_dae_normal():
+        """Setup LOQ for normal operation"""
+        gen.change_sync("smp")
+        gen.change_monitor(2, low=5000.0, high=27000.0)
+        gen.change_vetos(clearall=True, smp=True, TS2=True,
+                         ext0=True, ext1=True, ext2=True)
+        return ScanningInstrument._generic_scan(
+            r"c:\labview modules\dae\detector17792.dat",
+            r"c:\labview modules\dae\spectra17792.dat",
+            r"c:\labview modules\dae\wiring17792.dat",
+            [{"low": 3500.0, "high": 43500.0, "step": 0.025,
+              "log": True}])
+
+    @dae_setter("SANS/TRANS", "sans")
+    @staticmethod
+    def setup_dae_quiet():
+        """Setup LOQ for quiet operation"""
+        gen.change_sync("internal")
+        gen.change_monitor(2, low=5.0, high=20000.0)
+        gen.change_vetos(clearall=True, smp=False, TS2=False,
+                         ext0=False, ext1=False, ext2=False, ext3=False)
+        return ScanningInstrument._generic_scan(
+            r"c:\labview modules\dae\detector17792.dat",
+            r"c:\labview modules\dae\spectra17792.dat",
+            r"c:\labview modules\dae\wiring17792.dat",
+            [{"low": 5.0, "high": 19995.0, "step": 4000.0,
+              "log": False}])
+
+    @dae_setter("SANS/TRANS", "sans")
+    @staticmethod
+    def setup_dae_50hz_short():
+        """Setup LOQ for 50hz mode while short"""
+        gen.change_sync("isis")
+        gen.change_monitor(2, low=6800.0, high=17000.0)
+        gen.change_vetos(clearall=True, smp=True, TS2=True,
+                         ext0=True, ext1=True, ext2=True, ext3=True)
+        return ScanningInstrument._generic_scan(
+            r"c:\labview modules\dae\detector17792.dat",
+            r"c:\labview modules\dae\spectra17792.dat",
+            r"c:\labview modules\dae\wiring17792.dat",
+            [{"low": 6000.0, "high": 19600.0, "step": 400.0, "log": False},
+             {"low": 19600.0, "high": 19900.0, "step": 300.0, "log": False},
+             {"low": 19900.0, "high": 20800.0, "step": 100.0, "log": False},
+             {"low": 20800.0, "high": 26000.0, "step": 400.0, "log": False}])
+
+    @dae_setter("SANS/TRANS", "sans")
+    @staticmethod
+    def setup_dae_50hz_long():
+        """Setup LOQ for 50hz mode while long"""
+        gen.change_sync("isis")
+        gen.change_monitor(2, low=5000.0, high=27000.0)
+        gen.change_vetos(clearall=True, smp=True, TS2=True,
+                         ext0=True, ext1=True, ext2=True, ext3=True)
+        return ScanningInstrument._generic_scan(
+            r"c:\labview modules\dae\detector17792.dat",
+            r"c:\labview modules\dae\spectra17792.dat",
+            r"c:\labview modules\dae\wiring17792.dat",
+            [{"low": 20000.0, "high": 39500.0, "step": 250.0, "log": False},
+             {"low": 39500.0, "high": 40000.0, "step": 100.0, "log": False}])
 
     @staticmethod
     def _move_pos(pos):

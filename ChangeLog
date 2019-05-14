@@ -1,3 +1,8 @@
+2019-05-14  <adam.washington@stfc.ac.uk>
+
+	* instrument/loq/sans.py (LOQ.setup_dae_normal): Added suport for
+	LOQ DAE modes: normal, quiet, 50hz_long, and 50hz_short
+
 2019-05-13  <adam.washington@stfc.ac.uk>
 
 	* general/scans/scans.py (Scan.plot): Let fit plot actions view
