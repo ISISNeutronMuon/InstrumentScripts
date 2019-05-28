@@ -35,7 +35,8 @@ class LOQ(ScanningInstrument):
 
     @staticmethod
     def _generic_scan(  # pylint: disable=dangerous-default-value
-            detector, spectra,
+            detector=r"detector35576_M4.dat",
+            spectra=r"spectra35576_M4.dat",
             wiring=r"wiring35576_M4.dat",
             tcbs=[{"low": 3500.0, "high": 43500.0, "step": 0.025,
                    "log": True}]):
@@ -45,19 +46,15 @@ class LOQ(ScanningInstrument):
 
     @dae_setter("SANS/TRANS", "sans")
     def setup_dae_event(self):
-        self.setup_dae_histogram()
+        self.setup_dae_normal()
 
     @dae_setter("SANS/TRANS", "sans")
     def setup_dae_histogram(self):
-        return self._generic_scan(
-            detector="detector35576_M4.dat",
-            spectra="spectra35576_M4.dat")
+        self.setup_dae_normal()
 
     @dae_setter("TRANS", "transmission")
     def setup_dae_transmission(self):
-        return self._generic_scan(
-            detector="detector35576_M4.dat",
-            spectra="spectra35576_M4.dat")
+        return self._generic_scan()
 
     @dae_setter("SANS", "sans")
     def setup_dae_bsalignment(self):
@@ -68,9 +65,7 @@ class LOQ(ScanningInstrument):
         # FIXME: LOQ doesn't have a history of scanning, so it's not
         # certain what mode should be used.  For now, we'll guess it
         # to be the same as histogram
-        return self._generic_scan(
-            detector="detector35576_M4.dat",
-            spectra="spectra35576_M4.dat")
+        return self._generic_scan()
 
     @dae_setter("SCAN", "scan")
     def setup_dae_nr(self):
@@ -87,13 +82,10 @@ class LOQ(ScanningInstrument):
         gen.change_sync("smp")
         gen.change_monitor(2, low=5000.0, high=27000.0)
         gen.change_vetos(clearall=True, smp=True, TS2=True,
-                         ext0=True, ext1=True, ext2=True)
-        return ScanningInstrument._generic_scan(
-            r"c:\labview modules\dae\detector17792.dat",
-            r"c:\labview modules\dae\spectra17792.dat",
-            r"c:\labview modules\dae\wiring17792.dat",
-            [{"low": 3500.0, "high": 43500.0, "step": 0.025,
-              "log": True}])
+                         ext0=True, ext1=True, ext2=True, ext3=True)
+        return LOQ._generic_scan(
+            tcbs=[{"low": 3500.0, "high": 43500.0, "step": 0.025,
+                   "log": True}])
 
     @dae_setter("SANS/TRANS", "sans")
     @staticmethod
@@ -103,12 +95,9 @@ class LOQ(ScanningInstrument):
         gen.change_monitor(2, low=5.0, high=20000.0)
         gen.change_vetos(clearall=True, smp=False, TS2=False,
                          ext0=False, ext1=False, ext2=False, ext3=False)
-        return ScanningInstrument._generic_scan(
-            r"c:\labview modules\dae\detector17792.dat",
-            r"c:\labview modules\dae\spectra17792.dat",
-            r"c:\labview modules\dae\wiring17792.dat",
-            [{"low": 5.0, "high": 19995.0, "step": 4000.0,
-              "log": False}])
+        return LOQ._generic_scan(
+            tcbs=[{"low": 5.0, "high": 19995.0, "step": 4000.0,
+                   "log": False}])
 
     @dae_setter("SANS/TRANS", "sans")
     @staticmethod
@@ -118,14 +107,11 @@ class LOQ(ScanningInstrument):
         gen.change_monitor(2, low=6800.0, high=17000.0)
         gen.change_vetos(clearall=True, smp=True, TS2=True,
                          ext0=True, ext1=True, ext2=True, ext3=True)
-        return ScanningInstrument._generic_scan(
-            r"c:\labview modules\dae\detector17792.dat",
-            r"c:\labview modules\dae\spectra17792.dat",
-            r"c:\labview modules\dae\wiring17792.dat",
-            [{"low": 6000.0, "high": 19600.0, "step": 400.0, "log": False},
-             {"low": 19600.0, "high": 19900.0, "step": 300.0, "log": False},
-             {"low": 19900.0, "high": 20800.0, "step": 100.0, "log": False},
-             {"low": 20800.0, "high": 26000.0, "step": 400.0, "log": False}])
+        return LOQ._generic_scan(
+            tcbs=[{"low": 6e3, "high": 1.96e4, "step": 4e2, "log": False},
+                  {"low": 1.96e4, "high": 1.99e4, "step": 3e2, "log": False},
+                  {"low": 1.99e4, "high": 2.08e4, "step": 1e2, "log": False},
+                  {"low": 2.08e4, "high": 2.60e4, "step": 4e2, "log": False}])
 
     @dae_setter("SANS/TRANS", "sans")
     @staticmethod
@@ -135,12 +121,9 @@ class LOQ(ScanningInstrument):
         gen.change_monitor(2, low=5000.0, high=27000.0)
         gen.change_vetos(clearall=True, smp=True, TS2=True,
                          ext0=True, ext1=True, ext2=True, ext3=True)
-        return ScanningInstrument._generic_scan(
-            r"c:\labview modules\dae\detector17792.dat",
-            r"c:\labview modules\dae\spectra17792.dat",
-            r"c:\labview modules\dae\wiring17792.dat",
-            [{"low": 20000.0, "high": 39500.0, "step": 250.0, "log": False},
-             {"low": 39500.0, "high": 40000.0, "step": 100.0, "log": False}])
+        return LOQ._generic_scan(
+            tcbs=[{"low": 2e4, "high": 3.95e4, "step": 2.5e2, "log": False},
+                  {"low": 3.95e4, "high": 4e4, "step": 1e2, "log": False}])
 
     @staticmethod
     def _move_pos(pos):

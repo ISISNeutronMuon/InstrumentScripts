@@ -1,3 +1,7 @@
+2019-05-28  ndw1748  <adam.washington@stfc.ac.uk>
+
+	* instrument/loq/sans.py (LOQ._generic_scan): Change LOQ default wiring tables
+
 2019-05-14  <adam.washington@stfc.ac.uk>
 
 	* instrument/loq/sans.py (LOQ.setup_dae_normal): Added suport for
