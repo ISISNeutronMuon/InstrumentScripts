@@ -5,38 +5,10 @@ fits (i.e. Linear and Gaussian).
 
 """
 from abc import ABCMeta, abstractmethod
-from sys import platform
-import ctypes
-import os
-import sys
 import numpy as np
 from six import add_metaclass
 from scipy.special import erf  # pylint: disable=no-name-in-module
 
-if platform == "win32":
-    def handler(_):
-        """Basic handler for KeyboardInterrupt
-
-    This handler bypasses the Intel handler and prevents Python from
-    completely crashing on a Ctrl+C
-
-        """
-        try:
-            import _thread
-        except ImportError:
-            import thread as _thread
-        _thread.interrupt_main()
-        return 1
-
-    BASEPATH = os.path.join(os.path.dirname(sys.executable), "Lib",
-                            "site-packages", "numpy", "core")
-    ctypes.CDLL(os.path.join(BASEPATH, "libmmd.dll"))
-    ctypes.CDLL(os.path.join(BASEPATH, "libifcoremd.dll"))
-    routine = ctypes.WINFUNCTYPE(ctypes.c_int, ctypes.c_uint)(handler)
-    ctypes.windll.kernel32.SetConsoleCtrlHandler(routine, 1)
-
-else:
-    os.environ['FOR_DISABLE_CONSOLE_CTRL_HANDLER'] = "T"
 # pylint: disable=wrong-import-position
 from scipy.optimize import curve_fit, OptimizeWarning  # noqa: E402
 
