@@ -1,3 +1,29 @@
+2019-05-28  ndw1748  <adam.washington@stfc.ac.uk>
+
+	* instrument/loq/sans.py (LOQ._generic_scan): Change LOQ default wiring tables
+
+2019-05-14  <adam.washington@stfc.ac.uk>
+
+	* instrument/loq/sans.py (LOQ.setup_dae_normal): Added suport for
+	LOQ DAE modes: normal, quiet, 50hz_long, and 50hz_short
+
+2019-05-13  <adam.washington@stfc.ac.uk>
+
+	* general/scans/scans.py (Scan.plot): Let fit plot actions view
+	the results of the previous action.  As long as no one tries to
+	toss in an anamorphism, we don't have to worry about being
+	accidentally Turing complete.
+
+	* general/scans/fit.py (Fit.fit): Add uncertainty values into fits
+	(Fit.fit_quality): Start calculating the χ² of fits
+	(Fit.fit_plot_action.action): Insist that new fits are better than old fits
+
+2019-05-07  <adam.washington@stfc.ac.uk>
+
+	* technique/sans/util.py (dae_setter.decorator.wrapper): Keep
+	track of DAE state to prevent constantly changing the wiring
+	tables.
+
 2019-03-11    <thomas.lohnert@stfc.ac.uk>
 
 	* general/scans/fit.py (GaussianFit.guess): Use proper statistics
