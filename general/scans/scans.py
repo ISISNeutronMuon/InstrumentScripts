@@ -10,6 +10,7 @@ treated as private.
 """
 from __future__ import absolute_import, print_function
 from abc import ABCMeta, abstractmethod
+# pylint: disable=no-name-in-module
 from collections import Iterable, OrderedDict
 from contextlib import contextmanager
 import time
@@ -189,7 +190,7 @@ class Scan(object):
                     ys.plot(axis, xs)
                     if action:
                         action_remainder = action(xs, ys,
-                                                  axis)
+                                                  axis, action_remainder)
                     plt.draw()
         except KeyboardInterrupt:  # pragma: no cover
             pass
@@ -230,7 +231,7 @@ class Scan(object):
         if result is None:
             raise RuntimeError(
                 "Could not get result from plot. Perhaps the fit failed?")
-        elif isinstance(result[0], Iterable) and not isinstance(fit, ExactFit):
+        if isinstance(result[0], Iterable) and not isinstance(fit, ExactFit):
             result = np.array([x for x in result if x is not None])
             result = np.median(result, axis=0)
 
@@ -825,7 +826,7 @@ of trying to fake a detector."""
         axis.set_ylim(rng[0], rng[1])
         ys.plot(axis, xs)
         if action:
-            action_remainder = action(xs, ys, axis)
+            action_remainder = action(xs, ys, axis, None)
         if save:
             fig.savefig(save)
 

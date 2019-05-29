@@ -127,7 +127,6 @@ and other beam-line parameters for a measurement.
 ...   gen.cset(Translation=100)
 ...   gen.cset(CoarseZ=-75)
 >>> measure("Sample Name", weird_place, Julabo1_SP=37, uamps=10)
-Setup Larmor for event
 Moving to position weird_place
 Moving Julabo1_SP to 37
 Using the following Sample Parameters
@@ -193,7 +192,7 @@ keyword parameter that is automatically passed to
 back into event mode.
 
 >>> enumerate_dae()
-['4periods', 'alanis', 'bsalignment', 'diffraction', 'echoscan', 'event', 'event_fastsave', 'histogram', 'monitorsonly', 'monotest', 'nr', 'nrscanning', 'polarised', 'resonantimaging', 'resonantimaging_choppers', 'scanning', 'semsans', 'sesans', 'transmission', 'tshift']
+['4periods', 'alanis', 'bsalignment', 'diffraction', 'echoscan', 'event', 'event_fastsave', 'histogram', 'monitorsonly', 'monotest', 'nr', 'nrscanning', 'polarised', 'resonantimaging', 'resonantimaging_choppers', 'scanning', 'scanning12', 'semsans', 'sesans', 'transmission', 'tshift']
 
 The :py:meth:`ScanningInstrument.enumerate_dae` function will list all
 of the supported dae modes on the current beamline.
@@ -422,7 +421,6 @@ manner as a normal measurement.
 
 >>> set_default_dae(setup_dae_sesans)
 >>> measure("SESANS Test", frames=6000)
-Setup Larmor for event
 Setup Larmor for sesans
 Using the following Sample Parameters
 Geometry=Flat Plate
@@ -448,8 +446,6 @@ In this example, the instrument scientist has written two functions
 which handle the SESANS specific nature of the measurement.
 
 >>> measure("SESANS Test", u=1500, d=1500, uamps=10)
-Setup Larmor for event
-Setup Larmor for sesans
 Using the following Sample Parameters
 Geometry=Flat Plate
 Width=10

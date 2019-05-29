@@ -5,38 +5,10 @@ fits (i.e. Linear and Gaussian).
 
 """
 from abc import ABCMeta, abstractmethod
-from sys import platform
-import ctypes
-import os
-import sys
 import numpy as np
 from six import add_metaclass
 from scipy.special import erf  # pylint: disable=no-name-in-module
 
-if platform == "win32":
-    def handler(_):
-        """Basic handler for KeyboardInterrupt
-
-    This handler bypasses the Intel handler and prevents Python from
-    completely crashing on a Ctrl+C
-
-        """
-        try:
-            import _thread
-        except ImportError:
-            import thread as _thread
-        _thread.interrupt_main()
-        return 1
-
-    BASEPATH = os.path.join(os.path.dirname(sys.executable), "Lib",
-                            "site-packages", "numpy", "core")
-    ctypes.CDLL(os.path.join(BASEPATH, "libmmd.dll"))
-    ctypes.CDLL(os.path.join(BASEPATH, "libifcoremd.dll"))
-    routine = ctypes.WINFUNCTYPE(ctypes.c_int, ctypes.c_uint)(handler)
-    ctypes.windll.kernel32.SetConsoleCtrlHandler(routine, 1)
-
-else:
-    os.environ['FOR_DISABLE_CONSOLE_CTRL_HANDLER'] = "T"
 # pylint: disable=wrong-import-position
 from scipy.optimize import curve_fit, OptimizeWarning  # noqa: E402
 
@@ -54,13 +26,13 @@ class Fit(object):
         self._title = title
 
     @abstractmethod
-    def fit(self, x, y):  # pragma: no cover
+    def fit(self, x, y, err):  # pragma: no cover
         """The fit function takes arrays of independent and depedentend
         variables.  It returns a set of parameters in a format that is
         convenient for this specific object.
 
         """
-        return lambda i, j: None
+        return lambda i, j, errs: None
 
     @abstractmethod
     def get_y(self, x, fit):  # pragma: no cover
@@ -78,6 +50,10 @@ class Fit(object):
 
         """
         return lambda i: {}
+
+    def fit_quality(self, x, y, err, params):
+        """Find the quality of a fit for a data set"""
+        return np.mean(((self.get_y(x, params)-y) / err)**2)
 
     def title(self, params):
         """
@@ -100,7 +76,7 @@ class Fit(object):
         -------
         A function to call in the plotting loop
         """
-        def action(x, y, axis):
+        def action(x, y, axis, old_params):
             """Fit and plot the data within the plotting loop
 
             Parameters
@@ -111,6 +87,8 @@ class Fit(object):
               The y positions measured thus far
             axis : matplotlib.axis.Axis
               The axis on which to plot
+            old_params : None or tuple
+              The previous fit
 
             Returns
             -------
@@ -123,11 +101,12 @@ class Fit(object):
                 return None
             plot_x = np.linspace(np.min(x), np.max(x), 1000)
             values = np.array(y.values())
+            errs = np.array(y.err())
             if len(values.shape) > 1:
                 params = []
                 for value in values:
                     try:
-                        params.append(self.fit(x, value))
+                        params.append(self.fit(x, value, errs))
                     except RuntimeError:
                         params.append(None)
                         continue
@@ -136,10 +115,17 @@ class Fit(object):
                               label="{} fit".format(self.title(params[-1])))
             else:
                 try:
-                    params = self.fit(x, values)
+                    params = self.fit(x, values, errs)
                 except RuntimeError:
                     return None
                 fity = self.get_y(plot_x, params)
+                chi_sq = self.fit_quality(x, values, errs, params)
+                if old_params is not None:
+                    old_chi = self.fit_quality(x, values, errs, old_params)
+                    if chi_sq > old_chi:
+                        chi_sq = old_chi
+                        params = old_params
+                        fity = self.get_y(plot_x, params)
                 axis.plot(plot_x, fity, "-",
                           label="{} fit".format(self.title(params)))
             axis.legend()
@@ -158,8 +144,8 @@ class PolyFit(Fit):
             title = "Polynomial fit of degree {}".format(degree)
         Fit.__init__(self, degree + 1, title)
 
-    def fit(self, x, y):
-        return np.polyfit(x, y, self.degree - 1)
+    def fit(self, x, y, err):
+        return np.polyfit(x, y, self.degree - 1, w=1/err)
 
     def get_y(self, x, fit):
         return np.polyval(fit, x)
@@ -189,7 +175,7 @@ class ExactFit(Fit):
     def __init__(self):
         Fit.__init__(self, np.inf, "Exact Points")
 
-    def fit(self, x, y):
+    def fit(self, x, y, err):
         return (x, y)
 
     def get_y(self, _, fit):
@@ -237,7 +223,7 @@ class PeakFit(Fit):
     def _make_window(self, x, center):
         return np.abs(x-center) < self._window
 
-    def fit(self, x, y):
+    def fit(self, x, y, err):
         x = np.array(x)
         y = np.array(y)
         base = np.nanargmax(y)
@@ -245,6 +231,9 @@ class PeakFit(Fit):
         fit = np.polyfit(x[window], y[window], 2)
         self._fit = fit
         return np.array([-fit[1]/2/fit[0]])
+
+    def fit_quality(self, x, y, err, params):
+        return 1  # Cannot measure χ² for a peak
 
     def get_y(self, x, fit):
         center = fit[0]
@@ -286,15 +275,16 @@ class CurveFit(Fit):
         parameters of the fit.
         """
 
-    def fit(self, x, y):
+    def fit(self, x, y, err):
         x = np.array(x)
         y = np.array(y)
-        mask = np.logical_and(np.isfinite(y), np.isfinite(y))
+        mask = np.isfinite(x) & np.isfinite(y)
         x = x[mask]
         y = y[mask]
         # raise maxfev to 10,000, this allows scipy to make more function
         # calls, improving the chances of getting a good/correct fit.
-        return curve_fit(self._model, x, y, self.guess(x, y), maxfev=10000)[0]
+        return curve_fit(self._model, x, y, self.guess(x, y), maxfev=10000,
+                         sigma=err)[0]
 
     def get_y(self, x, fit):
         return self._model(x, *fit)
@@ -323,8 +313,10 @@ class GaussianFit(CurveFit):
 
     @staticmethod
     def guess(x, y):
-        return [np.mean(x), np.max(x)-np.min(x),
-                np.max(y) - np.min(y), np.min(y)]
+        mean = np.sum(x*y)/np.sum(y)
+        guess = [mean, np.sqrt(np.sum(y*(x - mean)**2)/np.sum(y)),
+                 np.max(y) - np.min(y), np.min(y)]
+        return guess
 
     def readable(self, fit):
         return {"center": fit[0], "sigma": fit[1],
@@ -495,8 +487,8 @@ class CentreOfMassFit(Fit):
         import warnings
         warnings.simplefilter("ignore", RuntimeWarning)
 
-    def fit(self, x, y):
-        if not x or not y:
+    def fit(self, x, y, err):
+        if not (x and y.size and err.size):
             return [np.nan]
 
         raw_data = np.array([
@@ -541,7 +533,7 @@ class CentreOfMassFit(Fit):
         return {"Centre_of_mass": fit[0]}
 
     def fit_plot_action(self):
-        def action(x, y, axis):
+        def action(x, y, axis, _):
             """Fit and plot the data within the plotting loop
 
             Parameters
@@ -560,7 +552,9 @@ class CentreOfMassFit(Fit):
                 parameters if the fit was performed
 
             """
-            params = self.fit(x, y)
+            values = np.array(y.values())
+            errs = np.array(y.err())
+            params = self.fit(x, values, errs)
             axis.axvline(x=params[0])
             axis.legend([self.title(params)])
             return params

@@ -153,6 +153,16 @@ Plot Motor Scan
 	    ...
 	    RuntimeError: Unable to build a scan with that set of options.
 
+  Given the flexibility of the scanning system, it's not too difficult
+  to accidentally request a scan that contains no data points.
+  Instead of plotting a pointless scan, the scanning system will raise
+  an exception, as this is almost never what the user intended.
+
+  >>> scan(theta, -2, -3, 0.2, 5)
+  Traceback (most recent call last):
+  ...
+  RuntimeError: Your requested scan contains no points.  Are you trying to move a negative distance with positive steps?
+
 Motor Objects
 -------------
 
@@ -254,7 +264,7 @@ Perform Fits
   Taking a count at theta=1.00 and two theta=0.00
   Taking a count at theta=1.50 and two theta=0.00
   Taking a count at theta=2.00 and two theta=0.00
-  >>> abs(fit["slope"] - 0.33) < 0.02
+  >>> abs(fit["slope"] - 0.64) < 0.02
   True
 
   In this instance, the user requested a linear fit.  The result was an
@@ -466,6 +476,57 @@ Perform complex scans
 
   >>> scan(theta, start=0, stop=1, stride=0.5).forever.fit(Gaussian, frames=5) #doctest: +SKIP
 
+Scan Alternate Detectors
+------------------------
+
+  The `scan` command, by default, scans an intensity on a detector
+  that has been chosen by the instrument scientist.  It is possible to
+  scan other detectors through the `detector` keyword.
+
+  >>> scan(theta, start=0, stop=1, stride=0.25, frames=50, detector=specific_spectra([[4]]))
+  Taking a count at theta=0.00 and two theta=3.00
+  Taking a count at theta=0.25 and two theta=3.00
+  Taking a count at theta=0.50 and two theta=3.00
+  Taking a count at theta=0.75 and two theta=3.00
+  Taking a count at theta=1.00 and two theta=3.00
+
+  The above uses the :meth:`general.scans.detector.specific_spectra`
+  to create a :math:`general.scans.detector.Detector` that looks at
+  spectrum number four.  Multiple channels can be combined together
+  into a single value by including them all within the inner list.
+  For example, to plots detector spectra four and one combined:
+
+  >>> scan(theta, start=0, stop=1, stride=0.25, frames=50, detector=specific_spectra([[4, 1]]))
+  Taking a count at theta=0.00 and two theta=3.00
+  Taking a count at theta=0.25 and two theta=3.00
+  Taking a count at theta=0.50 and two theta=3.00
+  Taking a count at theta=0.75 and two theta=3.00
+  Taking a count at theta=1.00 and two theta=3.00
+
+  It's also possible to plot different curves simultaneously by adding
+  more lists to be main list.  The example below plots both the
+  combined spectra 11 and 12 as well as a separate curve with detector
+  spectrum 4.
+
+  >>> scan(theta, start=0, stop=1, stride=0.25, frames=50, detector=specific_spectra([[4, 11, 12], [4, 1]]))
+  Taking a count at theta=0.00 and two theta=3.00
+  Taking a count at theta=0.00 and two theta=3.00
+  Taking a count at theta=0.25 and two theta=3.00
+  Taking a count at theta=0.25 and two theta=3.00
+  Taking a count at theta=0.50 and two theta=3.00
+  Taking a count at theta=0.50 and two theta=3.00
+  Taking a count at theta=0.75 and two theta=3.00
+  Taking a count at theta=0.75 and two theta=3.00
+  Taking a count at theta=1.00 and two theta=3.00
+  Taking a count at theta=1.00 and two theta=3.00
+
+  Beyond using the `specific_spectra` function, it's also possible to
+  scan across any arbitrary value.  The code below with plots twice
+  the current value of the theta motor (as an example).
+
+  >>> def example_detector(**kwargs):
+  ...   return Average(2*theta())
+  >>> scan(theta, start=0, stop=1, stride=0.25, frames=50, detector=example_detector)
 
 Perform continuous scans
 ------------------------
