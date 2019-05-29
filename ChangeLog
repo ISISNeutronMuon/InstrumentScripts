@@ -1,3 +1,10 @@
+2019-05-29  ndw1748  <adam.washington@stfc.ac.uk>
+
+	* general/scans/fit.py: Remove interrupt handler override.  IBEX
+	has moved to a different version of the numpy library that no
+	longer suffers from the Intel's MKL issues and the override is no
+	longer needed (or possible).
+
 2019-05-28  ndw1748  <adam.washington@stfc.ac.uk>
 
 	* instrument/loq/sans.py (LOQ._generic_scan): Change LOQ default wiring tables
