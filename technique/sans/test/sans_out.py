@@ -12,9 +12,7 @@ AssignCan(can)
 can_tr = AddRuns([89])
 TransmissionCan(can_tr,85)
 WavRangeReduction(3, 9)
-#  polar bear p1 along hairs
-#  Error: Missing transmission information
-#  polar bear p2 along hairs
+#  example solution 23 1mm cell
 #  Error: Missing transmission information
 #  polar bear p1 across hairs
 sample = AddRuns([84])
@@ -26,6 +24,8 @@ AssignCan(can)
 can_tr = AddRuns([85])
 TransmissionCan(can_tr,85)
 WavRangeReduction(3, 9)
+#  polar bear p1 along hairs
+#  Error: Missing transmission information
 #  polar bear p2 across hairs
 sample = AddRuns([82])
 AssignSample(sample)
@@ -36,5 +36,5 @@ AssignCan(can)
 can_tr = AddRuns([85])
 TransmissionCan(can_tr,85)
 WavRangeReduction(3, 9)
-#  example solution 23 1mm cell
+#  polar bear p2 along hairs
 #  Error: Missing transmission information
