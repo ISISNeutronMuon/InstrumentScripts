@@ -17,12 +17,13 @@ class LOQ(ScanningInstrument):
 
     _poslist = ['AB', 'BB', 'CB', 'DB', 'EB', 'FB', 'GB', 'HB', 'IB', 'JB',
                 'KB', 'LB', 'MB', 'NB', 'OB', 'PB', 'QB', 'RB', 'SB', 'TB',
-                'C1B', 'C2B', 'C3B', 'C4B', 'C5B', 'C6B', 'C7B',
-                'C8B', 'C9B', 'C10B', 'C11B', 'C12B', 'C13B', 'C14B',
+                'C1B', 'C2B', 'C3B', 'C4B', 'C5B', 'C6B', 'C7B', 'C8B', 'C9B',
+                'C10B', 'C11B', 'C12B', 'C13B', 'C14B', 'C15B', 'C16B', 'C17B', 'C18B',
                 'C1T', 'C2T', 'C3T', 'C4T', 'C5T', 'C6T', 'C7T',
                 'C8T', 'C9T', 'C10T', 'C11T', 'C12T', 'C13T', 'C14T',
                 'W1B', 'W2B', 'W3B', 'W4B', 'W5B', 'W6B', 'W7B', 'W8B',
-                'W9B', 'W10B', 'W11B', 'W12B', 'W13B', 'W14B', 'W15B', 'W16B']
+                'W9B', 'W10B', 'W11B', 'W12B', 'W13B', 'W14B', 'W15B', 'W16B',
+                'DLS2', 'DLS3', 'DLS4', 'DLS5', 'DLS6']
 
     def set_measurement_type(self, value):
         gen.set_pv(pv_origin + ":PARS:SAMPLE:MEAS:TYPE", value)
