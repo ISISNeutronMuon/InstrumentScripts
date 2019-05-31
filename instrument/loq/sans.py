@@ -4,6 +4,7 @@ from technique.sans.genie import gen
 # pylint: disable=unused-import
 from technique.sans.util import dae_setter  # noqa: F401
 from general.scans.util import local_wrapper
+from time import sleep
 
 pv_origin = "IN:LOQ"  # FIXME
 
@@ -182,17 +183,21 @@ for method in dir(obj):
 def J1(temperature_1, temperature_2):
     """Run off Julabo 1"""
     gen.set_pv("IN:LOQ:JULABO_01:MODE:SP", "OFF")
+    sleep(1)
     gen.set_pv("IN:LOQ:JULABO_02:MODE:SP", "OFF")
     gen.waitfor_move()
     gen.cset(Valve="J1")
     gen.waitfor_move()
     gen.cset(Julabo_1_Sensor="External")
+    sleep(1)
     gen.cset(Julabo_2_Sensor="Internal")
     gen.waitfor_move()
     gen.cset(Internal_Setpoint_1=temperature_1)
+    sleep(1)
     gen.cset(Internal_Setpoint_2=temperature_2)
     gen.waitfor_move()
     gen.set_pv("IN:LOQ:JULABO_01:MODE:SP", "ON")
+    sleep(1)
     gen.set_pv("IN:LOQ:JULABO_02:MODE:SP", "ON")
     gen.waitfor_move()
 
@@ -200,16 +205,20 @@ def J1(temperature_1, temperature_2):
 def J2(temperature_1, temperature_2):
     """Run off Julabo 2"""
     gen.cset(Julabo_1_Circulator="OFF")
+    sleep(1)
     gen.cset(Julabo_2_Circulator="OFF")
     gen.waitfor_move()
     gen.cset(Valve="J2")
     gen.waitfor_move()
     gen.cset(Julabo_1_Sensor="Internal")
+    sleep(1)
     gen.cset(Julabo_2_Sensor="External")
     gen.waitfor_move()
     gen.cset(Internal_Setpoint_1=temperature_1)
+    sleep(1)
     gen.cset(Internal_Setpoint_2=temperature_2)
     gen.waitfor_move()
     gen.cset(Julabo_1_Circulator="ON")
+    sleep(1)
     gen.cset(Julabo_2_Circulator="ON")
     gen.waitfor_move()
