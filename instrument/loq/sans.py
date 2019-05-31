@@ -74,7 +74,6 @@ class LOQ(ScanningInstrument):
     def setup_dae_nrscanning(self):
         raise NotImplementedError("LOQ cannot perform reflectometry")
 
-    @dae_setter("SANS/TRANS", "sans")
     @staticmethod
     @dae_setter("SANS/TRANS", "sans")
     def setup_dae_normal():
