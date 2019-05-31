@@ -77,6 +77,7 @@ class LOQ(ScanningInstrument):
 
     @dae_setter("SANS/TRANS", "sans")
     @staticmethod
+    @dae_setter("SANS/TRANS", "sans")
     def setup_dae_normal():
         """Setup LOQ for normal operation"""
         gen.change_sync("smp")
@@ -87,8 +88,8 @@ class LOQ(ScanningInstrument):
             tcbs=[{"low": 3500.0, "high": 43500.0, "step": 0.025,
                    "log": True}])
 
-    @dae_setter("SANS/TRANS", "sans")
     @staticmethod
+    @dae_setter("SANS/TRANS", "sans")
     def setup_dae_quiet():
         """Setup LOQ for quiet operation"""
         gen.change_sync("internal")
@@ -99,8 +100,8 @@ class LOQ(ScanningInstrument):
             tcbs=[{"low": 5.0, "high": 19995.0, "step": 4000.0,
                    "log": False}])
 
-    @dae_setter("SANS/TRANS", "sans")
     @staticmethod
+    @dae_setter("SANS/TRANS", "sans")
     def setup_dae_50hz_short():
         """Setup LOQ for 50hz mode while short"""
         gen.change_sync("isis")
@@ -113,8 +114,8 @@ class LOQ(ScanningInstrument):
                   {"low": 1.99e4, "high": 2.08e4, "step": 1e2, "log": False},
                   {"low": 2.08e4, "high": 2.60e4, "step": 4e2, "log": False}])
 
-    @dae_setter("SANS/TRANS", "sans")
     @staticmethod
+    @dae_setter("SANS/TRANS", "sans")
     def setup_dae_50hz_long():
         """Setup LOQ for 50hz mode while long"""
         gen.change_sync("isis")
