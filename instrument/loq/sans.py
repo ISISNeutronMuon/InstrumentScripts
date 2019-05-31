@@ -131,6 +131,11 @@ class LOQ(ScanningInstrument):
         return gen.cset(Changer=pos)
 
     @staticmethod
+    def _move_pos(pos):
+        """Move the sample changer to a labelled position"""
+        return gen.cset(Changer=pos)
+
+    @staticmethod
     def set_aperture(size):
         if size == "":
             pass
