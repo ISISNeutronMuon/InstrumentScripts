@@ -432,7 +432,8 @@ class ContinuousScan(Scan):
                             axis.set_ylim(rng[0], rng[1])
                             ys.plot(axis, xs)
                             if action:
-                                action_remainder = action(xs, ys, axis, action_remainder)
+                                action_remainder = action(xs, ys, axis,
+                                                          action_remainder)
 
                             plt.draw()
 
