@@ -37,8 +37,8 @@ class LOQ(ScanningInstrument):
     def set_measurement_id(self, value):
         gen.set_pv(self.pv_origin + ":PARS:SAMPLE:MEAS:ID", value)
 
-    @staticmethod
     def _generic_scan(  # pylint: disable=dangerous-default-value
+            self,
             detector=r"detector35576_M4.dat",
             spectra=r"spectra35576_M4.dat",
             wiring=r"wiring35576_M4.dat",
@@ -49,7 +49,7 @@ class LOQ(ScanningInstrument):
             gen.change_tcb(low=0, high=0, step=0, log=0, trange=trange, regime=1)
             sleep(1.5)
         gen.change_tcb(low=0, high=0, step=0, log=0, trange=1, regime=2)
-        ScanningInstrument._generic_scan(
+        ScanningInstrument._generic_scan(self,
             base+detector, base+spectra, base+wiring, tcbs)
 
     @dae_setter("SANS/TRANS", "sans")
@@ -93,7 +93,7 @@ class LOQ(ScanningInstrument):
         gen.change_monitor(2, low=5000.0, high=27000.0)
         gen.change_vetos(clearall=True, smp=True, TS2=True,
                          ext0=True, ext1=True, ext2=True, ext3=True)
-        return LOQ._generic_scan(
+        return self._generic_scan(
             tcbs=[{"low": 3500.0, "high": 43500.0, "step": 0.025,
                    "log": True},
                   {"low": 3500, "high": 43500.0, "step": 40000,
@@ -106,7 +106,7 @@ class LOQ(ScanningInstrument):
         gen.change_monitor(2, low=5.0, high=20000.0)
         gen.change_vetos(clearall=True, smp=False, TS2=False,
                          ext0=False, ext1=False, ext2=False, ext3=False)
-        return LOQ._generic_scan(
+        return self._generic_scan(
             tcbs=[{"low": 5.0, "high": 19995.0, "step": 4000.0,
                    "log": False},
                   {"low": 5, "high": 19995.0, "step": 19990.0, "log": False, "trange":1, "regime":2}])
@@ -118,7 +118,7 @@ class LOQ(ScanningInstrument):
         gen.change_monitor(2, low=6800.0, high=17000.0)
         gen.change_vetos(clearall=True, smp=True, TS2=True,
                          ext0=True, ext1=True, ext2=True, ext3=True)
-        return LOQ._generic_scan(
+        return self._generic_scan(
             tcbs=[{"low": 6e3, "high": 1.96e4, "step": 4e2, "log": False, "trange":1},
                   {"low": 1.96e4, "high": 1.99e4, "step": 3e2, "log": False, "trange":2},
                   {"low": 1.99e4, "high": 2.08e4, "step": 1e2, "log": False, "trange":3},
@@ -132,7 +132,7 @@ class LOQ(ScanningInstrument):
         gen.change_monitor(2, low=5000.0, high=27000.0)
         gen.change_vetos(clearall=True, smp=True, TS2=True,
                          ext0=True, ext1=True, ext2=True, ext3=True)
-        return LOQ._generic_scan(
+        return self._generic_scan(
             tcbs=[{"low": 2e4, "high": 3.95e4, "step": 2.5e2, "log": False, "trange":1},
                   {"low": 3.95e4, "high": 4e4, "step": 1e2, "log": False, "trange":2},
                   {"low": 20000, "high": 40000, "step": 20000, "log": False, "trange":1, "regime":2}])

@@ -85,8 +85,7 @@ class ScanningInstrument(object):
                 result[k] = kwargs[k]
         return result
 
-    @staticmethod
-    def _generic_scan(detector, spectra, wiring, tcbs):
+    def _generic_scan(self, detector, spectra, wiring, tcbs):
         """A utility class for setting up dae states
 
         On its own, it's not particularly useful, but
