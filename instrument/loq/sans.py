@@ -1,10 +1,10 @@
 """This is the instrument implementation for the LOQ beamline."""
+from time import sleep
 from technique.sans.instrument import ScanningInstrument
 from technique.sans.genie import gen
 # pylint: disable=unused-import
 from technique.sans.util import dae_setter  # noqa: F401
 from general.scans.util import local_wrapper
-from time import sleep
 
 
 class LOQ(ScanningInstrument):
@@ -44,13 +44,15 @@ class LOQ(ScanningInstrument):
                    "log": True}]):
         base = r"C:\Instrument\Settings\config\NDXLOQ\configurations\tables\\"
         gen.change_start()
-        for trange in range(1,6):
-            gen.change_tcb(low=0, high=0, step=0, log=0, trange=trange, regime=1)
+        for trange in range(1, 6):
+            gen.change_tcb(low=0, high=0, step=0, log=0,
+                           trange=trange, regime=1)
             sleep(1.5)
-        gen.change_tcb(low=0, high=0, step=0, log=0, trange=1, regime=2)
+        gen.change_tcb(low=0, high=0, step=0, log=0,
+                       trange=1, regime=2)
         gen.change_finish()
-        ScanningInstrument._generic_scan(self,
-            base+detector, base+spectra, base+wiring, tcbs)
+        ScanningInstrument._generic_scan(
+            self, base+detector, base+spectra, base+wiring, tcbs)
 
     @dae_setter("SANS/TRANS", "sans")
     def setup_dae_event(self):
@@ -97,7 +99,7 @@ class LOQ(ScanningInstrument):
             tcbs=[{"low": 3500.0, "high": 43500.0, "step": 0.025,
                    "log": True},
                   {"low": 3500, "high": 43500.0, "step": 40000,
-                   "log": False, "trange":1, "regime":2}])
+                   "log": False, "trange": 1, "regime": 2}])
 
     @dae_setter("SANS/TRANS", "sans")
     def setup_dae_quiet(self):
@@ -109,7 +111,8 @@ class LOQ(ScanningInstrument):
         return self._generic_scan(
             tcbs=[{"low": 5.0, "high": 19995.0, "step": 4000.0,
                    "log": False},
-                  {"low": 5, "high": 19995.0, "step": 19990.0, "log": False, "trange":1, "regime":2}])
+                  {"low": 5, "high": 19995.0, "step": 19990.0, "log": False,
+                   "trange": 1, "regime": 2}])
 
     @dae_setter("SANS/TRANS", "sans")
     def setup_dae_50hz_short(self):
@@ -119,11 +122,16 @@ class LOQ(ScanningInstrument):
         gen.change_vetos(clearall=True, smp=True, TS2=True,
                          ext0=True, ext1=True, ext2=True, ext3=True)
         return self._generic_scan(
-            tcbs=[{"low": 6e3, "high": 1.96e4, "step": 4e2, "log": False, "trange":1},
-                  {"low": 1.96e4, "high": 1.99e4, "step": 3e2, "log": False, "trange":2},
-                  {"low": 1.99e4, "high": 2.08e4, "step": 1e2, "log": False, "trange":3},
-                  {"low": 2.08e4, "high": 2.60e4, "step": 4e2, "log": False, "trange":4},
-                  {"low": 6000, "high": 2.60e4, "step": 20000, "log": False, "trange":1, "regime":2}])
+            tcbs=[{"low": 6e3, "high": 1.96e4, "step": 4e2,
+                   "log": False, "trange": 1},
+                  {"low": 1.96e4, "high": 1.99e4, "step": 3e2,
+                   "log": False, "trange": 2},
+                  {"low": 1.99e4, "high": 2.08e4, "step": 1e2,
+                   "log": False, "trange": 3},
+                  {"low": 2.08e4, "high": 2.60e4, "step": 4e2,
+                   "log": False, "trange": 4},
+                  {"low": 6000, "high": 2.60e4, "step": 20000,
+                   "log": False, "trange": 1, "regime": 2}])
 
     @dae_setter("SANS/TRANS", "sans")
     def setup_dae_50hz_long(self):
@@ -133,9 +141,12 @@ class LOQ(ScanningInstrument):
         gen.change_vetos(clearall=True, smp=True, TS2=True,
                          ext0=True, ext1=True, ext2=True, ext3=True)
         return self._generic_scan(
-            tcbs=[{"low": 2e4, "high": 3.95e4, "step": 2.5e2, "log": False, "trange":1},
-                  {"low": 3.95e4, "high": 4e4, "step": 1e2, "log": False, "trange":2},
-                  {"low": 20000, "high": 40000, "step": 20000, "log": False, "trange":1, "regime":2}])
+            tcbs=[{"low": 2e4, "high": 3.95e4, "step": 2.5e2,
+                   "log": False, "trange": 1},
+                  {"low": 3.95e4, "high": 4e4, "step": 1e2,
+                   "log": False, "trange": 2},
+                  {"low": 20000, "high": 40000, "step": 20000,
+                   "log": False, "trange": 1, "regime": 2}])
 
     @staticmethod
     def _move_pos(pos):

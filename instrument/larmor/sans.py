@@ -55,13 +55,13 @@ class Larmor(ScanningInstrument):  # pylint: disable=too-many-public-methods
         self._dae_mode = ""
         self.step = step
 
-    @staticmethod
     def _generic_scan(  # pylint: disable=dangerous-default-value
+            self,
             detector=r"C:\Instrument\Settings\Tables\detector.dat",
             spectra=r"C:\Instrument\Settings\Tables\spectra_1To1.dat",
             wiring=r"C:\Instrument\Settings\Tables\wiring.dat",
             tcbs=[]):
-        ScanningInstrument._generic_scan(detector, spectra, wiring, tcbs)
+        ScanningInstrument._generic_scan(self, detector, spectra, wiring, tcbs)
 
     @staticmethod
     def _set_choppers(lrange):
@@ -86,7 +86,7 @@ class Larmor(ScanningInstrument):  # pylint: disable=too-many-public-methods
 
     @dae_setter("SCAN", "scan")
     def setup_dae_scanning(self):
-        Larmor._generic_scan(
+        self._generic_scan(
             spectra=r"C:\Instrument\Settings\Tables\spectra_scanning_80.dat",
             tcbs=[{"low": 5.0, "high": 100000.0, "step": 100.0,
                    "trange": 1, "log": 0}])
@@ -95,7 +95,7 @@ class Larmor(ScanningInstrument):  # pylint: disable=too-many-public-methods
     def setup_dae_scanning12(self):  # pylint: disable=no-self-use
         """Set the wiring tables for performing a scan where the entire main
 detector is contained in only two channels."""
-        Larmor._generic_scan(
+        self._generic_scan(
             spectra=r"C:\Instrument\Settings\Tables\spectra_scanning_12.dat",
             tcbs=[{"low": 5.0, "high": 100000.0, "step": 100.0,
                    "trange": 1, "log": 0}])
@@ -108,14 +108,14 @@ involves only having two spectra covering the entire main detecor."""
 
     @dae_setter("SCAN", "scan")
     def setup_dae_nr(self):
-        Larmor._generic_scan(
+        self._generic_scan(
             spectra=r"C:\Instrument\Settings\Tables\spectra_nrscanning.dat",
             tcbs=[{"low": 5.0, "high": 100000.0, "step": 100.0,
                    "trange": 1, "log": 0}])
 
     @dae_setter("SCAN", "scan")
     def setup_dae_nrscanning(self):
-        Larmor._generic_scan(
+        self._generic_scan(
             spectra=r"U:\Users\Masks\spectra_scanning_auto.dat",
             tcbs=[{"low": 5.0, "high": 100000.0, "step": 100.0,
                    "trange": 1, "log": 0}])
@@ -123,7 +123,7 @@ involves only having two spectra covering the entire main detecor."""
     @dae_setter("SANS", "sans")
     def setup_dae_event(self):
         # Normal event mode with full detector binning
-        Larmor._generic_scan(
+        self._generic_scan(
             wiring=r"C:\Instrument\Settings\Tables\wiring_event.dat",
             tcbs=[{"low": 5.0, "high": 100000.0, "step": self.step,
                    "trange": 1, "log": 0},
@@ -140,7 +140,7 @@ involves only having two spectra covering the entire main detecor."""
         # Event mode with reduced detector histogram binning to
         # decrease filesize
         # This currently breaks mantid nexus read
-        Larmor._generic_scan(
+        self._generic_scan(
             wiring=r"C:\Instrument\Settings\Tables\wiring_event_fastsave.dat",
             # change to log binning to reduce number of detector bins
             # by a factor of 10 to decrease write time
@@ -162,7 +162,7 @@ involves only having two spectra covering the entire main detecor."""
     @dae_setter("SANS", "sans")
     def setup_dae_histogram(self):
         gen.change_sync('isis')
-        Larmor._generic_scan(
+        self._generic_scan(
             tcbs=[{"low": 5.0, "high": 100000.0, "step": 100.0,
                    "trange": 1, "log": 0},
                   {"low": 0.0, "high": 0.0, "step": 0.0,
@@ -173,7 +173,7 @@ involves only having two spectra covering the entire main detecor."""
     def setup_dae_transmission(self):
         gen.set_pv("IN:LARMOR:PARS:SAMPLE:MEAS:TYPE", "transmission")
         gen.change_sync('isis')
-        Larmor._generic_scan(
+        self._generic_scan(
             r"C:\Instrument\Settings\Tables\detector_monitors_only.dat",
             r"C:\Instrument\Settings\Tables\spectra_monitors_only.dat",
             r"C:\Instrument\Settings\Tables\wiring_monitors_only.dat",
@@ -183,11 +183,10 @@ involves only having two spectra covering the entire main detecor."""
               "trange": 2, "log": 0}])
         self._set_choppers(self.lrange)
 
-    @staticmethod
     @dae_setter("TRANS", "transmission")
-    def setup_dae_monotest():
+    def setup_dae_monotest(self):
         """Setup with a mono test?"""
-        Larmor._generic_scan(
+        self._generic_scan(
             tcbs=[{"low": 5.0, "high": 100000.0, "step": 100.0,
                    "trange": 1, "log": 0},
                   {"low": 0.0, "high": 0.0, "step": 0.0,
@@ -198,15 +197,14 @@ involves only having two spectra covering the entire main detecor."""
         gen.set_pv("IN: LARMOR: MK3CHOPR_01: CH3: DIR: SP", "CCW")
         gen.cset(InstrumentDiskPhase=77650)
 
-    @staticmethod
     @dae_setter("SANS", "sans")
-    def setup_dae_tshift(tlowdet=5.0, thighdet=100000.0, tlowmon=5.0,
+    def setup_dae_tshift(self, tlowdet=5.0, thighdet=100000.0, tlowmon=5.0,
                          thighmon=100000.0):
         """Allow m1 to count as normal but to shift the rest of the detectors
         in order to allow counting over the frame.
 
         """
-        Larmor._generic_scan(
+        self._generic_scan(
             wiring=r"C:\Instrument\Settings\Tables\wiring_tshift.dat",
             tcbs=[{"low": tlowdet, "high": thighdet, "step": 100.0,
                    "trange": 1, "log": 0},
@@ -215,49 +213,45 @@ involves only having two spectra covering the entire main detecor."""
                   {"low": tlowmon, "high": thighmon, "step": 20.0, "trange": 1,
                    "log": 0, "regime": 3}])
 
-    @staticmethod
     @dae_setter("SANS", "sans")
-    def setup_dae_diffraction():
+    def setup_dae_diffraction(self):
         """Set the wiring tables for a diffraction measurement"""
-        Larmor._generic_scan(
+        self._generic_scan(
             tcbs=[{"low": 5.0, "high": 100000.0, "step": 0.01,
                    "trange": 1, "log": 1},
                   {"low": 0.0, "high": 0.0, "step": 0.0,
                    "trange": 2, "log": 0}])
 
-    @staticmethod
     @dae_setter("SANS", "sans")
-    def setup_dae_polarised():
+    def setup_dae_polarised(self):
         """Set the wiring tables for a polarisation measurement."""
-        Larmor._generic_scan(
+        self._generic_scan(
             tcbs=[{"low": 5.0, "high": 100000.0, "step": 100.0, "trange": 1},
                   {"low": 0.0, "high": 0.0, "step": 0.0,
                    "trange": 2, "log": 0}])
 
     @dae_setter("SANS", "sans")
     def setup_dae_bsalignment(self):
-        Larmor._generic_scan(
+        self._generic_scan(
             tcbs=[{"low": 1000.0, "high": 100000.0, "step": 99000.0,
                    "trange": 1, "log": 0},
                   {"low": 0.0, "high": 0.0, "step": 0.0,
                    "trange": 2, "log": 0}])
 
-    @staticmethod
     @dae_setter("TRANS", "transmission")
-    def setup_dae_monitorsonly():
+    def setup_dae_monitorsonly(self):
         """Set the wiring tables to record only the monitors."""
-        Larmor._generic_scan(
+        self._generic_scan(
             spectra=r"C:\Instrument\Settings\Tables\spectra_phase1.dat",
             tcbs=[{"low": 5.0, "high": 100000.0, "step": 20.0,
                    "trange": 1, "log": 0},
                   {"low": 0.0, "high": 0.0, "step": 0.0,
                    "trange": 2, "log": 0}])
 
-    @staticmethod
     @dae_setter("SANS", "sans")
-    def setup_dae_resonantimaging():
+    def setup_dae_resonantimaging(self):
         """Set the wiring table for resonant imaging"""
-        Larmor._generic_scan(
+        self._generic_scan(
             r"C:\Instrument\Settings\Tables\detector_monitors_only.dat",
             r"C:\Instrument\Settings\Tables\spectra_monitors_only.dat",
             r"C:\Instrument\Settings\Tables\wiring_monitors_only.dat",
@@ -266,20 +260,20 @@ involves only having two spectra covering the entire main detecor."""
              {"low": 1500.0, "high": 100000.0, "step": 100.0,
               "trange": 2, "log": 0}])
 
-    @staticmethod
     @dae_setter("SANS", "sans")
-    def setup_dae_resonantimaging_choppers():  # pylint: disable=invalid-name
+    def setup_dae_resonantimaging_choppers(  # pylint: disable=invalid-name
+            self):
         """Set the wiring thable for resonant imaging choppers"""
         info("Setting Chopper phases")
         gen.cset(T0Phase=49200)
         gen.cset(TargetDiskPhase=0)
         gen.cset(InstrumentDiskPhase=0)
+        self._generic_scan()
 
-    @staticmethod
     @dae_setter("SANS", "sans")
-    def setup_dae_4periods():
+    def setup_dae_4periods(self):
         """Setup the instrument with four periods."""
-        Larmor._generic_scan(
+        self._generic_scan(
             r"C:\Instrument\Settings\Tables\detector.dat",
             r"C:\Instrument\Settings\Tables\spectra_4To1.dat",
             r"C:\Instrument\Settings\Tables\wiring.dat",

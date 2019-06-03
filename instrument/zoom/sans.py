@@ -31,15 +31,14 @@ class Zoom(ScanningInstrument):
         raise NotImplementedError(
             "Neutron reflectivity scanning tables not yet set")
 
-    @staticmethod
     def _generic_scan(  # pylint: disable=dangerous-default-value
-            detector, spectra,
+            self, detector, spectra,
             wiring=r"detector_1det_1dae3card.dat",
             tcbs=[{"low": 5.0, "high": 100000.0, "step": 200.0,
                    "trange": 1, "log": 0}]):
         base = r"C:\Instrument\Settings\config\NDXZOOM\configurations\tables\\"
         ScanningInstrument._generic_scan(
-            base+detector, base+spectra, base+wiring, tcbs)
+            self, base+detector, base+spectra, base+wiring, tcbs)
 
     @dae_setter("SANS", "sans")
     def setup_dae_event(self):
