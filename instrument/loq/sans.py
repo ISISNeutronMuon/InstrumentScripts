@@ -60,8 +60,10 @@ class LOQ(ScanningInstrument):
 
     @dae_setter("TRANS", "transmission")
     def setup_dae_transmission(self):
-        return self._genetic_scan(
-            detector="detecor8.dat")
+        return self._generic_scan(
+            detector="detector8.dat",
+            spectra="spectra8.dat",
+            wiring="wiring8.dat")
 
     @dae_setter("SANS", "sans")
     def setup_dae_bsalignment(self):
