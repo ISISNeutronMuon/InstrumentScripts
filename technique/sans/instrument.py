@@ -10,6 +10,8 @@ any generic scripts.
 
 from abc import ABCMeta, abstractmethod
 from logging import info, warning
+from os.path import realpath
+from time import sleep
 from six import add_metaclass
 from .genie import gen
 
@@ -85,6 +87,20 @@ class ScanningInstrument(object):
                 result[k] = kwargs[k]
         return result
 
+    def _insist_table(self, **kwargs):
+        for k, v in kwargs.iteritems():
+            while True:
+                gen.change_tables(**{k: v})
+                result = gen.get_pv("{}:DAE:{}_FILE".format(
+                    self.pv_origin,
+                    k.upper()))
+                if realpath(result) == realpath(v):
+                    break
+                else:
+                    warning("Tried to set {} file to {}, but got {}.  Trying again in five seconds".format(
+                        k, realpath(v), realpath(result)))
+                    sleep(5)
+
     def _generic_scan(self, detector, spectra, wiring, tcbs):
         """A utility class for setting up dae states
 
@@ -94,9 +110,10 @@ class ScanningInstrument(object):
         """
         gen.change(nperiods=1)
         gen.change_start()
-        gen.change_tables(detector=detector)
-        gen.change_tables(spectra=spectra)
-        gen.change_tables(wiring=wiring)
+        self._insist_table(
+            detector=detector,
+            spectra=spectra,
+            wiring=wiring)
         for tcb in tcbs:
             gen.change_tcb(**tcb)
         gen.change_finish()
