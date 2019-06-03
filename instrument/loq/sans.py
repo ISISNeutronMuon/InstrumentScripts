@@ -45,10 +45,12 @@ class LOQ(ScanningInstrument):
             tcbs=[{"low": 3500.0, "high": 43500.0, "step": 0.025,
                    "log": True}]):
         base = r"C:\Instrument\Settings\config\NDXLOQ\configurations\tables\\"
+        gen.change_start()
         for trange in range(1,6):
             gen.change_tcb(low=0, high=0, step=0, log=0, trange=trange, regime=1)
             sleep(1.5)
         gen.change_tcb(low=0, high=0, step=0, log=0, trange=1, regime=2)
+        gen.change_finish()
         ScanningInstrument._generic_scan(self,
             base+detector, base+spectra, base+wiring, tcbs)
 
