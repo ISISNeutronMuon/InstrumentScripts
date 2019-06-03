@@ -6,11 +6,13 @@ from technique.sans.util import dae_setter  # noqa: F401
 from general.scans.util import local_wrapper
 from time import sleep
 
-pv_origin = "IN:LOQ"  # FIXME
+
 
 
 class LOQ(ScanningInstrument):
     """This class handles the LOQ beamline"""
+
+    pv_origin = "IN:LOQ"
 
     def __init__(self):
         ScanningInstrument.__init__(self)
@@ -27,13 +29,13 @@ class LOQ(ScanningInstrument):
                 'DLS2', 'DLS3', 'DLS4', 'DLS5', 'DLS6']
 
     def set_measurement_type(self, value):
-        gen.set_pv(pv_origin + ":PARS:SAMPLE:MEAS:TYPE", value)
+        gen.set_pv(self.pv_origin + ":PARS:SAMPLE:MEAS:TYPE", value)
 
     def set_measurement_label(self, value):
-        gen.set_pv(pv_origin + ":PARS:SAMPLE:MEAS:LABEL", value)
+        gen.set_pv(self.pv_origin + ":PARS:SAMPLE:MEAS:LABEL", value)
 
     def set_measurement_id(self, value):
-        gen.set_pv(pv_origin + ":PARS:SAMPLE:MEAS:ID", value)
+        gen.set_pv(self.pv_origin + ":PARS:SAMPLE:MEAS:ID", value)
 
     @staticmethod
     def _generic_scan(  # pylint: disable=dangerous-default-value
