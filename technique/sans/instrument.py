@@ -347,6 +347,11 @@ class ScanningInstrument(object):
             return False
         return True
 
+    @staticmethod
+    def _move_pos(pos):
+        """Move the sample changer to a labelled position"""
+        return gen.cset(SamplePos=pos)
+
     def _setup_measurement(self, trans, blank):
         """Perform all of the software setup for a measurement
 
@@ -448,7 +453,7 @@ class ScanningInstrument(object):
             if isinstance(pos, str):
                 if self.check_move_pos(pos=pos):
                     info("Moving to sample changer position {}".format(pos))
-                    gen.cset(SamplePos=pos)
+                    self._move_pos(pos)
                 else:
                     raise RuntimeError(
                         "Position {} does not exist".format(pos))
