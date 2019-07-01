@@ -1,28 +1,30 @@
 Guide for Instrument Scientists
 *******************************
 
+.. highlight:: python
+   :linenothreshold: 20
+
+  .. comment
+     >>> import os, sys
+     >>> sys.path.insert(0, os.getcwd())
+     >>> import matplotlib
+     >>> # matplotlib.use("Agg")
+     >>> ();from instrument.larmor import *;()  # doctest:+ELLIPSIS
+     (...)
+     >>> from general.scans.motion import populate
+     >>> populate()
+
 Introduction
 ============
 
-In theory, the instrument scientist is responsible for writing a
-single function, ``scan``, which will create the necessary scan
-objects for the user.  In practice, the writing this scan function is
-tricky and much of this project is about creating a generic scan
-function that minimises the boilerplate required from the instrument
-scientist.
-The main point of entry will be the
-:meth:`scans.Util.make_scan` function.  Given a set of defaults
-defined by the instrument scientist, the ``make_scan`` function will
-create the necessary function. For example, on the Zoom instrument,
-the scanning function is simply defined by:
-
->>> from .Util import make_scan  #doctest: +SKIP
->>> scan = make_scan(Zoom())  #doctest: +SKIP
-
-All that remains for the instrument scientist is to create a subclass
-(such as the `Zoom` class in the example above)
-of the :class:`scans.Defaults.Defaults` to provide ``make_scan`` with
-the information that it needs.
+In theory, the minimal responsibility of the instrument scientist is
+to write a single instance of the :class:`scans.defaults.Defaults`
+class.  The :meth:`scans.defaults.Defaults.scan`,
+:meth:`scans.defaults.Defaults.ascan`,
+:meth:`scans.defaults.Defaults.dscan`, and
+:meth:`scans.defaults.Defaults.rscan` methods should then be exported
+from the module.  The :meth:`scans.util.local_wrapper` function can
+simplify exporting these class methods.
 
 Defaults
 ========
@@ -36,7 +38,7 @@ measurement when the missing function is first needed.
 detector
 --------
 
-The :meth:`scans.Defaults.Defaults.detector` function should return
+The :meth:`scans.defaults.Defaults.detector` function should return
 the result of a measurement in a Monoid_.  This will most likely be
 either a total number of counts on a detector or transmission monitor.
 However, it is possible to provide more complicated measurements and
@@ -47,6 +49,18 @@ The value returned by the function should either be a raw count
 represented by a number or an instance of the
 :class:`scans.Monoid.Monoid` class.  The Monoid_ class allows for
 multiple measurements to be combined correctly.
+
+The :meth:`general.scans.detector.specific_spectra` function is a
+useful helper function for creating function the read from specific detectors.  For example
+
+    >>> whole_detector = specific_spectra([[1]])
+
+Will create a new detector function ``whole_detector`` which returns
+the total counts on detector spectrum 1.  The user could then runghc
+
+    >>> scan(Theta, 0, 2, 0.6, 50, detector=whole_detector)
+
+To run the scan over those channels, instead of over the default setup.
 
 log_file
 --------
