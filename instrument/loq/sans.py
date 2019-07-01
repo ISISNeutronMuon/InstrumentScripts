@@ -1,10 +1,10 @@
 """This is the instrument implementation for the LOQ beamline."""
+from time import sleep
 from technique.sans.instrument import ScanningInstrument
 from technique.sans.genie import gen
 # pylint: disable=unused-import
 from technique.sans.util import dae_setter  # noqa: F401
 from general.scans.util import local_wrapper
-from time import sleep
 
 pv_origin = "IN:LOQ"  # FIXME
 
@@ -84,7 +84,7 @@ class LOQ(ScanningInstrument):
         gen.change_monitor(2, low=5000.0, high=27000.0)
         gen.change_vetos(clearall=True, smp=True, TS2=True,
                          ext0=True, ext1=True, ext2=True, ext3=True)
-        return LOQ._generic_scan(
+        return self._generic_scan(
             tcbs=[{"low": 3500.0, "high": 43500.0, "step": 0.025,
                    "log": True}])
 
@@ -95,7 +95,7 @@ class LOQ(ScanningInstrument):
         gen.change_monitor(2, low=5.0, high=20000.0)
         gen.change_vetos(clearall=True, smp=False, TS2=False,
                          ext0=False, ext1=False, ext2=False, ext3=False)
-        return LOQ._generic_scan(
+        return self._generic_scan(
             tcbs=[{"low": 5.0, "high": 19995.0, "step": 4000.0,
                    "log": False}])
 
@@ -106,7 +106,7 @@ class LOQ(ScanningInstrument):
         gen.change_monitor(2, low=6800.0, high=17000.0)
         gen.change_vetos(clearall=True, smp=True, TS2=True,
                          ext0=True, ext1=True, ext2=True, ext3=True)
-        return LOQ._generic_scan(
+        return self._generic_scan(
             tcbs=[{"low": 6e3, "high": 1.96e4, "step": 4e2, "log": False},
                   {"low": 1.96e4, "high": 1.99e4, "step": 3e2, "log": False},
                   {"low": 1.99e4, "high": 2.08e4, "step": 1e2, "log": False},
@@ -119,7 +119,7 @@ class LOQ(ScanningInstrument):
         gen.change_monitor(2, low=5000.0, high=27000.0)
         gen.change_vetos(clearall=True, smp=True, TS2=True,
                          ext0=True, ext1=True, ext2=True, ext3=True)
-        return LOQ._generic_scan(
+        return self._generic_scan(
             tcbs=[{"low": 2e4, "high": 3.95e4, "step": 2.5e2, "log": False},
                   {"low": 3.95e4, "high": 4e4, "step": 1e2, "log": False}])
 
