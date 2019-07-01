@@ -202,7 +202,7 @@ def populate():
     """Create Motion objects in the GLOBAL namespace for each
     block registered with IBEX."""
     for i in g.get_blocks():
-        if type(i) is not str:
+        if not isinstance(i, str):
             continue
         temp = BlockMotion(i)
         __builtins__[i.upper()] = temp
