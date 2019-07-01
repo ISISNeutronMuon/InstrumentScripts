@@ -1,7 +1,12 @@
 2019-07-01  ndw1748  <adam.washington@stfc.ac.uk>
 
+	* doc/source/reference.rst: Include all module members in reference docs.
+
+	* doc/source/scans/tutorial.rst: Cleanup hyperlinks
+
 	* doc/source/scans/instrument.rst: Update outdated information in
 	the instrument scientist guide to scans.
+
 
 	* instrument/loq/sans.py: Asorted bug fixes
 	(J1, J2): Fix timings on J1 and J2 for LOQ

@@ -4,7 +4,7 @@ Guide for Instrument Scientists
 .. highlight:: python
    :linenothreshold: 20
 
-  .. comment
+.. comment
      >>> import os, sys
      >>> sys.path.insert(0, os.getcwd())
      >>> import matplotlib
@@ -17,13 +17,15 @@ Guide for Instrument Scientists
 Introduction
 ============
 
+.. py:currentmodule:: general.scans
+
 In theory, the minimal responsibility of the instrument scientist is
-to write a single instance of the :class:`scans.defaults.Defaults`
-class.  The :meth:`scans.defaults.Defaults.scan`,
-:meth:`scans.defaults.Defaults.ascan`,
-:meth:`scans.defaults.Defaults.dscan`, and
-:meth:`scans.defaults.Defaults.rscan` methods should then be exported
-from the module.  The :meth:`scans.util.local_wrapper` function can
+to write a single instance of the :class:`defaults.Defaults`
+class.  The :meth:`defaults.Defaults.scan`,
+:meth:`defaults.Defaults.ascan`,
+:meth:`defaults.Defaults.dscan`, and
+:meth:`defaults.Defaults.rscan` methods should then be exported
+from the module.  The :meth:`util.local_wrapper` function can
 simplify exporting these class methods.
 
 Defaults
@@ -38,7 +40,7 @@ measurement when the missing function is first needed.
 detector
 --------
 
-The :meth:`scans.defaults.Defaults.detector` function should return
+The :meth:`defaults.Defaults.detector` function should return
 the result of a measurement in a Monoid_.  This will most likely be
 either a total number of counts on a detector or transmission monitor.
 However, it is possible to provide more complicated measurements and
@@ -47,10 +49,10 @@ polarisation.
 
 The value returned by the function should either be a raw count
 represented by a number or an instance of the
-:class:`scans.Monoid.Monoid` class.  The Monoid_ class allows for
+:class:`monoid.Monoid` class.  The Monoid_ class allows for
 multiple measurements to be combined correctly.
 
-The :meth:`general.scans.detector.specific_spectra` function is a
+The :meth:`detector.specific_spectra` function is a
 useful helper function for creating function the read from specific detectors.  For example
 
     >>> whole_detector = specific_spectra([[1]])
@@ -65,7 +67,7 @@ To run the scan over those channels, instead of over the default setup.
 log_file
 --------
 
-The :meth:`scans.Defaults.Defaults.log_file` returns the path to a
+The :meth:`defaults.Defaults.log_file` returns the path to a
 file where the results of the current scan should be stored.  This
 function should return a unique value for each scan, to ensure that
 previous results are not overwritten.  This can easily be achieved by
@@ -172,6 +174,7 @@ Polarisation(100.0, 0.0)
 MonoidList([Polarisation(100.0, 0.0), Average(1.0, count=1), Sum(2.0)])
 
 Where appropriate, monoids can be cast into a float
+
 >>> float(s)
 2.0
 >>> float(x)
@@ -210,6 +213,7 @@ can be iterated, like a normal list.
 10.0
 
 You can also find the minimum and maximum value
+
 >>> lst.min()
 Average(-2.0, count=2)
 >>> lst.max()
@@ -219,14 +223,14 @@ Sum(10.0)
 Models
 ======
 
-All models for fitting should derive from the :class:`scans.Fit.Fit`
+All models for fitting should derive from the :class:`fit.Fit`
 class.  However, this class is likely too generic for common use, as
 it expects the instrument scientist to implement their own fitting
 procedures.  While this is useful for implementing classes like
-:class:`scans.Fit.PolyFit`, where we can take advantage of our
+:class:`fit.PolyFit`, where we can take advantage of our
 knowledge of the model to get an exact fitting procedure, most models
 will not need this level of control.  For this reason, there is a
-subclass :class:`scans.Fit.CurveFit` which simplifies this work as
+subclass :class:`fit.CurveFit` which simplifies this work as
 much as possible.  Implementing a new model with `CurveFit` for fitting
 requires implementing three functions.
 
@@ -248,15 +252,3 @@ readable
   returned by ``guess``.  It returns a dictionary with each parameter
   given a human readable name.  The purpose is to make it easier for
   users to understand the results of the fit.
-
-As of the current version, there is a nasty bug with `CurveFit`.
-Specifically, `CurveFit` relies on scipy.optimize, which load the
-Intel Math Kernel Library.  This library adds an operating system hook
-that crashes when the user presses Ctrl-C.  Since the hook is at a
-much lower level than Python, there is nothing that can be done at the
-Python level to handle the issue.  The result is that, while the
-fitting functions run properly, the python session will be permanently
-tainted so that Ctrl-C will now crash Python.  The system environment
-variable `FOR_DISABLE_CONSOLE_CTRL_HANDLER` is the official way of
-bypassing this issue, but I have not had luck with getting this to
-work within the genie-python environment.
