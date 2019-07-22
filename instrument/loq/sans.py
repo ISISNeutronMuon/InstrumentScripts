@@ -26,15 +26,15 @@ class LOQ(ScanningInstrument):
                 'W9B', 'W10B', 'W11B', 'W12B', 'W13B', 'W14B', 'W15B', 'W16B',
                 'DLS2', 'DLS3', 'DLS4', 'DLS5', 'DLS6']
 
-    @staticmethod
     def _generic_scan(  # pylint: disable=dangerous-default-value
+            self,
             detector=r"detector35576_M4.dat",
             spectra=r"spectra35576_M4.dat",
             wiring=r"wiring35576_M4.dat",
             tcbs=[{"low": 3500.0, "high": 43500.0, "step": 0.025,
                    "log": True}]):
         base = r"C:\Instrument\Settings\config\NDXLOQ\configurations\tables\\"
-        ScanningInstrument._generic_scan(
+        self._generic_scan(
             base+detector, base+spectra, base+wiring, tcbs)
 
     @dae_setter("SANS/TRANS", "sans")
@@ -132,22 +132,21 @@ class LOQ(ScanningInstrument):
         else:
             raise RuntimeError("Slit size {} is undefined".format(size))
 
-    @staticmethod
-    def _detector_is_on():
+    def _detector_is_on(self):
         """Is the detector currently on?"""
-        return gen.get_pv("IN:LOQ:MOXA12XX_02:CH0:AI:RBV") > 2
+        return self.get_pv("MOXA12XX_02:CH0:AI:RBV") > 2
 
     @staticmethod
     def _detector_turn_on(delay=True):
         raise NotImplementedError("Detector toggling is not supported LOQ")
         # for x in range(8):
-        #     gen.set_pv(pv_origin + ":CAEN:hv0:4:{}:pwonoff".format(x), "On")
+        #     self.set_pv("CAEN:hv0:4:{}:pwonoff".format(x), "On")
 
     @staticmethod
     def _detector_turn_off(delay=True):
         raise NotImplementedError("Detector toggling is not supported on LOQ")
         # for x in range(8):
-        #     gen.set_pv(pv_origin + ":CAEN:hv0:4:{}:pwonoff".format(x), "Off")
+        #     self.set_pv("CAEN:hv0:4:{}:pwonoff".format(x), "Off")
 
     def _configure_sans_custom(self):
         gen.cset(Tx_Mon="OUT")

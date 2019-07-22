@@ -4,6 +4,13 @@
 	adding get_pv and set_pv methods to instrument base class
 	(ScanningInstrument._generic_scan): Only change detector, spectra,
 	or wiring tables when the user has actually changed the values.
+	Also, this function is no longer a static method.
+	(ScanningInstrument.set_measurement_type): Create base class
+	implemention to handle all cases
+	(ScanningInstrument.set_measurement_label): Create base class
+	implemention to handle all cases
+	(ScanningInstrument.set_measurement_id): Create base class
+	implemention to handle all cases
 
 2019-07-01  ndw1748  <adam.washington@stfc.ac.uk>
 
