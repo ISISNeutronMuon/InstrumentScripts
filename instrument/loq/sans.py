@@ -157,54 +157,53 @@ class LOQ(ScanningInstrument):
         gen.cset(Tx_Mon="IN")
         gen.waitfor_move()
 
+    # pylint: disable=invalid-name
+    def J1(self, temperature_1, temperature_2):
+        """Run off Julabo 1"""
+        self.set_pv("JULABO_01:MODE:SP", "OFF")
+        sleep(1)
+        self.set_pv("JULABO_02:MODE:SP", "OFF")
+        gen.waitfor_move()
+        gen.cset(Valve="J1")
+        gen.waitfor_move()
+        gen.cset(Julabo_1_Sensor="External")
+        sleep(1)
+        gen.cset(Julabo_2_Sensor="Internal")
+        gen.waitfor_move()
+        gen.cset(Internal_Setpoint_1=temperature_1)
+        sleep(1)
+        gen.cset(Internal_Setpoint_2=temperature_2)
+        gen.waitfor_move()
+        self.set_pv("JULABO_01:MODE:SP", "ON")
+        sleep(1)
+        self.set_pv("JULABO_02:MODE:SP", "ON")
+        gen.waitfor_move()
+
+    @staticmethod
+    def J2(temperature_1, temperature_2):
+        """Run off Julabo 2"""
+        gen.cset(Julabo_1_Circulator="OFF")
+        sleep(1)
+        gen.cset(Julabo_2_Circulator="OFF")
+        gen.waitfor_move()
+        gen.cset(Valve="J2")
+        gen.waitfor_move()
+        gen.cset(Julabo_1_Sensor="Internal")
+        sleep(1)
+        gen.cset(Julabo_2_Sensor="External")
+        gen.waitfor_move()
+        gen.cset(Internal_Setpoint_1=temperature_1)
+        sleep(1)
+        gen.cset(Internal_Setpoint_2=temperature_2)
+        gen.waitfor_move()
+        gen.cset(Julabo_1_Circulator="ON")
+        sleep(1)
+        gen.cset(Julabo_2_Circulator="ON")
+        gen.waitfor_move()
+
 
 obj = LOQ()
 for method in dir(obj):
     if method[0] != "_" and method not in locals() and \
        callable(getattr(obj, method)):
         locals()[method] = local_wrapper(obj, method)
-
-
-# pylint: disable=invalid-name
-def J1(temperature_1, temperature_2):
-    """Run off Julabo 1"""
-    gen.set_pv("IN:LOQ:JULABO_01:MODE:SP", "OFF")
-    sleep(1)
-    gen.set_pv("IN:LOQ:JULABO_02:MODE:SP", "OFF")
-    gen.waitfor_move()
-    gen.cset(Valve="J1")
-    gen.waitfor_move()
-    gen.cset(Julabo_1_Sensor="External")
-    sleep(1)
-    gen.cset(Julabo_2_Sensor="Internal")
-    gen.waitfor_move()
-    gen.cset(Internal_Setpoint_1=temperature_1)
-    sleep(1)
-    gen.cset(Internal_Setpoint_2=temperature_2)
-    gen.waitfor_move()
-    gen.set_pv("IN:LOQ:JULABO_01:MODE:SP", "ON")
-    sleep(1)
-    gen.set_pv("IN:LOQ:JULABO_02:MODE:SP", "ON")
-    gen.waitfor_move()
-
-
-def J2(temperature_1, temperature_2):
-    """Run off Julabo 2"""
-    gen.cset(Julabo_1_Circulator="OFF")
-    sleep(1)
-    gen.cset(Julabo_2_Circulator="OFF")
-    gen.waitfor_move()
-    gen.cset(Valve="J2")
-    gen.waitfor_move()
-    gen.cset(Julabo_1_Sensor="Internal")
-    sleep(1)
-    gen.cset(Julabo_2_Sensor="External")
-    gen.waitfor_move()
-    gen.cset(Internal_Setpoint_1=temperature_1)
-    sleep(1)
-    gen.cset(Internal_Setpoint_2=temperature_2)
-    gen.waitfor_move()
-    gen.cset(Julabo_1_Circulator="ON")
-    sleep(1)
-    gen.cset(Julabo_2_Circulator="ON")
-    gen.waitfor_move()
