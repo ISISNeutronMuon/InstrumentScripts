@@ -21,21 +21,13 @@ class Larmor(ScanningInstrument):  # pylint: disable=too-many-public-methods
 
     step = 100.0
     lrange = "0.9-13.25"
+    _PV_BASE = "IN:LARMOR:"
 
     @property
     def TIMINGS(self):
         if self._dae_mode == "sesans":
             return self._TIMINGS + ["u", "d"]
         return self._TIMINGS
-
-    def set_measurement_type(self, value):
-        gen.set_pv("IN:LARMOR:PARS:SAMPLE:MEAS:TYPE", value)
-
-    def set_measurement_label(self, value):
-        gen.set_pv("IN:LARMOR:PARS:SAMPLE:MEAS:LABEL", value)
-
-    def set_measurement_id(self, value):
-        gen.set_pv("IN:LARMOR:PARS:SAMPLE:MEAS:ID", value)
 
     def get_lrange(self):
         """Return the current wavelength range"""

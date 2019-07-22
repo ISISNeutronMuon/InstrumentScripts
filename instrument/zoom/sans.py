@@ -1,6 +1,5 @@
 """This is the instrument implementation for the Zoom beamline."""
 from technique.sans.instrument import ScanningInstrument
-from technique.sans.genie import gen
 # pylint: disable=unused-import
 from technique.sans.util import dae_setter  # noqa: F401
 from general.scans.util import local_wrapper
@@ -8,15 +7,7 @@ from general.scans.util import local_wrapper
 
 class Zoom(ScanningInstrument):
     """This class handles the Zoom beamline"""
-
-    def set_measurement_type(self, value):
-        gen.set_pv("IN:ZOOM:PARS:SAMPLE:MEAS:TYPE", value)
-
-    def set_measurement_label(self, value):
-        gen.set_pv("IN:ZOOM:PARS:SAMPLE:MEAS:LABEL", value)
-
-    def set_measurement_id(self, value):
-        gen.set_pv("IN:ZOOM:PARS:SAMPLE:MEAS:ID", value)
+    _PV_BASE = "IN:ZOOM:"
 
     @dae_setter("SCAN", "scan")
     def setup_dae_scanning(self):

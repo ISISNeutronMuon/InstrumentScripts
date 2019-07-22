@@ -123,7 +123,6 @@ class ScanningInstrument(object):
         if gen.get_runstate() != "SETUP":  # pragma: no cover
             raise RuntimeError("Cannot start a measurement in a measurement")
 
-    @abstractmethod
     def set_measurement_type(self, value):  # pragma: no cover
         """Set the measurement type in the journal.
 
@@ -137,8 +136,8 @@ class ScanningInstrument(object):
         value stored in the journal for the next run, which should be
         set to the new value.
         """
+        self.set_pv("PARS:SAMPLE:MEAS:TYPE", value)
 
-    @abstractmethod
     def set_measurement_label(self, value):  # pragma: no cover
         """Set the sample label in the journal.
 
@@ -152,8 +151,8 @@ class ScanningInstrument(object):
         value stored in the journal for the next run, which should be
         set to the new value.
         """
+        self.set_pv("PARS:SAMPLE:MEAS:LABEL", value)
 
-    @abstractmethod
     def set_measurement_id(self, value):  # pragma: no cover
         """Set the measurement id in the journal.
 
@@ -167,6 +166,7 @@ class ScanningInstrument(object):
         value stored in the journal for the next run, which should be
         set to the new value.
         """
+        self.set_pv("PARS:SAMPLE:MEAS:ID", value)
 
     @abstractmethod
     def setup_dae_scanning(self):  # pragma: no cover
