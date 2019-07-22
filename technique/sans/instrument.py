@@ -30,6 +30,7 @@ class ScanningInstrument(object):
     title_footer = ""
     measurement_type = "sans"
     _TIMINGS = ["uamps", "frames", "seconds", "minutes", "hours"]
+    _PV_BASE = None
 
     def __init__(self):
         self.setup_sans = self.setup_dae_event
@@ -628,3 +629,22 @@ of parameters accepted. """
     def enumerate_dae(self):
         """List the supported DAE modes on this beamline."""
         return [x[10:] for x in dir(self) if x.startswith("setup_dae_")]
+
+    def get_pv(self, name):
+        """Get the given PV within the sub heirarchy of the instrument.
+
+        For example, on Larmor, get_pv("DAE:WIRING_FILE") would return
+        the value of the PV for "IN:LARMOR:DAE:WIRING_FILE"
+
+        """
+        return gen.get_pv(self._PV_BASE + name)
+
+    def set_pv(self, name, value):
+        """Set the given PV within the sub heirarchy of the instrument.
+
+        For example, on Larmor, set_pv("DAE:WIRING_FILE", f) would
+        change the value of the PV for "IN:LARMOR:DAE:WIRING_FILE" to
+        the value in f.
+
+        """
+        return gen.set_pv(self._PV_BASE + name, value)
