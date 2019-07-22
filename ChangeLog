@@ -1,3 +1,10 @@
+2019-07-22  ndw1748  <adam.washington@stfc.ac.uk>
+
+	* technique/sans/instrument.py (ScanningInstrument.get_pv): Start
+	adding get_pv and set_pv methods to instrument base class
+	(ScanningInstrument._generic_scan): Only change detector, spectra,
+	or wiring tables when the user has actually changed the values.
+
 2019-07-01  ndw1748  <adam.washington@stfc.ac.uk>
 
 	* doc/source/reference.rst: Include all module members in reference docs.

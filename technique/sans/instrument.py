@@ -86,7 +86,6 @@ class ScanningInstrument(object):
                 result[k] = kwargs[k]
         return result
 
-    @staticmethod
     def _generic_scan(detector, spectra, wiring, tcbs):
         """A utility class for setting up dae states
 
@@ -96,9 +95,12 @@ class ScanningInstrument(object):
         """
         gen.change(nperiods=1)
         gen.change_start()
-        gen.change_tables(detector=detector)
-        gen.change_tables(spectra=spectra)
-        gen.change_tables(wiring=wiring)
+        if self.get_pv("DAE:DETECTOR_FILE") != wiring:
+            gen.change_tables(detector=detector)
+        if self.get_pv("DAE:SPECTRA_FILE") != wiring:
+            gen.change_tables(spectra=spectra)
+        if self.get_pv("DAE:WIRING_FILE") != wiring:
+            gen.change_tables(wiring=wiring)
         for tcb in tcbs:
             gen.change_tcb(**tcb)
         gen.change_finish()
