@@ -23,6 +23,9 @@ class Larmor(ScanningInstrument):  # pylint: disable=too-many-public-methods
     lrange = "0.9-13.25"
     _PV_BASE = "IN:LARMOR:"
 
+    # change the default for Edler June 2019
+    # lrange = "0.65-12.95"
+
     @property
     def TIMINGS(self):
         if self._dae_mode == "sesans":
