@@ -118,9 +118,9 @@ def generic_pol(spectra, preconfig=lambda: None):
     return inner_pol
 
 
-detector_trans = pv_motion("IN:LARMOR:MOT:MTD1501", "DetectorTranslation")
+# detector_trans = pv_motion("IN:LARMOR:MOT:MTD1501", "DetectorTranslation")
 
-detector_trans = pv_motion("IN:LARMOR:MOT:MTD1501", "DetectorTranslation")
+# detector_trans = pv_motion("IN:LARMOR:MOT:MTD1501", "DetectorTranslation")
 
 _lm = Larmor()
 semsans_pol = generic_pol(range(40971, 41226+1), preconfig=setup_dae_semsans)
