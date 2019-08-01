@@ -116,7 +116,9 @@ class ScanningInstrument(object):
                 '1WB', '2WB', '3WB', '4WB', '5WB', '6WB', '7WB',
                 '8WB', '9WB', '10WB', '11WB', '12WB', '13WB', '14WB',
                 '1WT', '2WT', '3WT', '4WT', '5WT', '6WT', '7WT',
-                '8WT', '9WT', '10WT', '11WT', '12WT', '13WT', '14WT']
+                '8WT', '9WT', '10WT', '11WT', '12WT', '13WT', '14WT',
+                '1GT', '2GT', '3GT', '4GT', '5GT', '6GT', '7GT', '8GT', '9GT',
+                '10GT', '11GT', '12GT']
 
     @staticmethod
     def _needs_setup():

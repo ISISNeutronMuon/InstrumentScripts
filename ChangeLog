@@ -1,3 +1,8 @@
+2019-08-05  ndw1748  <adam.washington@stfc.ac.uk>
+
+	* technique/sans/instrument.py (ScanningInstrument): Added more
+	sample changer positions.
+
 2019-07-22  ndw1748  <adam.washington@stfc.ac.uk>
 
 	* technique/sans/instrument.py (ScanningInstrument.get_pv): Start
