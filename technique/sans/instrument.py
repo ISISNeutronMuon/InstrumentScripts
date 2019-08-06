@@ -120,10 +120,54 @@ class ScanningInstrument(object):
                 '1GT', '2GT', '3GT', '4GT', '5GT', '6GT', '7GT', '8GT', '9GT',
                 '10GT', '11GT', '12GT']
 
-    @staticmethod
-    def _needs_setup():
-        if gen.get_runstate() != "SETUP":  # pragma: no cover
-            raise RuntimeError("Cannot start a measurement in a measurement")
+    def _attempt_resume(self, title, pos, thick, dae, **kwargs):
+        if gen.get_title() != title:
+            raise RuntimeError(
+                'Attempted to continue measurement "{}", but was already in '
+                'the middle of measurement "{}".'.format(
+                    title, gen.get_title()))
+        if isinstance(pos, str) and pos != self.changer_pos:
+            raise RuntimeError(
+                'Attempted to continue measurement in position "{}", '
+                'but was already in position "{}".'.format(
+                    title, gen.get_title()))
+        elif callable(pos):
+            raise RuntimeError(
+                'Cannot determine if instrument is in the right place to '
+                'resume run. Please manually end the run and restart it.')
+        elif pos is not None:
+            raise RuntimeError(
+                'Cannot determine if instrument is in the right place to '
+                'resume run. Please manually end the run and restart it.')
+
+        if dae and self._dae_mode != dae:
+            raise RuntimeError(
+                'Cannot resume a measurement with DAE mode {} '
+                'since the current running measurement is DAE mode {}. '
+                'Either check your script or manually stop the '
+                'current run.'.format(dae, self._dae_mode))
+
+        for arg, val in sorted(kwargs.items()):
+            if arg in self.TIMINGS:
+                continue
+            if gen.cget(arg)["value"] != val:
+                raise RuntimeError(
+                    'Expected to resume measurement with position {} '
+                    'at {}, but instead found it at {}. Please either '
+                    'correct the script or manually end the run.'.format(
+                        arg, val, gen.cget(val)["value"]))
+
+        if gen.get_sample_parts()['THICK'] != thick:
+            raise RuntimeError(
+                'Expected to resume a run on a sample of thickness {}, '
+                'but was already running a measurement on a sample of '
+                'thickness {}. Please either correct the script or '
+                'manually end the run'.format(
+                    thick, gen.get_sample_pars()['THICK']))
+
+        times = self.sanitised_timings(kwargs)
+        self._waitfor(**times)
+        self._end()
 
     def set_measurement_type(self, value):  # pragma: no cover
         """Set the measurement type in the journal.
@@ -444,7 +488,10 @@ class ScanningInstrument(object):
         current. (approx 15 minutes).
 
         """
-        self._needs_setup()
+        if gen.get_runstate() != "SETUP":  # pragma: no cover
+            self._attempt_resume(title, pos, thick, dae, kwargs)
+            return
+
         if not self.detector_lock() and not self.detector_on() and not trans:
             raise RuntimeError(
                 "The detector is off.  Either turn on the detector or "
