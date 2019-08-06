@@ -18,7 +18,7 @@ except ImportError:
 from general.scans.defaults import Defaults
 from general.scans.detector import dae_periods, specific_spectra
 from general.scans.monoid import Polarisation, Average, MonoidList
-from general.scans.motion import pv_motion
+# from general.scans.motion import pv_motion
 from general.scans.util import local_wrapper
 # pylint: disable=no-name-in-module
 from instrument.larmor.sans import setup_dae_transmission, setup_dae_semsans
