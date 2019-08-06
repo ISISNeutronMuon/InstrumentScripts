@@ -1,6 +1,9 @@
 2019-08-06  ndw1748  <adam.washington@stfc.ac.uk>
 
 	* technique/sans/instrument.py (ScanningInstrument.changer_pos): Replace _move_pos private setter with changer_pos property on class
+	(ScanningInstrument.measurement_type): Change measurement_type from a function to a property
+	(ScanningInstrument.measurement_label): Change measurement_label from a function to a property
+	(ScanningInstrument.measurement_id): Change measurement_id from a function to a property
 
 2019-08-05  ndw1748  <adam.washington@stfc.ac.uk>
 

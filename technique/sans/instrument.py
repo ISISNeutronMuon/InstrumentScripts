@@ -28,7 +28,6 @@ class ScanningInstrument(object):
     _dae_mode = None
     _detector_lock = False
     title_footer = ""
-    measurement_type = "sans"
     _TIMINGS = ["uamps", "frames", "seconds", "minutes", "hours"]
     _PV_BASE = None
 
@@ -169,7 +168,13 @@ class ScanningInstrument(object):
         self._waitfor(**times)
         self._end()
 
-    def set_measurement_type(self, value):  # pragma: no cover
+    @property
+    def measurement_type(self):
+        """Get the measurement type form the journal."""
+        return self.get_pv("PARS:SAMPLE:MEAS:TYPE")
+
+    @measurement_type.setter
+    def measurement_type(self, value):
         """Set the measurement type in the journal.
 
         Parameters
@@ -184,7 +189,13 @@ class ScanningInstrument(object):
         """
         self.set_pv("PARS:SAMPLE:MEAS:TYPE", value)
 
-    def set_measurement_label(self, value):  # pragma: no cover
+    @property
+    def measurement_label(self):
+        """Get the measurement label from the journal"""
+        return self.get_pv("PARS:SAMPLE:MEAS:LABEL")
+
+    @measurement_label.setter
+    def measurement_label(self, value):
         """Set the sample label in the journal.
 
         Parameters
@@ -199,7 +210,13 @@ class ScanningInstrument(object):
         """
         self.set_pv("PARS:SAMPLE:MEAS:LABEL", value)
 
-    def set_measurement_id(self, value):  # pragma: no cover
+    @property
+    def measurement_id(self):
+        """Get the measurement id from the journal"""
+        return self.get_pv("PARS:SAMPLE:MEAS:ID")
+
+    @measurement_id.setter
+    def measurement_id(self, value):  # pragma: no cover
         """Set the measurement id in the journal.
 
         Parameters
@@ -418,16 +435,14 @@ class ScanningInstrument(object):
         """
         if trans:
             if blank:
-                self.set_measurement_type("blank_transmission")
+                self.measurement_type = "blank_transmission"
             else:
-                self.set_measurement_type("transmission")
+                self.measurement_type = "transmission"
             self.setup_trans()
             self._configure_trans_custom()
         else:
             if blank:
-                self.set_measurement_type("blank")
-            else:
-                self.set_measurement_type(self.measurement_type)
+                self.measurement_type = "blank"
             self.setup_sans()
             self._configure_sans_custom()
 
@@ -504,7 +519,7 @@ class ScanningInstrument(object):
                 "is off intentionally")
         self.set_default_dae(dae, trans)
         self._setup_measurement(trans, blank)
-        self.set_measurement_label(title)
+        self.measurement_label = title
         self.set_aperture(aperture)
         if pos:
             if isinstance(pos, str):
