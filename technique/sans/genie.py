@@ -81,6 +81,18 @@ def change_sample_pars(key, value):
 
 mock_gen.change_sample_par.side_effect = change_sample_pars
 
+PARAMS = {"title": ""}
+
+
+def change(**kwargs):
+    """Change instrument parameters"""
+    for k in kwargs:
+        PARAMS[k] = kwargs[k]
+
+
+mock_gen.change.side_effect = change
+mock_gen.get_title.side_effect = lambda: PARAMS["title"]
+
 
 def set_pv(pv_name, value):
     """Fake setting a PV value"""

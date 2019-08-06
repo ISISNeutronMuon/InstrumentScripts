@@ -120,16 +120,17 @@ class ScanningInstrument(object):
                 '10GT', '11GT', '12GT']
 
     def _attempt_resume(self, title, pos, thick, dae, **kwargs):
-        if gen.get_title() != title:
+        if gen.get_title() != title+self.title_footer:
             raise RuntimeError(
                 'Attempted to continue measurement "{}", but was already in '
                 'the middle of measurement "{}".'.format(
                     title, gen.get_title()))
-        if isinstance(pos, str) and pos != self.changer_pos:
-            raise RuntimeError(
-                'Attempted to continue measurement in position "{}", '
-                'but was already in position "{}".'.format(
-                    title, gen.get_title()))
+        if isinstance(pos, str):
+            if pos != self.changer_pos:
+                raise RuntimeError(
+                    'Attempted to continue measurement in position "{}", '
+                    'but was already in position "{}".'.format(
+                        title, gen.get_title()))
         elif callable(pos):
             raise RuntimeError(
                 'Cannot determine if instrument is in the right place to '
@@ -156,7 +157,7 @@ class ScanningInstrument(object):
                     'correct the script or manually end the run.'.format(
                         arg, val, gen.cget(val)["value"]))
 
-        if gen.get_sample_parts()['THICK'] != thick:
+        if gen.get_sample_pars()['THICK'] != thick:
             raise RuntimeError(
                 'Expected to resume a run on a sample of thickness {}, '
                 'but was already running a measurement on a sample of '
@@ -165,6 +166,9 @@ class ScanningInstrument(object):
                     thick, gen.get_sample_pars()['THICK']))
 
         times = self.sanitised_timings(kwargs)
+        warning(
+            "Detected that run was already in progress.  "
+            "Reconnecting to existing run.")
         self._waitfor(**times)
         self._end()
 

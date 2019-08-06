@@ -197,6 +197,48 @@ back into event mode.
 The :py:meth:`ScanningInstrument.enumerate_dae` function will list all
 of the supported dae modes on the current beamline.
 
+Resuming runs
+=============
+
+By request, the system is capable of detecting of reconnecting with
+the run if it's already in progress, assuming that the user is
+attempting to reconnect to the SAME run.
+
+>>> do_sans("Example", "CT", uamps=3)
+Moving to sample changer position CT
+Using the following Sample Parameters
+Geometry=Flat Plate
+Width=10
+Height=10
+Thick=1.0
+Measuring Example_SANS for 3 uamps
+
+We then assume that the above run has been interrupted by the user
+hitting Ctrl-C.  IBEX is still running and collecting data, but the
+script has ended.  The user can connect back into the script by
+running the same command that was already started.
+
+.. Fake Ctrl-C
+
+    >>> gen.begin()
+
+>>> do_sans("Example", "CT", uamps=3)
+Detected that run was already in progress.  Reconnecting to existing run.
+
+However, if the user botches their edit of the script and attempts to
+reconnect to the wrong run, the process will immediately fail, while
+leaving the run measuring.
+
+.. Fake Ctrl-C
+    >>> gen.begin()
+>>> do_sans("H2O", "DT", uamps=3)
+Traceback (most recent call last):
+...
+RuntimeError: Attempted to continue measurement "H2O", but was already in the middle of measurement "Example_SANS".
+
+.. Fake Ctrl-C
+    >>> gen.end()
+
 Automated script checking
 =========================
 
