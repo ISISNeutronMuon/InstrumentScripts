@@ -24,6 +24,7 @@ def end():
 
 MOTORS = {"CoarseZ": 0, "Translation": 0, "SampleX": 0,
           "SamplePos": "", "T0Phase": 0, "TargetDiskPhase": 0,
+          "Changer": "",
           "InstrumentDiskPhase": 0, "m4trans": 0,
           "Julabo1_SP": 0, "a1hgap": 0, "a1vgap": 0,
           "s1hgap": 0, "s1vgap": 0}
@@ -43,7 +44,7 @@ mock_gen.begin.side_effect = begin
 mock_gen.end.side_effect = end
 mock_gen.get_runstate.side_effect = lambda: mock_gen.mock_state
 mock_gen.cset.side_effect = cset_sideffect
-mock_gen.cget.side_effect = lambda axis: MOTORS[axis]
+mock_gen.cget.side_effect = lambda axis: {"value": MOTORS[axis]}
 
 mock_gen.mock_sample_pars = {
     "GEOMETRY": "Flat Plate",

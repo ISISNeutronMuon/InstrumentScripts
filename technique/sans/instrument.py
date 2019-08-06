@@ -396,9 +396,14 @@ class ScanningInstrument(object):
             return False
         return True
 
-    @staticmethod
-    def _move_pos(pos):
-        """Move the sample changer to a labelled position"""
+    @property
+    def changer_pos(self):
+        """Get the current sample changer position"""
+        return gen.cget("SamplePos")["value"]
+
+    @changer_pos.setter
+    def changer_pos(self, pos):  # pylint: disable=no-self-use
+        """Set the current sample changer position"""
         return gen.cset(SamplePos=pos)
 
     def _setup_measurement(self, trans, blank):
@@ -489,7 +494,7 @@ class ScanningInstrument(object):
 
         """
         if gen.get_runstate() != "SETUP":  # pragma: no cover
-            self._attempt_resume(title, pos, thick, dae, kwargs)
+            self._attempt_resume(title, pos, thickness, dae, **kwargs)
             return
 
         if not self.detector_lock() and not self.detector_on() and not trans:
@@ -505,7 +510,7 @@ class ScanningInstrument(object):
             if isinstance(pos, str):
                 if self.check_move_pos(pos=pos):
                     info("Moving to sample changer position {}".format(pos))
-                    self._move_pos(pos)
+                    self.changer_pos = pos
                 else:
                     raise RuntimeError(
                         "Position {} does not exist".format(pos))

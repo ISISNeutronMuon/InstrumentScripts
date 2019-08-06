@@ -1,3 +1,7 @@
+2019-08-06  ndw1748  <adam.washington@stfc.ac.uk>
+
+	* technique/sans/instrument.py (ScanningInstrument.changer_pos): Replace _move_pos private setter with changer_pos property on class
+
 2019-08-05  ndw1748  <adam.washington@stfc.ac.uk>
 
 	* technique/sans/instrument.py (ScanningInstrument): Added more

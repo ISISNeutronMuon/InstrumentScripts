@@ -114,9 +114,12 @@ class LOQ(ScanningInstrument):
             tcbs=[{"low": 2e4, "high": 3.95e4, "step": 2.5e2, "log": False},
                   {"low": 3.95e4, "high": 4e4, "step": 1e2, "log": False}])
 
-    @staticmethod
-    def _move_pos(pos):
-        """Move the sample changer to a labelled position"""
+    @property
+    def changer_pos(self):
+        return gen.cget("Changer")["value"]
+
+    @changer_pos.setter
+    def changer_pos(self, pos):
         return gen.cset(Changer=pos)
 
     @staticmethod
