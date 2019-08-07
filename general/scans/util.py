@@ -100,8 +100,12 @@ def get_points(
 
 def local_wrapper(obj, method):
     """Get a function that calls a METHOD on object OBJect"""
-    @wraps(getattr(obj, method))
-    def inner(*args, **kwargs):
-        """Call the method without the object"""
-        return getattr(obj, method)(*args, **kwargs)
-    return inner
+    try:
+        @wraps(getattr(obj, method, lambda: None))
+        def inner(*args, **kwargs):
+            """Call the method without the object"""
+            return getattr(obj, method)(*args, **kwargs)
+        return inner
+    except AttributeError:
+        def inner(*args, **kwargs):
+            raise RuntimeError("Stupid Mock Issue")
