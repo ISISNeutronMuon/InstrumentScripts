@@ -107,5 +107,6 @@ def local_wrapper(obj, method):
             return getattr(obj, method)(*args, **kwargs)
         return inner
     except AttributeError:
-        def inner(*args, **kwargs):
+        def inner(*args, **kwargs):  # pylint: disable=unused-argument
+            """Call the method without the object"""
             raise RuntimeError("Stupid Mock Issue")
