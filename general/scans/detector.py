@@ -46,7 +46,7 @@ class BlockDetector(DetectorManager):
     """
     def __init__(self, blockname):
         self.blockname = blockname
-        self._f = lambda: get_block(self.blockname)
+        self._f = lambda acc: (acc, get_block(self.blockname))
         DetectorManager.__init__(self, self._f)
 
     def __call__(self, scan, **kwargs):
@@ -149,7 +149,7 @@ def specific_spectra(spectra_list, preconfig=lambda: None):
     all of the counts in monitor four.  The second will be the combined
     sum of the counts in channels 1000 through 1999, inclusive."""
     @dae_periods(preconfig)
-    def inner(**kwargs):
+    def inner(acc, **kwargs):
         """Get counts on a set of channels"""
         local_kwargs = {}
         if "frames" in kwargs:
@@ -175,6 +175,6 @@ def specific_spectra(spectra_list, preconfig=lambda: None):
                 temp = sum(spec["signal"])
                 pols[idx] += Average(temp*100.0, 0.0)
         if len(pols) == 1:
-            return pols[0]
-        return MonoidList(pols)
+            return acc, pols[0]
+        return acc, MonoidList(pols)
     return inner

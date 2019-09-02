@@ -159,6 +159,7 @@ class Scan(object):
         xs = []
         ys = ListOfMonoids()
 
+        acc = None
         action_remainder = None
         try:
             with open(self.defaults.log_file(), "w") as logfile, \
@@ -166,7 +167,7 @@ class Scan(object):
                 for x in self:
                     # FIXME: Handle multidimensional plots
                     (label, position) = next(iter(x.items()))
-                    value = detect(**just_times(kwargs))
+                    acc, value = detect(acc, **just_times(kwargs))
                     if isinstance(value, float):
                         value = Average(value)
                     if position in xs:
@@ -386,6 +387,7 @@ class ContinuousScan(Scan):
         xs = []
         ys = ListOfMonoids()
 
+        acc = None
         action_remainder = None
 
         try:
@@ -408,8 +410,9 @@ class ContinuousScan(Scan):
                         while abs(self.motion() - move.stop) > \
                                 self.motion.tolerance:
 
-                            position, value = self.motion(), Exact(
-                                detect(**just_times(kwargs)))
+                            position = self.motion()
+                            acc, value = detect(acc, **just_times(kwargs))
+                            value = Exact(value)
 
                             xs.append(position)
                             ys.append(value)
@@ -613,12 +616,13 @@ class ProductScan(Scan):
         for _ in range(len(self.outer)):
             values.append([np.nan] * len(self.inner))
 
+        acc = None
         action_remainder = None
         try:
             with open(self.defaults.log_file(), "w") as logfile, \
                  detector(self, save) as detect:
                 for x in self:
-                    value = detect(**kwargs)
+                    acc, value = detect(acc, **kwargs)
 
                     keys = list(x.keys())
                     keys[1] = keys[1]

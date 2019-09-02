@@ -1,3 +1,16 @@
+2019-09-02    <adam.washington@stfc.ac.uk>
+
+	* general/scans/scans.py (Scan.plot): Allow detector function to
+	have an accumulator parameter so that state can be maintained.
+	(ContinuousScan.plot): Allow detector function to
+	have an accumulator parameter so that state can be maintained.
+	(ProductScan.plot): Allow detector function to
+	have an accumulator parameter so that state can be maintained.
+
+
+	* general/scans/detector.py (BlockDetector): Add dummy accumulator to the detector function
+	(specific_spectra.inner): Add dummy accumulator to specific spectra
+
 2019-07-22  ndw1748  <adam.washington@stfc.ac.uk>
 
 	* technique/sans/instrument.py (ScanningInstrument.get_pv): Start
