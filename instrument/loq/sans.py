@@ -35,7 +35,7 @@ class LOQ(ScanningInstrument):
                    "log": True}]):
         base = r"C:\Instrument\Settings\config\NDXLOQ\configurations\tables\\"
         self._generic_scan(
-            base+detector, base+spectra, base+wiring, tcbs)
+            base + detector, base + spectra, base + wiring, tcbs)
 
     @dae_setter("SANS/TRANS", "sans")
     def setup_dae_event(self):

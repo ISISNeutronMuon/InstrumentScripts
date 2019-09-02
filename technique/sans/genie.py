@@ -52,7 +52,7 @@ mock_gen.mock_sample_pars = {
     "THICK": 1}
 mock_gen.get_sample_pars.side_effect = lambda: mock_gen.mock_sample_pars
 mock_gen.get_frames = lambda: mock_gen.mock_frames
-mock_gen.get_uamps = lambda: mock_gen.mock_frames/900.0
+mock_gen.get_uamps = lambda: mock_gen.mock_frames / 900.0
 
 
 def waitfor(**kwargs):
@@ -60,13 +60,19 @@ def waitfor(**kwargs):
     if "frames" in kwargs:
         mock_gen.mock_frames = max(mock_gen.mock_frames, kwargs["frames"])
     elif "uamps" in kwargs:
-        mock_gen.mock_frames = max(mock_gen.mock_frames, 900*kwargs["uamps"])
+        mock_gen.mock_frames = max(mock_gen.mock_frames, 900 * kwargs["uamps"])
     elif "seconds" in kwargs:
-        mock_gen.mock_frames = max(mock_gen.mock_frames, 10*kwargs["seconds"])
+        mock_gen.mock_frames = max(
+            mock_gen.mock_frames,
+            10 * kwargs["seconds"])
     elif "minutes" in kwargs:
-        mock_gen.mock_frames = max(mock_gen.mock_frames, 600*kwargs["minutes"])
+        mock_gen.mock_frames = max(
+            mock_gen.mock_frames,
+            600 * kwargs["minutes"])
     elif "hours" in kwargs:
-        mock_gen.mock_frames = max(mock_gen.mock_frames, 36000*kwargs["hours"])
+        mock_gen.mock_frames = max(
+            mock_gen.mock_frames,
+            36000 * kwargs["hours"])
 
 
 mock_gen.waitfor.side_effect = waitfor

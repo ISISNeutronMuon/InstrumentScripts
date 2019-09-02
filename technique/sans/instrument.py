@@ -54,7 +54,7 @@ class ScanningInstrument(object):
             pass
         elif isinstance(mode, str):
             self.set_default_dae(
-                getattr(self, "setup_dae_"+mode),
+                getattr(self, "setup_dae_" + mode),
                 trans)
         else:
             if trans:
@@ -220,22 +220,22 @@ class ScanningInstrument(object):
 
     def _begin(self, *args, **kwargs):
         """Start a measurement."""
-        if self._dae_mode and hasattr(self, "_begin_"+self._dae_mode):
-            getattr(self, "_begin_"+self._dae_mode)(*args, **kwargs)
+        if self._dae_mode and hasattr(self, "_begin_" + self._dae_mode):
+            getattr(self, "_begin_" + self._dae_mode)(*args, **kwargs)
         else:
             gen.begin(*args, **kwargs)
 
     def _end(self):
         """End a measurement."""
-        if self._dae_mode and hasattr(self, "_end_"+self._dae_mode):
-            getattr(self, "_end_"+self._dae_mode)()  # pragma: no cover
+        if self._dae_mode and hasattr(self, "_end_" + self._dae_mode):
+            getattr(self, "_end_" + self._dae_mode)()  # pragma: no cover
         else:
             gen.end()
 
     def _waitfor(self, **kwargs):
         """Await the user's desired statistics."""
-        if self._dae_mode and hasattr(self, "_waitfor_"+self._dae_mode):
-            getattr(self, "_waitfor_"+self._dae_mode)(**kwargs)
+        if self._dae_mode and hasattr(self, "_waitfor_" + self._dae_mode):
+            getattr(self, "_waitfor_" + self._dae_mode)(**kwargs)
         else:
             gen.waitfor(**kwargs)
 
@@ -475,12 +475,12 @@ class ScanningInstrument(object):
         gen.change_sample_par("Thick", thickness)
         info("Using the following Sample Parameters")
         self.printsamplepars()
-        gen.change(title=title+self.title_footer)
+        gen.change(title=title + self.title_footer)
 
         self._begin()
         unit, time = _get_times(times)
         info("Measuring {title:} for {time:} {units:}".format(
-            title=title+self.title_footer,
+            title=title + self.title_footer,
             units=unit,
             time=time))
         self._waitfor(**times)
@@ -579,7 +579,7 @@ of parameters accepted. """
         import csv
         import ast
         import os.path
-        with open(file_path, "r") as src, open(file_path+".py", "w") as out:
+        with open(file_path, "r") as src, open(file_path + ".py", "w") as out:
             out.write("from SansScripting import *\n")
             out.write("@user_script\n")
             out.write("def {}():\n".format(

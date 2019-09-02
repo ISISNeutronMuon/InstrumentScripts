@@ -302,7 +302,7 @@ involves only having two spectra covering the entire main detecor."""
             flipper1(1)
             gfrm = gen.get_frames()
             gen.resume()
-            gen.waitfor(frames=gfrm+u)
+            gen.waitfor(frames=gfrm + u)
             gen.pause()
 
             gen.change(period=2)
@@ -310,7 +310,7 @@ involves only having two spectra covering the entire main detecor."""
             flipper1(0)
             gfrm = gen.get_frames()
             gen.resume()
-            gen.waitfor(frames=gfrm+d)
+            gen.waitfor(frames=gfrm + d)
             gen.pause()
 
             gtotal = get_total()

@@ -52,7 +52,7 @@ def _plot_range(array):
     # array = [float(x) for x in array]
     low = array.min()
     high = array.max()
-    diff = high-low
+    diff = high - low
     return (low - 0.05 * diff,
             high + 0.05 * diff)
 
@@ -163,7 +163,7 @@ class Scan(object):
         action_remainder = None
         try:
             with open(self.defaults.log_file(), "w") as logfile, \
-                 detector(self, save=save, **kwargs) as detect:
+                    detector(self, save=save, **kwargs) as detect:
                 for x in self:
                     # FIXME: Handle multidimensional plots
                     (label, position) = next(iter(x.items()))
@@ -180,11 +180,11 @@ class Scan(object):
                     axis.clear()
                     axis.set_xlabel(label)
                     if isinstance(self.min(), tuple):
-                        rng = [1.05*self.min()[0] - 0.05 * self.max()[0],
-                               1.05*self.max()[0] - 0.05 * self.min()[0]]
+                        rng = [1.05 * self.min()[0] - 0.05 * self.max()[0],
+                               1.05 * self.max()[0] - 0.05 * self.min()[0]]
                     else:
-                        rng = [1.05*self.min() - 0.05 * self.max(),
-                               1.05*self.max() - 0.05 * self.min()]
+                        rng = [1.05 * self.min() - 0.05 * self.max(),
+                               1.05 * self.max() - 0.05 * self.min()]
                     axis.set_xlim(rng[0], rng[1])
                     rng = _plot_range(ys)
                     axis.set_ylim(rng[0], rng[1])
@@ -313,6 +313,7 @@ class ContinuousMove(object):
     An object representing a continuous move from start to stop at a constant
     speed.
     """
+
     def __init__(self, start, stop, speed):
         self.start = start
         self.stop = stop
@@ -620,7 +621,7 @@ class ProductScan(Scan):
         action_remainder = None
         try:
             with open(self.defaults.log_file(), "w") as logfile, \
-                 detector(self, save) as detect:
+                    detector(self, save) as detect:
                 for x in self:
                     acc, value = detect(acc, **kwargs)
 
@@ -646,11 +647,11 @@ class ProductScan(Scan):
                     axis.set_ylabel(keys[0])
                     miny, minx = self.min()
                     maxy, maxx = self.max()
-                    rng = [1.05*minx - 0.05 * maxx,
-                           1.05*maxx - 0.05 * minx]
+                    rng = [1.05 * minx - 0.05 * maxx,
+                           1.05 * maxx - 0.05 * minx]
                     axis.set_xlim(rng[0], rng[1])
-                    rng = [1.05*miny - 0.05 * maxy,
-                           1.05*maxy - 0.05 * miny]
+                    rng = [1.05 * miny - 0.05 * maxy,
+                           1.05 * maxy - 0.05 * miny]
                     axis.set_ylim(rng[0], rng[1])
                     axis.pcolor(
                         self._estimate_locations(xs, len(self.inner),
@@ -677,12 +678,12 @@ class ProductScan(Scan):
         if len(xs) >= 2:
             deltax = np.mean(steps)
         else:
-            deltax = (high-low)/float(size)
+            deltax = (high - low) / float(size)
 
-        first = np.array([xs[0]]-deltax/2)
+        first = np.array([xs[0]] - deltax / 2)
         remainder = size + 1 - len(xs)
-        end = np.linspace(xs[-1] + deltax/2, high, remainder)[1:]
-        return np.hstack([first, xs+deltax/2, end])
+        end = np.linspace(xs[-1] + deltax / 2, high, remainder)[1:]
+        return np.hstack([first, xs + deltax / 2, end])
 
 
 class ParallelScan(Scan):
@@ -765,6 +766,7 @@ class ForeverContinuousScan(ContinuousScan):
     """
     A special case of a forever scan that can operate with continuous moves.
     """
+
     def __len__(self):
         raise ValueError(
             "Can't get length of continuous scan that runs forever.")
@@ -820,11 +822,11 @@ of trying to fake a detector."""
 
         axis.clear()
         if isinstance(self.min(), tuple):
-            rng = [1.05*self.min()[0] - 0.05 * self.max()[0],
-                   1.05*self.max()[0] - 0.05 * self.min()[0]]
+            rng = [1.05 * self.min()[0] - 0.05 * self.max()[0],
+                   1.05 * self.max()[0] - 0.05 * self.min()[0]]
         else:
-            rng = [1.05*self.min() - 0.05 * self.max(),
-                   1.05*self.max() - 0.05 * self.min()]
+            rng = [1.05 * self.min() - 0.05 * self.max(),
+                   1.05 * self.max() - 0.05 * self.min()]
         axis.set_xlabel(self.axis)
         axis.set_xlim(rng[0], rng[1])
         rng = _plot_range(ys)
@@ -857,5 +859,5 @@ def last_scan(path=None, axis="replay"):
                    key=os.path.getctime)
     with open(path, "r") as infile:
         xs, ys, errs = np.loadtxt(infile, unpack=True)
-        ys = [Average((y/e)**2, y/e**2) for y, e in zip(ys, errs)]
+        ys = [Average((y / e)**2, y / e**2) for y, e in zip(ys, errs)]
         return ReplayScan(xs, ys, axis)

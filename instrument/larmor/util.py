@@ -19,4 +19,4 @@ def flipper1(state=0):
         gen.set_pv("IN:LARMOR:SPINFLIPPER_01:FLIPSTATE:SP", 1)
     # time.sleep(5)
     flipstate = gen.get_pv("IN:LARMOR:SPINFLIPPER_01:FLIPSTATE")
-    debug("Flipstate="+str(flipstate))
+    debug("Flipstate=" + str(flipstate))

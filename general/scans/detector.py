@@ -44,6 +44,7 @@ class BlockDetector(DetectorManager):
     """
     A helper class for using an IBEX block as a detector.
     """
+
     def __init__(self, blockname):
         self.blockname = blockname
         self._f = lambda acc: (acc, get_block(self.blockname))
@@ -113,7 +114,7 @@ class DaePeriods(DetectorManager):
         def wrap(*args, **kwargs):
             """Wrapped function to change periods"""
             x = self._f(*args, **kwargs)
-            g.change_period(1+g.get_period())
+            g.change_period(1 + g.get_period())
             return x
 
         return wrap
@@ -164,7 +165,7 @@ def specific_spectra(spectra_list, preconfig=lambda: None):
         spec = None
         while spec is None:
             spec = g.get_spectrum(1, g.get_period())
-        base = sum(g.get_spectrum(1, period=g.get_period())["signal"])*100.0
+        base = sum(g.get_spectrum(1, period=g.get_period())["signal"]) * 100.0
         pols = [Average(0, base) for _ in spectra_list]
         for idx, spectra in enumerate(spectra_list):
             for channel in spectra:
@@ -173,7 +174,7 @@ def specific_spectra(spectra_list, preconfig=lambda: None):
                 while spec is None:
                     spec = g.get_spectrum(channel, g.get_period())
                 temp = sum(spec["signal"])
-                pols[idx] += Average(temp*100.0, 0.0)
+                pols[idx] += Average(temp * 100.0, 0.0)
         if len(pols) == 1:
             return acc, pols[0]
         return acc, MonoidList(pols)
