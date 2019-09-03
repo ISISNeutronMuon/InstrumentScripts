@@ -28,6 +28,26 @@ class.  The :meth:`defaults.Defaults.scan`,
 from the module.  The :meth:`util.local_wrapper` function can
 simplify exporting these class methods.
 
+Detector Functions
+==================
+
+Beneath all of the abstraction layers, every scan calls a detector
+function at each data point to get the measured result.  A detector
+function takes a single positional argument, the accumulator, and
+keywords arguments to take the length of time for the measurement.  It
+will return a tuple, where the first argument is the updated
+accumulator and the second argument is the measured variable.
+
+For most detector functions, the accumulator will be passed back
+unchanged.  The reason for its existence is to allow more complicated
+detector functions to store information between calls.  For example,
+imagine a detector function which needs to create a large array.  The
+initial call of the function would, by convention, receive ``None``
+for the accumulator value.  It would then create the array and pass it
+out as the new accumulator value.  The next call would then receive
+this array and could use it again, instead of needing to make another
+expensive array creation call.
+
 Defaults
 ========
 

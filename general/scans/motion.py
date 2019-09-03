@@ -164,6 +164,7 @@ class BlockMotion(Motion):
     block
       A string containing the name of the ibex block to control
     """
+
     def __init__(self, block):
         if block not in g.get_blocks():
             raise RuntimeError(

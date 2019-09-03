@@ -30,7 +30,7 @@ class Zoom(ScanningInstrument):
                    "trange": 1, "log": 0}]):
         base = r"C:\Instrument\Settings\config\NDXZOOM\configurations\tables\\"
         self._generic_scan(
-            base+detector, base+spectra, base+wiring, tcbs)
+            base + detector, base + spectra, base + wiring, tcbs)
 
     @dae_setter("SANS", "sans")
     def setup_dae_event(self):

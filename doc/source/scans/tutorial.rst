@@ -526,8 +526,8 @@ Scan Alternate Detectors
   scan across any arbitrary value.  The code below with plots twice
   the current value of the theta motor (as an example).
 
-  >>> def example_detector(**kwargs):
-  ...   return Average(2*theta())
+  >>> def example_detector(acc, **kwargs):
+  ...   return (acc, Average(2*theta()))
   >>> scan(theta, start=0, stop=1, stride=0.25, frames=50, detector=example_detector)
 
 Perform continuous scans
