@@ -617,8 +617,7 @@ class ProductScan(Scan):
         for _ in range(len(self.outer)):
             values.append([np.nan] * len(self.inner))
 
-        acc = None
-        action_remainder = None
+        acc = action_remainder = None
         try:
             with open(self.defaults.log_file(), "w") as logfile, \
                     detector(self, save) as detect:
