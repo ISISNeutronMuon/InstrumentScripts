@@ -21,21 +21,16 @@ class Larmor(ScanningInstrument):  # pylint: disable=too-many-public-methods
 
     step = 100.0
     lrange = "0.9-13.25"
+    _PV_BASE = "IN:LARMOR:"
+
+    # change the default for Edler June 2019
+    # lrange = "0.65-12.95"
 
     @property
     def TIMINGS(self):
         if self._dae_mode == "sesans":
             return self._TIMINGS + ["u", "d"]
         return self._TIMINGS
-
-    def set_measurement_type(self, value):
-        gen.set_pv("IN:LARMOR:PARS:SAMPLE:MEAS:TYPE", value)
-
-    def set_measurement_label(self, value):
-        gen.set_pv("IN:LARMOR:PARS:SAMPLE:MEAS:LABEL", value)
-
-    def set_measurement_id(self, value):
-        gen.set_pv("IN:LARMOR:PARS:SAMPLE:MEAS:ID", value)
 
     def get_lrange(self):
         """Return the current wavelength range"""
@@ -171,7 +166,7 @@ involves only having two spectra covering the entire main detecor."""
 
     @dae_setter("TRANS", "transmission")
     def setup_dae_transmission(self):
-        gen.set_pv("IN:LARMOR:PARS:SAMPLE:MEAS:TYPE", "transmission")
+        self.set_pv("PARS:SAMPLE:MEAS:TYPE", "transmission")
         gen.change_sync('isis')
         self._generic_scan(
             r"C:\Instrument\Settings\Tables\detector_monitors_only.dat",
@@ -192,9 +187,9 @@ involves only having two spectra covering the entire main detecor."""
                   {"low": 0.0, "high": 0.0, "step": 0.0,
                    "trange": 2, "log": 0}])
         gen.cset(T0Phase=0)
-        gen.set_pv("IN: LARMOR: MK3CHOPR_01: CH2: DIR: SP", "CW")
+        self.set_pv("MK3CHOPR_01: CH2: DIR: SP", "CW")
         gen.cset(TargetDiskPhase=8200)
-        gen.set_pv("IN: LARMOR: MK3CHOPR_01: CH3: DIR: SP", "CCW")
+        self.set_pv("MK3CHOPR_01: CH3: DIR: SP", "CCW")
         gen.cset(InstrumentDiskPhase=77650)
 
     @dae_setter("SANS", "sans")
@@ -311,7 +306,7 @@ involves only having two spectra covering the entire main detecor."""
             flipper1(1)
             gfrm = gen.get_frames()
             gen.resume()
-            gen.waitfor(frames=gfrm+u)
+            gen.waitfor(frames=gfrm + u)
             gen.pause()
 
             gen.change(period=2)
@@ -319,7 +314,7 @@ involves only having two spectra covering the entire main detecor."""
             flipper1(0)
             gfrm = gen.get_frames()
             gen.resume()
-            gen.waitfor(frames=gfrm+d)
+            gen.waitfor(frames=gfrm + d)
             gen.pause()
 
             gtotal = get_total()
@@ -327,7 +322,7 @@ involves only having two spectra covering the entire main detecor."""
     @dae_setter("SEMSANS", "semsans")
     def setup_dae_alanis(self):
         """Setup the instrument for using the Alanis fibre detector"""
-        Larmor._generic_scan(
+        self._generic_scan(
             r"C:\Instrument\Settings\Tables\Alanis_Detector.dat",
             r"C:\Instrument\Settings\Tables\Alanis_Spectra.dat",
             r"C:\Instrument\Settings\Tables\Alanis_Wiring.dat",
@@ -341,7 +336,7 @@ involves only having two spectra covering the entire main detecor."""
     @dae_setter("SEMSANS", "semsans")
     def setup_dae_semsans(self):
         """Setup the instrument for polarised SEMSANS on the fibre detector"""
-        Larmor._generic_scan(
+        self._generic_scan(
             r"C:\Instrument\Settings\Tables\Alanis_Detector.dat",
             r"C:\Instrument\Settings\Tables\Alanis_Spectra.dat",
             r"C:\Instrument\Settings\Tables\Alanis_Wiring.dat",
@@ -376,31 +371,28 @@ involves only having two spectra covering the entire main detecor."""
         # move the transmission monitor in
         gen.cset(m4trans=0.0)
 
-    @staticmethod
-    def _detector_is_on():
+    def _detector_is_on(self):
         """Is the detector currently on?"""
         voltage_status = all([
-            gen.get_pv(
-                "IN:LARMOR:CAEN:hv0:0:{}:status".format(x)).lower() == "on"
+            self.get_pv(
+                "CAEN:hv0:0:{}:status".format(x)).lower() == "on"
             for x in [8, 9, 10, 11]])
         return voltage_status
 
-    @staticmethod
-    def _detector_turn_on(delay=True):
-        gen.set_pv("IN:LARMOR:CAEN:hv0:0:8:pwonoff", "On")
-        gen.set_pv("IN:LARMOR:CAEN:hv0:0:9:pwonoff", "On")
-        gen.set_pv("IN:LARMOR:CAEN:hv0:0:10:pwonoff", "On")
-        gen.set_pv("IN:LARMOR:CAEN:hv0:0:11:pwonoff", "On")
+    def _detector_turn_on(self, delay=True):
+        self.set_pv("CAEN:hv0:0:8:pwonoff", "On")
+        self.set_pv("CAEN:hv0:0:9:pwonoff", "On")
+        self.set_pv("CAEN:hv0:0:10:pwonoff", "On")
+        self.set_pv("CAEN:hv0:0:11:pwonoff", "On")
         if delay:
             info("Waiting For Detector To Power Up (180s)")
             sleep(180)
 
-    @staticmethod
-    def _detector_turn_off(delay=True):
-        gen.set_pv("IN:LARMOR:CAEN:hv0:0:8:pwonoff", "Off")
-        gen.set_pv("IN:LARMOR:CAEN:hv0:0:9:pwonoff", "Off")
-        gen.set_pv("IN:LARMOR:CAEN:hv0:0:10:pwonoff", "Off")
-        gen.set_pv("IN:LARMOR:CAEN:hv0:0:11:pwonoff", "Off")
+    def _detector_turn_off(self, delay=True):
+        self.set_pv("CAEN:hv0:0:8:pwonoff", "Off")
+        self.set_pv("CAEN:hv0:0:9:pwonoff", "Off")
+        self.set_pv("CAEN:hv0:0:10:pwonoff", "Off")
+        self.set_pv("CAEN:hv0:0:11:pwonoff", "Off")
         if delay:
             info("Waiting For Detector To Power Down (60s)")
             sleep(60)
@@ -442,45 +434,41 @@ involves only having two spectra covering the entire main detecor."""
         else:
             gen.cset(BSY=200.0, BSZ=0.0)
 
-    @staticmethod
-    def _generic_home_slit(slit):
+    def _generic_home_slit(self, slit):
         # home north and west
-        gen.set_pv(slit + "JN:MTR.HOMR", 1)
-        gen.set_pv(slit + "JW:MTR.HOMR", 1)
+        self.set_pv(slit + "JN:MTR.HOMR", 1)
+        self.set_pv(slit + "JW:MTR.HOMR", 1)
         gen.waitfor_move()
-        gen.set_pv(slit + "JN:MTR.VAL", "20")
-        gen.set_pv(slit + "JW:MTR.VAL", "20")
+        self.set_pv(slit + "JN:MTR.VAL", "20")
+        self.set_pv(slit + "JW:MTR.VAL", "20")
         # home south and east
-        gen.set_pv(slit + "JS:MTR.HOMR", 1)
-        gen.set_pv(slit + "JE:MTR.HOMR", 1)
+        self.set_pv(slit + "JS:MTR.HOMR", 1)
+        self.set_pv(slit + "JE:MTR.HOMR", 1)
         gen.waitfor_move()
-        gen.set_pv(slit + "JS:MTR.VAL", "20")
-        gen.set_pv(slit + "JE:MTR.VAL", "20")
+        self.set_pv(slit + "JS:MTR.VAL", "20")
+        self.set_pv(slit + "JE:MTR.VAL", "20")
         gen.waitfor_move()
 
-    @staticmethod
-    def homecoarsejaws():
+    def homecoarsejaws(self):
         """Rehome coarse jaws."""
         info("Homing Coarse Jaws")
         gen.cset(cjhgap=40, cjvgap=40)
         gen.waitfor_move()
-        Larmor._generic_home_slit("IN:LARMOR:MOT:JAWS1:")
+        self._generic_home_slit("MOT:JAWS1:")
 
-    @staticmethod
-    def homea1():
+    def homea1(self):
         """Rehome aperture 1."""
         info("Homing a1")
         gen.cset(a1hgap=40, a1vgap=40)
-        Larmor._generic_home_slit("IN:LARMOR:MOT:JAWS2:")
+        self._generic_home_slit("MOT:JAWS2:")
         gen.waitfor_move()
 
-    @staticmethod
-    def homes1():
+    def homes1(self):
         """Rehome slit1."""
         info("Homing s1")
         gen.cset(s1hgap=40, s1vgap=40)
         gen.waitfor_move()
-        Larmor._generic_home_slit("IN:LARMOR:MOT:JAWS3:")
+        self._generic_home_slit("MOT:JAWS3:")
 
     @staticmethod
     def homes2():
@@ -509,7 +497,7 @@ involves only having two spectra covering the entire main detecor."""
             info("Lifting Bench (20s)")
             sleep(20)
 
-            if gen.get_pv("IN: LARMOR: BENCH: STATUS") == 1:
+            if self.get_pv("BENCH: STATUS") == 1:
                 info("Rotating Bench")
                 gen.cset(bench_rot=angle)
                 gen.waitfor_move()
@@ -520,24 +508,24 @@ involves only having two spectra covering the entire main detecor."""
                 info("Bench failed to lift")
                 info("Move not attempted")
 
-    @staticmethod
-    def setup_pi_rotation():
+    def setup_pi_rotation(self):
         """Initialise the pi flipper."""
         script = ["*IDN?", "ERR?", "SVO 1 1", "RON 1 1",
                   "VEL 1 180", "ACC 1 90", "DEC 1 90"]
-        gen.set_pv("IN: LARMOR: SDTEST_01: P2: COMM", script[0])
+        self.set_pv("SDTEST_01: P2: COMM", script[0])
         for line in script[1:]:
             sleep(1)
-            gen.set_pv("IN: LARMOR: SDTEST_01: P2: COMM", line)
+            self.set_pv("SDTEST_01: P2: COMM", line)
 
-    @staticmethod
-    def home_pi_rotation():
+    def home_pi_rotation(self):
         """Calibrate the pi flipper."""
-        gen.set_pv("IN: LARMOR: SDTEST_01: P2: COMM", "FRF 1")
+        self.set_pv("SDTEST_01: P2: COMM", "FRF 1")
 
+block_accessors = ["changer_pos"]
 
 obj = Larmor()
 for method in dir(obj):
     if method[0] != "_" and method not in locals() and \
+       method not in block_accessors and \
        callable(getattr(obj, method)):
         locals()[method] = local_wrapper(obj, method)

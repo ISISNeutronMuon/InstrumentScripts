@@ -10,7 +10,7 @@ from general.scans.util import local_wrapper
 class LOQ(ScanningInstrument):
     """This class handles the LOQ beamline"""
 
-    pv_origin = "IN:LOQ"
+    _PV_BASE = "IN:LOQ:"
 
     def __init__(self):
         ScanningInstrument.__init__(self)
@@ -25,15 +25,6 @@ class LOQ(ScanningInstrument):
                 'W1B', 'W2B', 'W3B', 'W4B', 'W5B', 'W6B', 'W7B', 'W8B',
                 'W9B', 'W10B', 'W11B', 'W12B', 'W13B', 'W14B', 'W15B', 'W16B',
                 'DLS2', 'DLS3', 'DLS4', 'DLS5', 'DLS6']
-
-    def set_measurement_type(self, value):
-        gen.set_pv(self.pv_origin + ":PARS:SAMPLE:MEAS:TYPE", value)
-
-    def set_measurement_label(self, value):
-        gen.set_pv(self.pv_origin + ":PARS:SAMPLE:MEAS:LABEL", value)
-
-    def set_measurement_id(self, value):
-        gen.set_pv(self.pv_origin + ":PARS:SAMPLE:MEAS:ID", value)
 
     def _generic_scan(  # pylint: disable=dangerous-default-value
             self,
@@ -52,7 +43,7 @@ class LOQ(ScanningInstrument):
                        trange=1, regime=2)
         gen.change_finish()
         ScanningInstrument._generic_scan(
-            self, base+detector, base+spectra, base+wiring, tcbs)
+            self, base + detector, base + spectra, base + wiring, tcbs)
 
     @dae_setter("SANS/TRANS", "sans")
     def setup_dae_event(self):
@@ -148,9 +139,12 @@ class LOQ(ScanningInstrument):
                   {"low": 20000, "high": 40000, "step": 20000,
                    "log": False, "trange": 1, "regime": 2}])
 
-    @staticmethod
-    def _move_pos(pos):
-        """Move the sample changer to a labelled position"""
+    @property
+    def changer_pos(self):
+        return gen.cget("Changer")["value"]
+
+    @changer_pos.setter
+    def changer_pos(self, pos):
         return gen.cset(Changer=pos)
 
     @staticmethod
@@ -166,22 +160,21 @@ class LOQ(ScanningInstrument):
         else:
             raise RuntimeError("Slit size {} is undefined".format(size))
 
-    @staticmethod
-    def _detector_is_on():
+    def _detector_is_on(self):
         """Is the detector currently on?"""
-        return gen.get_pv("IN:LOQ:MOXA12XX_02:CH0:AI:RBV") > 2
+        return self.get_pv("MOXA12XX_02:CH0:AI:RBV") > 2
 
     @staticmethod
     def _detector_turn_on(delay=True):
         raise NotImplementedError("Detector toggling is not supported LOQ")
         # for x in range(8):
-        #     gen.set_pv(pv_origin + ":CAEN:hv0:4:{}:pwonoff".format(x), "On")
+        #     self.set_pv("CAEN:hv0:4:{}:pwonoff".format(x), "On")
 
     @staticmethod
     def _detector_turn_off(delay=True):
         raise NotImplementedError("Detector toggling is not supported on LOQ")
         # for x in range(8):
-        #     gen.set_pv(pv_origin + ":CAEN:hv0:4:{}:pwonoff".format(x), "Off")
+        #     self.set_pv("CAEN:hv0:4:{}:pwonoff".format(x), "Off")
 
     def _configure_sans_custom(self):
         gen.cset(Tx_Mon="OUT")
@@ -192,58 +185,56 @@ class LOQ(ScanningInstrument):
         gen.cset(Tx_Mon="IN")
         gen.waitfor_move()
 
+    # pylint: disable=invalid-name
+    def J1(self, temperature_1, temperature_2):
+        """Run off Julabo 1"""
+        self.set_pv("JULABO_01:MODE:SP", "OFF")
+        sleep(1)
+        self.set_pv("JULABO_02:MODE:SP", "OFF")
+        gen.waitfor_move()
+        gen.cset(Valve="J1")
+        gen.waitfor_move()
+        gen.cset(Julabo_1_Sensor="External")
+        sleep(1)
+        gen.cset(Julabo_2_Sensor="Internal")
+        gen.waitfor_move()
+        gen.cset(Internal_Setpoint_1=temperature_1)
+        sleep(1)
+        gen.cset(Internal_Setpoint_2=temperature_2)
+        gen.waitfor_move()
+        self.set_pv("JULABO_01:MODE:SP", "ON")
+        sleep(1)
+        self.set_pv("JULABO_02:MODE:SP", "ON")
+        gen.waitfor_move()
+
+    @staticmethod
+    def J2(temperature_1, temperature_2):
+        """Run off Julabo 2"""
+        gen.cset(Julabo_1_Circulator="OFF")
+        sleep(1)
+        gen.cset(Julabo_2_Circulator="OFF")
+        gen.waitfor_move()
+        gen.cset(Valve="J2")
+        gen.waitfor_move()
+        gen.cset(Julabo_1_Sensor="Internal")
+        sleep(1)
+        gen.cset(Julabo_2_Sensor="External")
+        gen.waitfor_move()
+        gen.cset(Internal_Setpoint_1=temperature_1)
+        sleep(1)
+        gen.cset(Internal_Setpoint_2=temperature_2)
+        gen.waitfor_move()
+        gen.cset(Julabo_1_Circulator="ON")
+        sleep(1)
+        gen.cset(Julabo_2_Circulator="ON")
+        gen.waitfor_move()
+
+block_accessors = ["changer_pos"]
 
 obj = LOQ()
 for method in dir(obj):
     if method[0] != "_" and method not in locals() and \
+       method not in block_accessors and \
        callable(getattr(obj, method)):
         locals()[method.lower()] = local_wrapper(obj, method)
         locals()[method.upper()] = local_wrapper(obj, method)
-
-
-# pylint: disable=invalid-name
-def J1(temperature_1, temperature_2):
-    """Run off Julabo 1"""
-    gen.set_pv("IN:LOQ:JULABO_01:MODE:SP", "OFF")
-    sleep(2)
-    gen.set_pv("IN:LOQ:JULABO_02:MODE:SP", "OFF")
-    gen.waitfor_move()
-    gen.cset(Valve="J1")
-    gen.waitfor_move()
-    gen.cset(Julabo_1_Sensor="External")
-    sleep(2)
-    gen.cset(Julabo_2_Sensor="Internal")
-    gen.waitfor_move()
-    gen.cset(Internal_Setpoint_1=temperature_1)
-    sleep(2)
-    gen.cset(Internal_Setpoint_2=temperature_2)
-    gen.waitfor_move()
-    gen.set_pv("IN:LOQ:JULABO_01:MODE:SP", "ON")
-    sleep(2)
-    gen.set_pv("IN:LOQ:JULABO_02:MODE:SP", "ON")
-    gen.waitfor_move()
-
-
-def J2(temperature_1, temperature_2):
-    """Run off Julabo 2"""
-    gen.cset(Julabo_1_Circulator="OFF")
-    sleep(2)
-    gen.cset(Julabo_2_Circulator="OFF")
-    gen.waitfor_move()
-    gen.cset(Valve="J2")
-    gen.waitfor_move()
-    gen.cset(Julabo_1_Sensor="Internal")
-    sleep(2)
-    gen.cset(Julabo_2_Sensor="External")
-    gen.waitfor_move()
-    gen.cset(Internal_Setpoint_1=temperature_1)
-    sleep(2)
-    gen.cset(Internal_Setpoint_2=temperature_2)
-    gen.waitfor_move()
-    gen.cset(Julabo_1_Circulator="ON")
-    sleep(2)
-    gen.cset(Julabo_2_Circulator="ON")
-    gen.waitfor_move()
-
-j1 = J1
-j2 = J2
