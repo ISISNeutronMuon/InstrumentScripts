@@ -90,9 +90,11 @@ class Zoom(ScanningInstrument):
         # move the transmission monitor in
         self.set_pv("VACUUM:MONITOR:4:INSERT", "INSERT")
 
+block_accessors = ["changer_pos"]
 
 obj = Zoom()
 for method in dir(obj):
     if method[0] != "_" and method not in locals() and \
+       method not in block_accessors and \
        callable(getattr(obj, method)):
         locals()[method] = local_wrapper(obj, method)
