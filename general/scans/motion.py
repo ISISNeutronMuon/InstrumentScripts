@@ -164,6 +164,7 @@ class BlockMotion(Motion):
     block
       A string containing the name of the ibex block to control
     """
+
     def __init__(self, block):
         if block not in g.get_blocks():
             raise RuntimeError(
@@ -202,6 +203,8 @@ def populate():
     """Create Motion objects in the GLOBAL namespace for each
     block registered with IBEX."""
     for i in g.get_blocks():
+        if not isinstance(i, str):
+            continue
         temp = BlockMotion(i)
         __builtins__[i.upper()] = temp
         __builtins__[i] = temp

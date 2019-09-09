@@ -68,8 +68,8 @@ class LoqSampleChanger(Defaults):
 
         speed = size / time_single_direction
 
-        start = centre + size/2.0
-        stop = centre - size/2.0
+        start = centre + size / 2.0
+        stop = centre - size / 2.0
 
         # pylint: disable=redefined-outer-name
         scan = ContinuousScan(motion, [], self)

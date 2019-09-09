@@ -16,6 +16,8 @@ Tutorial
      >>> ();from instrument.larmor import *;()  # doctest:+ELLIPSIS
      (...)
 
+.. py:currentmodule:: general.scans
+
 Plot Motor Scan
 ---------------
 
@@ -133,7 +135,7 @@ Plot Motor Scan
   Taking a count at theta=4.00 and two theta=0.00
 
   Since relative scans are fairly common, there's a built in
-  :meth:`general.scans.defaults.Defaults.rscan` method which defaults to a relative scan,
+  :meth:`defaults.Defaults.rscan` method which defaults to a relative scan,
   instead of an absolute.
 
   >>> rscan(theta, -1, 1, 0.5, 5)
@@ -354,7 +356,7 @@ Replaying Scans
 
 It's fairly common to only realise that you should be fitting data
 *after* starting a scan.  Thankfully,
-:meth:`general.scans.scan.last_scan` allows you to replay the results
+:meth:`scans.last_scan` allows you to replay the results
 of the previous measurement and perform fits on it.
 
 >>> from general.scans.scans import last_scan
@@ -490,8 +492,8 @@ Scan Alternate Detectors
   Taking a count at theta=0.75 and two theta=3.00
   Taking a count at theta=1.00 and two theta=3.00
 
-  The above uses the :meth:`general.scans.detector.specific_spectra`
-  to create a :math:`general.scans.detector.Detector` that looks at
+  The above uses the :meth:`detector.specific_spectra`
+  to create a :class:`detector.DetectorManager` that looks at
   spectrum number four.  Multiple channels can be combined together
   into a single value by including them all within the inner list.
   For example, to plots detector spectra four and one combined:
@@ -520,12 +522,12 @@ Scan Alternate Detectors
   Taking a count at theta=1.00 and two theta=3.00
   Taking a count at theta=1.00 and two theta=3.00
 
-  Beyond using the `specific_spectra` function, it's also possible to
+  Beyond using the ``specific_spectra`` function, it's also possible to
   scan across any arbitrary value.  The code below with plots twice
   the current value of the theta motor (as an example).
 
-  >>> def example_detector(**kwargs):
-  ...   return Average(2*theta())
+  >>> def example_detector(acc, **kwargs):
+  ...   return (acc, Average(2*theta()))
   >>> scan(theta, start=0, stop=1, stride=0.25, frames=50, detector=example_detector)
 
 Perform continuous scans
@@ -540,7 +542,7 @@ Perform continuous scans
   only be combined with each other, and not with other non-continuous scans.
 
   Instead of taking a set of points, a continuous scan takes a collection of
-  `ContinuousMove` objects:
+  :class:`scans.ContinuousMove` objects:
 
   >>> from general.scans.scans import ContinuousMove
   >>> ContinuousMove(start=-5, stop=5, speed=0.05)
@@ -656,7 +658,7 @@ Position Commands
 	 integer number of steps, the measurement will stop before the
 	 requested end.
 
-  See the :meth:`general.scans.util.get_points` function for more information on the parameters.
+  See the :meth:`util.get_points` function for more information on the parameters.
 
 
 Class setup
