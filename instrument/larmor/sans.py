@@ -520,11 +520,7 @@ involves only having two spectra covering the entire main detecor."""
         """Calibrate the pi flipper."""
         self.set_pv("SDTEST_01: P2: COMM", "FRF 1")
 
-block_accessors = ["changer_pos"]
 
 obj = Larmor()
-for method in dir(obj):
-    if method[0] != "_" and method not in locals() and \
-       method not in block_accessors and \
-       callable(getattr(obj, method)):
-        locals()[method] = local_wrapper(obj, method)
+for method in obj.method_iterator():
+    locals()[method] = local_wrapper(obj, method)

@@ -204,11 +204,7 @@ class LOQ(ScanningInstrument):
         gen.cset(Julabo_2_Circulator="ON")
         gen.waitfor_move()
 
-block_accessors = ["changer_pos"]
 
 obj = LOQ()
-for method in dir(obj):
-    if method[0] != "_" and method not in locals() and \
-       method not in block_accessors and \
-       callable(getattr(obj, method)):
-        locals()[method] = local_wrapper(obj, method)
+for method in obj.method_iterator():
+    locals()[method] = local_wrapper(obj, method)

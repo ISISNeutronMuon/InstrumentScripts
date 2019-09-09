@@ -30,10 +30,19 @@ class ScanningInstrument(object):
     title_footer = ""
     _TIMINGS = ["uamps", "frames", "seconds", "minutes", "hours"]
     _PV_BASE = None
+    _block_accessors = ["changer_pos", "method_iterator"]
 
     def __init__(self):
         self.setup_sans = self.setup_dae_event
         self.setup_trans = self.setup_dae_transmission
+
+    def method_iterator(self):
+        """Iterate through the class's public functions"""
+        for method in dir(self):
+            if method[0] != "_" and method not in locals() and \
+               method not in self._block_accessors and \
+               callable(getattr(self, method)):
+                yield method
 
     def set_default_dae(self, mode=None, trans=False):
         """Set the default DAE mode for SANS or TRANS measuremnts.
