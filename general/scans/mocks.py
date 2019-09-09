@@ -67,9 +67,9 @@ g.get_blocks.side_effect = instrument.keys
 def fake_spectrum(channel, period):  # pragma: no cover
     """Create a fake intensity spectrum."""
     if channel == 1:
-        return {"signal": np.zeros(1000)+1}
+        return {"signal": np.zeros(1000) + 1}
     x = np.arange(1000)
-    base = np.cos(0.01*(instrument["Theta"]+1.05)*x)+1
+    base = np.cos(0.01 * (instrument["Theta"] + 1.05) * x) + 1
     if period % 2 == 0:
         base = 2 - base
     base *= 100000
@@ -80,7 +80,7 @@ def fake_spectrum(channel, period):  # pragma: no cover
         base *= 0
         print("Taking a count at theta=%0.2f and two theta=%0.2f" %
               (g.cget("Theta")["value"], g.cget("Two_Theta")["value"]))
-        base += (1+np.cos(g.cget("Theta")["value"])) * \
+        base += (1 + np.cos(g.cget("Theta")["value"])) * \
             np.sqrt(g.cget("Theta")["value"]) + \
             g.cget("Two_Theta")["value"] ** 2 + \
             0.05 * np.random.rand()

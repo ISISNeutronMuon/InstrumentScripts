@@ -16,15 +16,15 @@ def load_tests(_loader, tests, _ignore):
     tests.addTests(
         doctest.DocFileSuite(os.path.join(
             "..", "..", "..", "doc", "source", "scans", "tutorial.rst"),
-                             setUp=lambda _: os.chdir(os.path.join(
-                                 "doc", "source", "scans")),
-                             tearDown=lambda _: os.chdir(pwd)))
+            setUp=lambda _: os.chdir(os.path.join(
+                "doc", "source", "scans")),
+            tearDown=lambda _: os.chdir(pwd)))
     tests.addTests(
         doctest.DocFileSuite(os.path.join(
             "..", "..", "..", "doc", "source", "scans", "instrument.rst"),
-                             setUp=lambda _: os.chdir(os.path.join(
-                                 "doc", "source", "scans")),
-                             tearDown=lambda _: os.chdir(pwd)))
+            setUp=lambda _: os.chdir(os.path.join(
+                "doc", "source", "scans")),
+            tearDown=lambda _: os.chdir(pwd)))
     return tests
 
 

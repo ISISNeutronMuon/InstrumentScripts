@@ -28,8 +28,8 @@ class ScanningInstrument(object):
     _dae_mode = None
     _detector_lock = False
     title_footer = ""
-    measurement_type = "sans"
     _TIMINGS = ["uamps", "frames", "seconds", "minutes", "hours"]
+    _PV_BASE = None
 
     def __init__(self):
         self.setup_sans = self.setup_dae_event
@@ -53,7 +53,7 @@ class ScanningInstrument(object):
             pass
         elif isinstance(mode, str):
             self.set_default_dae(
-                getattr(self, "setup_dae_"+mode),
+                getattr(self, "setup_dae_" + mode),
                 trans)
         else:
             if trans:
@@ -85,8 +85,7 @@ class ScanningInstrument(object):
                 result[k] = kwargs[k]
         return result
 
-    @staticmethod
-    def _generic_scan(detector, spectra, wiring, tcbs):
+    def _generic_scan(self, detector, spectra, wiring, tcbs):
         """A utility class for setting up dae states
 
         On its own, it's not particularly useful, but
@@ -95,9 +94,12 @@ class ScanningInstrument(object):
         """
         gen.change(nperiods=1)
         gen.change_start()
-        gen.change_tables(detector=detector)
-        gen.change_tables(spectra=spectra)
-        gen.change_tables(wiring=wiring)
+        if self.get_pv("DAE:DETECTOR_FILE") != wiring:
+            gen.change_tables(detector=detector)
+        if self.get_pv("DAE:SPECTRA_FILE") != wiring:
+            gen.change_tables(spectra=spectra)
+        if self.get_pv("DAE:WIRING_FILE") != wiring:
+            gen.change_tables(wiring=wiring)
         for tcb in tcbs:
             gen.change_tcb(**tcb)
         gen.change_finish()
@@ -115,15 +117,70 @@ class ScanningInstrument(object):
                 '1WB', '2WB', '3WB', '4WB', '5WB', '6WB', '7WB',
                 '8WB', '9WB', '10WB', '11WB', '12WB', '13WB', '14WB',                
                 '1WT', '2WT', '3WT', '4WT', '5WT', '6WT', '7WT',
-                '8WT', '9WT', '10WT', '11WT', '12WT', '13WT', '14WT']
+                '8WT', '9WT', '10WT', '11WT', '12WT', '13WT', '14WT',
+                '1GT', '2GT', '3GT', '4GT', '5GT', '6GT', '7GT', '8GT', '9GT',
+                '10GT', '11GT', '12GT']
 
-    @staticmethod
-    def _needs_setup():
-        if gen.get_runstate() != "SETUP":  # pragma: no cover
-            raise RuntimeError("Cannot start a measurement in a measurement")
+    def _attempt_resume(self, title, pos, thick, dae, **kwargs):
+        if gen.get_title() != title+self.title_footer:
+            raise RuntimeError(
+                'Attempted to continue measurement "{}", but was already in '
+                'the middle of measurement "{}".'.format(
+                    title, gen.get_title()))
+        if isinstance(pos, str):
+            if pos != self.changer_pos:
+                raise RuntimeError(
+                    'Attempted to continue measurement in position "{}", '
+                    'but was already in position "{}".'.format(
+                        title, gen.get_title()))
+        elif callable(pos):
+            raise RuntimeError(
+                'Cannot determine if instrument is in the right place to '
+                'resume run. Please manually end the run and restart it.')
+        elif pos is not None:
+            raise RuntimeError(
+                'Cannot determine if instrument is in the right place to '
+                'resume run. Please manually end the run and restart it.')
 
-    @abstractmethod
-    def set_measurement_type(self, value):  # pragma: no cover
+        if dae and self._dae_mode != dae:
+            raise RuntimeError(
+                'Cannot resume a measurement with DAE mode {} '
+                'since the current running measurement is DAE mode {}. '
+                'Either check your script or manually stop the '
+                'current run.'.format(dae, self._dae_mode))
+
+        for arg, val in sorted(kwargs.items()):
+            if arg in self.TIMINGS:
+                continue
+            if gen.cget(arg)["value"] != val:
+                raise RuntimeError(
+                    'Expected to resume measurement with position {} '
+                    'at {}, but instead found it at {}. Please either '
+                    'correct the script or manually end the run.'.format(
+                        arg, val, gen.cget(val)["value"]))
+
+        if gen.get_sample_pars()['THICK'] != thick:
+            raise RuntimeError(
+                'Expected to resume a run on a sample of thickness {}, '
+                'but was already running a measurement on a sample of '
+                'thickness {}. Please either correct the script or '
+                'manually end the run'.format(
+                    thick, gen.get_sample_pars()['THICK']))
+
+        times = self.sanitised_timings(kwargs)
+        warning(
+            "Detected that run was already in progress.  "
+            "Reconnecting to existing run.")
+        self._waitfor(**times)
+        self._end()
+
+    @property
+    def measurement_type(self):
+        """Get the measurement type form the journal."""
+        return self.get_pv("PARS:SAMPLE:MEAS:TYPE")
+
+    @measurement_type.setter
+    def measurement_type(self, value):
         """Set the measurement type in the journal.
 
         Parameters
@@ -136,9 +193,15 @@ class ScanningInstrument(object):
         value stored in the journal for the next run, which should be
         set to the new value.
         """
+        self.set_pv("PARS:SAMPLE:MEAS:TYPE", value)
 
-    @abstractmethod
-    def set_measurement_label(self, value):  # pragma: no cover
+    @property
+    def measurement_label(self):
+        """Get the measurement label from the journal"""
+        return self.get_pv("PARS:SAMPLE:MEAS:LABEL")
+
+    @measurement_label.setter
+    def measurement_label(self, value):
         """Set the sample label in the journal.
 
         Parameters
@@ -151,9 +214,15 @@ class ScanningInstrument(object):
         value stored in the journal for the next run, which should be
         set to the new value.
         """
+        self.set_pv("PARS:SAMPLE:MEAS:LABEL", value)
 
-    @abstractmethod
-    def set_measurement_id(self, value):  # pragma: no cover
+    @property
+    def measurement_id(self):
+        """Get the measurement id from the journal"""
+        return self.get_pv("PARS:SAMPLE:MEAS:ID")
+
+    @measurement_id.setter
+    def measurement_id(self, value):  # pragma: no cover
         """Set the measurement id in the journal.
 
         Parameters
@@ -166,6 +235,7 @@ class ScanningInstrument(object):
         value stored in the journal for the next run, which should be
         set to the new value.
         """
+        self.set_pv("PARS:SAMPLE:MEAS:ID", value)
 
     @abstractmethod
     def setup_dae_scanning(self):  # pragma: no cover
@@ -219,22 +289,22 @@ class ScanningInstrument(object):
 
     def _begin(self, *args, **kwargs):
         """Start a measurement."""
-        if self._dae_mode and hasattr(self, "_begin_"+self._dae_mode):
-            getattr(self, "_begin_"+self._dae_mode)(*args, **kwargs)
+        if self._dae_mode and hasattr(self, "_begin_" + self._dae_mode):
+            getattr(self, "_begin_" + self._dae_mode)(*args, **kwargs)
         else:
             gen.begin(*args, **kwargs)
 
     def _end(self):
         """End a measurement."""
-        if self._dae_mode and hasattr(self, "_end_"+self._dae_mode):
-            getattr(self, "_end_"+self._dae_mode)()  # pragma: no cover
+        if self._dae_mode and hasattr(self, "_end_" + self._dae_mode):
+            getattr(self, "_end_" + self._dae_mode)()  # pragma: no cover
         else:
             gen.end()
 
     def _waitfor(self, **kwargs):
         """Await the user's desired statistics."""
-        if self._dae_mode and hasattr(self, "_waitfor_"+self._dae_mode):
-            getattr(self, "_waitfor_"+self._dae_mode)(**kwargs)
+        if self._dae_mode and hasattr(self, "_waitfor_" + self._dae_mode):
+            getattr(self, "_waitfor_" + self._dae_mode)(**kwargs)
         else:
             gen.waitfor(**kwargs)
 
@@ -349,9 +419,14 @@ class ScanningInstrument(object):
             return False
         return True
 
-    @staticmethod
-    def _move_pos(pos):
-        """Move the sample changer to a labelled position"""
+    @property
+    def changer_pos(self):
+        """Get the current sample changer position"""
+        return gen.cget("SamplePos")["value"]
+
+    @changer_pos.setter
+    def changer_pos(self, pos):  # pylint: disable=no-self-use
+        """Set the current sample changer position"""
         return gen.cset(SamplePos=pos)
 
     def _setup_measurement(self, trans, blank):
@@ -366,16 +441,14 @@ class ScanningInstrument(object):
         """
         if trans:
             if blank:
-                self.set_measurement_type("blank_transmission")
+                self.measurement_type = "blank_transmission"
             else:
-                self.set_measurement_type("transmission")
+                self.measurement_type = "transmission"
             self.setup_trans()
             self._configure_trans_custom()
         else:
             if blank:
-                self.set_measurement_type("blank")
-            else:
-                self.set_measurement_type(self.measurement_type)
+                self.measurement_type = "blank"
             self.setup_sans()
             self._configure_sans_custom()
 
@@ -441,7 +514,10 @@ class ScanningInstrument(object):
         current. (approx 15 minutes).
 
         """
-        self._needs_setup()
+        if gen.get_runstate() != "SETUP":  # pragma: no cover
+            self._attempt_resume(title, pos, thickness, dae, **kwargs)
+            return
+
         if not self.detector_lock() and not self.detector_on() and not trans:
             raise RuntimeError(
                 "The detector is off.  Either turn on the detector or "
@@ -449,13 +525,13 @@ class ScanningInstrument(object):
                 "is off intentionally")
         self.set_default_dae(dae, trans)
         self._setup_measurement(trans, blank)
-        self.set_measurement_label(title)
+        self.measurement_label = title
         self.set_aperture(aperture)
         if pos:
             if isinstance(pos, str):
                 if self.check_move_pos(pos=pos):
                     info("Moving to sample changer position {}".format(pos))
-                    self._move_pos(pos)
+                    self.changer_pos = pos
                 else:
                     raise RuntimeError(
                         "Position {} does not exist".format(pos))
@@ -474,12 +550,12 @@ class ScanningInstrument(object):
         gen.change_sample_par("Thick", thickness)
         info("Using the following Sample Parameters")
         self.printsamplepars()
-        gen.change(title=title+self.title_footer)
+        gen.change(title=title + self.title_footer)
 
         self._begin()
         unit, time = _get_times(times)
         info("Measuring {title:} for {time:} {units:}".format(
-            title=title+self.title_footer,
+            title=title + self.title_footer,
             units=unit,
             time=time))
         self._waitfor(**times)
@@ -578,7 +654,7 @@ of parameters accepted. """
         import csv
         import ast
         import os.path
-        with open(file_path, "r") as src, open(file_path+".py", "w") as out:
+        with open(file_path, "r") as src, open(file_path + ".py", "w") as out:
             out.write("from SansScripting import *\n")
             out.write("@user_script\n")
             out.write("def {}():\n".format(
@@ -630,3 +706,22 @@ of parameters accepted. """
     def enumerate_dae(self):
         """List the supported DAE modes on this beamline."""
         return [x[10:] for x in dir(self) if x.startswith("setup_dae_")]
+
+    def get_pv(self, name):
+        """Get the given PV within the sub heirarchy of the instrument.
+
+        For example, on Larmor, get_pv("DAE:WIRING_FILE") would return
+        the value of the PV for "IN:LARMOR:DAE:WIRING_FILE"
+
+        """
+        return gen.get_pv(self._PV_BASE + name)
+
+    def set_pv(self, name, value):
+        """Set the given PV within the sub heirarchy of the instrument.
+
+        For example, on Larmor, set_pv("DAE:WIRING_FILE", f) would
+        change the value of the PV for "IN:LARMOR:DAE:WIRING_FILE" to
+        the value in f.
+
+        """
+        return gen.set_pv(self._PV_BASE + name, value)

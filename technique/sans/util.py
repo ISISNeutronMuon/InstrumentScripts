@@ -94,10 +94,10 @@ def pretty_print_time(seconds):
       A string giving the time needed in hours and an approximate ETA.
     """
     from datetime import timedelta, datetime
-    hours = seconds/3600.0
+    hours = seconds / 3600.0
     delta = timedelta(0, seconds)
     skeleton = "The script should finish in {} hours\nat {}"
-    return skeleton.format(hours, delta+datetime.now())
+    return skeleton.format(hours, delta + datetime.now())
 
 
 def user_script(script):
