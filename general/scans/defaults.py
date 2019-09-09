@@ -74,6 +74,13 @@ class Defaults(object):
         the end of the measurement, the `result` variable will hold
         the position of the observed peak.
 
+        >>> scan(translation, -5, 5, 0.1, 50, detector=specfic_spectra([[3]]))
+
+        This is similar to our original scan on translation, except
+        that the scan will be performed on monitor 3, instead of the
+        default spectrum.  You instrument scientist may have defined
+        other detectors that you can use to perform special scans.
+
         The scan function itself has one mandatory parameter `motion`
         but will require another three keyword parameters to define
         the range of the scan.  In the example above, the motion
@@ -107,6 +114,12 @@ class Defaults(object):
         stride
           The approximate step size.  The scan may shrink this step size
           to ensure that the final point is still included in the scan.
+        detector
+          An optional parameter to choose how to measure the dependent
+          variable in the scan.  A set of these will have already been
+          defined by your instrument scientist.  If you need something
+          ad hoc, then check the documentation on specific_spectra for
+          more details
 
         Returns
         -------
