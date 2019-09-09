@@ -1,3 +1,11 @@
+2019-09-09    <adam.washington@stfc.ac.uk?
+        * instrument/larmor/sans: Don't try to access changer_pos before
+	the blocks are initialised.
+        * instrument/loq/sans: Don't try to access changer_pos before
+	the blocks are initialised.
+        * instrument/zoom/sans: Don't try to access changer_pos before
+	the blocks are initialised.
+
 2019-09-02    <adam.washington@stfc.ac.uk>
 
 	* general/scans/scans.py (Scan.plot): Allow detector function to
