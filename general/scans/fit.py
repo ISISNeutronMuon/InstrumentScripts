@@ -53,7 +53,7 @@ class Fit(object):
 
     def fit_quality(self, x, y, err, params):
         """Find the quality of a fit for a data set"""
-        return np.mean(((self.get_y(x, params)-y) / err)**2)
+        return np.mean(((self.get_y(x, params) - y) / err)**2)
 
     def title(self, params):
         """
@@ -145,7 +145,7 @@ class PolyFit(Fit):
         Fit.__init__(self, degree + 1, title)
 
     def fit(self, x, y, err):
-        return np.polyfit(x, y, self.degree - 1, w=1/err)
+        return np.polyfit(x, y, self.degree - 1, w=1 / err)
 
     def get_y(self, x, fit):
         return np.polyval(fit, x)
@@ -221,7 +221,7 @@ class PeakFit(Fit):
         Fit.__init__(self, 3, "Peak")
 
     def _make_window(self, x, center):
-        return np.abs(x-center) < self._window
+        return np.abs(x - center) < self._window
 
     def fit(self, x, y, err):
         x = np.array(x)
@@ -230,7 +230,7 @@ class PeakFit(Fit):
         window = self._make_window(x, x[base])
         fit = np.polyfit(x[window], y[window], 2)
         self._fit = fit
-        return np.array([-fit[1]/2/fit[0]])
+        return np.array([-fit[1] / 2 / fit[0]])
 
     def fit_quality(self, x, y, err, params):
         return 1  # Cannot measure χ² for a peak
@@ -313,8 +313,8 @@ class GaussianFit(CurveFit):
 
     @staticmethod
     def guess(x, y):
-        mean = np.sum(x*y)/np.sum(y)
-        guess = [mean, np.sqrt(np.sum(y*(x - mean)**2)/np.sum(y)),
+        mean = np.sum(x * y) / np.sum(y)
+        guess = [mean, np.sqrt(np.sum(y * (x - mean)**2) / np.sum(y)),
                  np.max(y) - np.min(y), np.min(y)]
         return guess
 
@@ -356,13 +356,14 @@ class DampedOscillatorFit(CurveFit):
           The standard deviation of the damping.
 
         """
-        return amp * np.cos((x-center)*freq)*np.exp(-((x-center)/width)**2)
+        return amp * np.cos((x - center) * freq) * \
+            np.exp(-((x - center) / width)**2)
 
     @staticmethod
     def guess(x, y):
         peak = x[np.argmax(y)]
         valley = x[np.argmin(y)]
-        return [peak, 1, np.pi/np.abs(peak-valley), max(x)-min(x)]
+        return [peak, 1, np.pi / np.abs(peak - valley), max(x) - min(x)]
 
     def readable(self, fit):
         return {"center": fit[0], "amplitude": fit[1],
@@ -402,14 +403,14 @@ class ErfFit(CurveFit):
         an xscale of stretch and a yscale of scale over a base of
         background.
         """
-        return background + scale * erf(stretch*(xs-cen))
+        return background + scale * erf(stretch * (xs - cen))
 
     @staticmethod
     def guess(x, y):
         return [
             np.mean(x),  # center
-            (max(x)-min(x))/2,  # stretch
-            (max(y)-min(y))/2,  # scale
+            (max(x) - min(x)) / 2,  # stretch
+            (max(y) - min(y)) / 2,  # scale
             min(y)]  # background
 
     def readable(self, fit):
@@ -444,15 +445,15 @@ class TopHatFit(CurveFit):
         background.
         """
         ys = xs * 0
-        ys[np.abs(xs-cen) < width/2] = height
+        ys[np.abs(xs - cen) < width / 2] = height
         return background + ys
 
     @staticmethod
     def guess(x, y):
         return [
             np.mean(x),  # center
-            (max(x)-min(x))/2,  # stretch
-            (max(y)-min(y))/2,  # scale
+            (max(x) - min(x)) / 2,  # stretch
+            (max(y) - min(y)) / 2,  # scale
             min(y)]  # background
 
     def readable(self, fit):
@@ -482,6 +483,7 @@ class CentreOfMassFit(Fit):
     The interpolation is needed because otherwise the point density may not be
     constant.
     """
+
     def __init__(self):
         Fit.__init__(self, degree=1, title="Centre of mass")
         import warnings
