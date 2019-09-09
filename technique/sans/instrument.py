@@ -446,10 +446,10 @@ class ScanningInstrument(object):
                 "The detector is off.  Either turn on the detector or "
                 "use the detector_lock(True) to indicate that the detector "
                 "is off intentionally")
+        self.set_aperture(aperture)
         self.set_default_dae(dae, trans)
         self._setup_measurement(trans, blank)
         self.set_measurement_label(title)
-        self.set_aperture(aperture)
         if pos:
             if isinstance(pos, str):
                 if self.check_move_pos(pos=pos):
