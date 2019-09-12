@@ -20,7 +20,7 @@ def handle_import_from(x, f):
         elif x.level == 1:
             header = os.path.dirname(f).replace("/",".") + "."
         else:
-            RuntimeError("Cannot handle upper imports yet")
+            header = os.path.relname(os.path.dirname(f), "/".join([".." * (x.level-1)])) + "."
         return [header + x.module]
     return []
 
