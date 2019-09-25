@@ -10,6 +10,14 @@ def valid_module(m):
     return m.startswith("general") or m.startswith("technique") or m.startswith("instrument")
 
 
+def file_to_module(f):
+    return f[:-3].replace("/", ".")
+
+
+def dir_to_module(f):
+    return f.replace("/", ".")
+
+
 @singledispatch
 def handle(x, f):
     return []
@@ -27,7 +35,7 @@ def _(x, f):
         if x.level == 0:
             header = ""
         elif x.level == 1:
-            header = os.path.dirname(f).replace("/", ".") + "."
+            header = dir_to_module(os.path.dirname(f)) + "."
         else:
             header = os.path.relname(
                 os.path.dirname(f), "/".join([".." * (x.level-1)])) + "."
@@ -48,14 +56,36 @@ def load_file(f):
 
 
 def make_graphs(data):
-    base = data[0][:-3].replace("/", ".")
+    base = file_to_module(data[0])
     sources = data[1]
     lines = ['  "{}" -> "{}";'.format(base, source) for source in sources]
     return "\n".join(lines)
 
 
+def make_node(module):
+    style = " []"
+    return '  "{}"{};'.format(module, style)
+
+
+def make_cluster(name, color, modules):
+    header = 'subgraph "cluster_{name:}" {{\nnode [color={color:}];\ncolor={color:};\nlabel="{name:}";\n'.format(
+        name=name, color=color)
+    nodes = "\n".join([make_node(m) for m in modules if m.startswith(name)])
+    footer = "\n}"
+    return header+nodes+footer
+
+
+NAMES = ["instrument.larmor", "instrument.zoom", "instrument.loq", "technique.sans", "general.scans"]
+COLORS = ["blue", "red", "cyan", "black", "black"]
+
+
 def make_dot(data):
-    return "digraph G {{\n{}\n}}".format(
+    data = list(data)
+    modules = sum([d[1] for d in data], []) + [file_to_module(d[0]) for d in data if d[1]]
+    modules = [m for m in modules if "test" not in m]
+    clusters = [make_cluster(name, color, modules) for (name, color) in zip(NAMES, COLORS)]
+    return 'digraph G {{\nrankdir="LR";\n{}\n{}\n}}'.format(
+        "\n".join(clusters),
         "\n\n".join([make_graphs(datum) for datum in data]))
 
 
