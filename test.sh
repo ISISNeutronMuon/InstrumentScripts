@@ -9,10 +9,10 @@ coverage html
 python doc/call.py > call.dot
 python doc/functions.py general instrument
 python doc/functions.py technique instrument
-dot -Tpdf -O *.dot
-mv general_instrument.dot.pdf doc/source/
-mv technique_instrument.dot.pdf doc/source/
-mv call.dot.pdf doc/source/
+dot -Tpng -O *.dot
+mv general_instrument.dot.png doc/source/
+mv technique_instrument.dot.png doc/source/
+mv call.dot.png doc/source/
 cd doc
 make html
 make latexpdf

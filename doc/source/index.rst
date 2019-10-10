@@ -12,6 +12,7 @@ Welcome to the Genie Python instrument scripts documentation
    scans/index.rst
    sans/index.rst
    contributing
+   graphs
    reference
 
 The Genie Python Instrument Scripts repository is a library for useful

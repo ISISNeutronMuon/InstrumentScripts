@@ -1,18 +1,12 @@
-Module Import Graph
-===================
+Call Graphs
+===========
 
-  .. images:: call.dot.pdf
+  .. images:: call.dot.png
      :alt: The dependency graph for module imports
 
-Scans Call Graph
-================
-
-  .. image:: general_instrument.dot.pdf
+  .. image:: general_instrument.dot.png
      :alt: The paths of calls in the Scans library
 
 
-Sans Call Graph
-================
-
-  .. image:: technique_instrument.dot.pdf
+  .. image:: technique_instrument.dot.png
      :alt: The paths of calls in the Sans library
