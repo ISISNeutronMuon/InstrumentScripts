@@ -5,6 +5,7 @@ fits (i.e. Linear and Gaussian).
 
 """
 from abc import ABCMeta, abstractmethod
+import warnings
 import numpy as np
 from six import add_metaclass
 from scipy.special import erf  # pylint: disable=no-name-in-module
@@ -297,7 +298,6 @@ class GaussianFit(CurveFit):
 
     def __init__(self):
         CurveFit.__init__(self, 4, "Gaussian Fit")
-        import warnings
         warnings.simplefilter("ignore", OptimizeWarning)
 
     @staticmethod
@@ -392,7 +392,6 @@ class ErfFit(CurveFit):
 
     def __init__(self):
         CurveFit.__init__(self, 4, "Erf Fit")
-        import warnings
         warnings.simplefilter("ignore", OptimizeWarning)
 
     @staticmethod
@@ -433,7 +432,6 @@ class TopHatFit(CurveFit):
 
     def __init__(self):
         CurveFit.__init__(self, 5, "Top Hat Fit")
-        import warnings
         warnings.simplefilter("ignore", OptimizeWarning)
 
     @staticmethod
@@ -486,7 +484,6 @@ class CentreOfMassFit(Fit):
 
     def __init__(self):
         Fit.__init__(self, degree=1, title="Centre of mass")
-        import warnings
         warnings.simplefilter("ignore", RuntimeWarning)
 
     def fit(self, x, y, err):
