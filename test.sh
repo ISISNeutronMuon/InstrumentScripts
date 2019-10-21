@@ -17,11 +17,11 @@ case $PYTHON_VERSION in
 	mv general_instrument.dot.png doc/source/
 	mv technique_instrument.dot.png doc/source/
 	mv call.dot.png doc/source/
+	cd doc
+	make html
+	make latexpdf
 	;;
     *)
 	echo "Old Python version"
 	echo $PYTHON_VERSION
 esac
-cd doc
-make html
-make latexpdf
