@@ -8,6 +8,7 @@ environment.
 
 """
 from __future__ import print_function
+from datetime import datetime
 import os.path
 import numpy as np
 try:
@@ -42,7 +43,6 @@ class Larmor(Defaults):
 
     @staticmethod
     def log_file():
-        from datetime import datetime
         now = datetime.now()
         return "larmor_scan_{}_{}_{}_{}_{}_{}.dat".format(
             now.year, now.month, now.day, now.hour, now.minute, now.second)

@@ -15,6 +15,7 @@ from logging import info, warning
 import os.path
 from six import add_metaclass
 from .genie import gen
+from .util import user_script
 
 
 def _get_times(times):
@@ -624,7 +625,6 @@ of parameters accepted. """
           users return.
 
         """
-        from .util import user_script
 
         @user_script
         def inner():

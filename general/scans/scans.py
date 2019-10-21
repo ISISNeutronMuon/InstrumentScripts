@@ -13,6 +13,7 @@ from abc import ABCMeta, abstractmethod
 # pylint: disable=no-name-in-module
 from collections import Iterable, OrderedDict
 from contextlib import contextmanager
+from datetime import timedelta, datetime
 import os
 import time
 import warnings
@@ -253,7 +254,6 @@ class Scan(object):
         time of completion.
 
         """
-        from datetime import timedelta, datetime
         total = len(self) * (pad + estimate(**kwargs))
         # We can't test the time printing code since the result would
         # always change.
