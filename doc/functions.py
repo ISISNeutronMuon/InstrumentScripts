@@ -10,44 +10,54 @@ except ImportError:
     sys.exit()  # singledispatch is only in python 3
 
 
-def valid_module(m):
-    return m.startswith("general") or m.startswith("technique") or m.startswith("instrument")
+def valid_module(module):
+    """Confirm that we're in one of the main modules"""
+    return module.startswith("general") or m.startswith("technique") or m.startswith("instrument")
 
 
-def file_to_module(f):
-    return f[:-3].replace("/", ".")
+def file_to_module(filename):
+    """Turn a file name into a module name"""
+    return filename[:-3].replace("/", ".")
 
 
-def dir_to_module(f):
-    return f.replace("/", ".")
+def dir_to_module(filename):
+    """Turn a directory name into a module"""
+    return filename.replace("/", ".")
 
 
 @singledispatch
-def names(x, f):
+def names(x, filename):
+    """Pull the function call names out of a node"""
     return []
+
 
 @names.register(ast.FunctionDef)
-def _(x, f):
-    subvalues = [calls(node, f) for node in ast.walk(x)]
+def _(x, filename):
+    """Pull the function call names out of a node"""
+    subvalues = [calls(node, filename) for node in ast.walk(x)]
     return [(x.name, subvalues)]
 
-def load_file(f):
-    with open(f, "r") as infile:
+def load_file(filename):
+    with open(filename, "r") as infile:
         data = infile.read()
 
-    temp = ast.parse(data, f)
+    temp = ast.parse(data, filename)
 
     result = [
-        sum([names(node, f) for node in ast.walk(part)], [])
+        sum([names(node, filename) for node in ast.walk(part)], [])
         for part in temp.body]
-    return (f, sum(result, []))
+    return (filename, sum(result, []))
+
 
 @singledispatch
-def calls(x, f):
+def calls(x, filename):
+    """Return all of the function calls in a node"""
     return []
 
+
 @calls.register(ast.Call)
-def calls(x, f):
+def _(x, filename):
+    """Return all of the function calls in a node"""
     if type(x) != ast.Call:
         return []
     if isinstance(x.func, ast.Name):
@@ -58,42 +68,41 @@ def calls(x, f):
 
 
 def make_graphs(data):
+    """Made a link from the call site to the called function"""
     base = file_to_module(data[0])
     sources = data[1]
     lines = ['  "{}" -> "{}";'.format(base, source) for source in sources]
     return "\n".join(lines)
 
 
-def make_node(module):
-    style = " []"
-    return '  "{}"{};'.format(module, style)
-
-
 def make_cluster(name, calls, funcs, drawn):
-    header = 'subgraph "cluster_{name:}" {{\nnode [color={color:}];\ncolor={color:};\nlabel="{name:}";\n'.format(
-        name=name, color=pick_color(name))
+    """Group together functions in the same module"""
+    header = ('subgraph "cluster_{name:}" {{\nnode [color={color:}];\n'
+              'color={color:};\nlabel="{name:}";\n'.format(
+                  name=name, color=pick_color(name)))
     footer = "\n}"
     joined = []
-    for a,b in calls:
-        if a not in funcs:
+    for location, children in calls:
+        if location not in funcs:
             continue
-        for c in sum(b, []):
-            if c not in funcs:
+        for child in sum(children, []):
+            if child not in funcs:
                 continue
-            if (a, c) in drawn:
+            if (location, child) in drawn:
                 continue
-            joined.append('"{}" -> "{}";'.format(a, c))
-            drawn.add((a,c))
+            joined.append('"{}" -> "{}";'.format(location, child))
+            drawn.add((location, child))
     nodes = "\n".join(joined)
     return header+nodes+footer
 
 
-def pick_color(name):
-    if name[-3:] == ".py":
-        name = file_to_module(name)
-    for n, c in zip(NAMES, COLORS):
-        if name.startswith(n):
-            return c
+def pick_color(goal):
+    """Asign colors by module goal"""
+    if goal[-3:] == ".py":
+        goal = file_to_module(goal)
+    for name, clr in zip(NAMES, COLORS):
+        if goal.startswith(name):
+            return clr
     return "green"
 
 NAMES = ["instrument.larmor", "instrument.zoom", "instrument.loq", "technique.sans", "general.scans"]
@@ -101,6 +110,7 @@ COLORS = ["blue", "red", "cyan", "orange", "black"]
 
 
 def make_dot(data):
+    """Make a graph of the function calls"""
     data = list(data)
     funcs = set()
     seen = set()
