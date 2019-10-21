@@ -4,7 +4,10 @@ import ast
 import os
 import sys
 
-from functools import singledispatch
+try:
+    from functools import singledispatch
+except ImportError:
+    sys.exit()  # singledispatch is only in python 3
 
 
 def valid_module(m):
