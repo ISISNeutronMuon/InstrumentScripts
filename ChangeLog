@@ -1,5 +1,8 @@
 2019-10-22    <adam.washington@stfc.ac.uk>
 
+	* general/scans/motion.py (populate): Fix bug with populate not
+	accept blocks with unicode names.
+
 	* test.sh (PYTHON_VERSION): Only generate documentation under
 	python 3.  The new dependency graph generators only work under
 	Python 3 due to the use of the singledispatch decorator to help
