@@ -167,10 +167,14 @@ class BlockMotion(Motion):
     """
 
     def __init__(self, block):
-        if block not in g.get_blocks():
-            raise RuntimeError(
-                "Unknown block {}.  Does the capitalisation "
-                "match IBEX?".format(block))
+        blocks = g.get_blocks()
+        if block not in blocks:
+            new_name = [name for name in blocks
+                        if name and name.lower() == block.lower()]
+            if new_name:
+                block = new_name[0]
+            else:
+                raise RuntimeError("Unknown block {}.".format(block))
         Motion.__init__(self,
                         lambda: g.cget(block)["value"],
                         lambda x: g.cset(block, x),

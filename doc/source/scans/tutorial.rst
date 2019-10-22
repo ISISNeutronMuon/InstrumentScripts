@@ -226,8 +226,8 @@ Motor Objects
 
   If there is no Motion object for a specific axis, the user can give
   the name in a string and use that.  If the axis isn't a string or a
-  Motion object, the scan will fail.  Also, the string must be the
-  same case as in the IBEX block.
+  Motion object, the scan will fail.  Also, the string does **not** need
+  to match the case of the IBEX block.
 
   >>> scan("Theta", start=0, stop=10, stride=2, frames=5)
   Taking a count at theta=0.00 and two theta=0.00
@@ -238,9 +238,12 @@ Motor Objects
   Taking a count at theta=10.00 and two theta=0.00
 
   >>> scan("theta", start=0, stop=10, stride=2, frames=5)
-  Traceback (most recent call last):
-      ...
-  RuntimeError: Unknown block theta.  Does the capitalisation match IBEX?
+  Taking a count at theta=0.00 and two theta=0.00
+  Taking a count at theta=2.00 and two theta=0.00
+  Taking a count at theta=4.00 and two theta=0.00
+  Taking a count at theta=6.00 and two theta=0.00
+  Taking a count at theta=8.00 and two theta=0.00
+  Taking a count at theta=10.00 and two theta=0.00
 
   >>> scan(True, start=0, stop=10, count=5) # doctest: +NORMALIZE_WHITESPACE
   Traceback (most recent call last):
@@ -266,7 +269,7 @@ Perform Fits
   Taking a count at theta=1.00 and two theta=0.00
   Taking a count at theta=1.50 and two theta=0.00
   Taking a count at theta=2.00 and two theta=0.00
-  >>> abs(fit["slope"] - 0.64) < 0.02
+  >>> abs(fit["slope"] - 0.64) < 0.025
   True
 
   In this instance, the user requested a linear fit.  The result was an

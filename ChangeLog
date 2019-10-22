@@ -1,5 +1,10 @@
 2019-10-22    <adam.washington@stfc.ac.uk>
 
+	* general/scans/motion.py (BlockMotion.__init__): BlockMotion will
+	now find the block in ANY case if the block isn't present in the
+	chosen case.  This also gives case insensitivity the scan
+	function when the axis is passed as a string.
+
 	* doc/source/sans/proposed.rst: Remove old proposed changes to
 	SANS module.  These proposals were accepted and added over a year
 	ago.
