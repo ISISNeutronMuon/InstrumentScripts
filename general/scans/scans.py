@@ -13,9 +13,12 @@ from abc import ABCMeta, abstractmethod
 # pylint: disable=no-name-in-module
 from collections import Iterable, OrderedDict
 from contextlib import contextmanager
+from datetime import timedelta, datetime
+import os
 import time
-import six
+import warnings
 import numpy as np
+import six
 from six import add_metaclass
 import matplotlib.pyplot as plt
 
@@ -148,7 +151,6 @@ class Scan(object):
         The measurement parameter can be used to set what type of measurement
         is to be taken.  If the save parameter is set to a file name, then the
         plot will be saved in that file."""
-        import warnings
         warnings.simplefilter("ignore", UserWarning)
 
         detector = self._normalise_detector(detector)
@@ -252,7 +254,6 @@ class Scan(object):
         time of completion.
 
         """
-        from datetime import timedelta, datetime
         total = len(self) * (pad + estimate(**kwargs))
         # We can't test the time printing code since the result would
         # always change.
@@ -378,7 +379,6 @@ class ContinuousScan(Scan):
              update_freq=1.0, **kwargs):
         """Run over a continuous range, plotting every update_freq seconds"""
         # pylint: disable=arguments-differ
-        import warnings
         warnings.simplefilter("ignore", UserWarning)
 
         detector = self._normalise_detector(detector)
@@ -598,7 +598,6 @@ class ProductScan(Scan):
         # pylint: disable=too-many-locals
         """An overloading of Scan.plot to handle multidimensional
         scans."""
-        import warnings
         warnings.simplefilter("ignore", UserWarning)
 
         if g and g.get_runstate() != "SETUP":
@@ -852,7 +851,6 @@ def last_scan(path=None, axis="replay"):
       The label for the x axis
 
     """
-    import os
     if path is None:
         path = max([f for f in os.listdir(os.getcwd()) if f[-4:] == ".dat"],
                    key=os.path.getctime)

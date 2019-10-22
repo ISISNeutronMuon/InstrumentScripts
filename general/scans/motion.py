@@ -13,6 +13,7 @@ can be controlled by an instrument.  Although it is called Motion,
 it will also handle temperatures, currents, and other physical properties.
 """
 
+import six
 try:
     # pylint: disable=import-error
     from genie_python import genie as g
@@ -203,7 +204,7 @@ def populate():
     """Create Motion objects in the GLOBAL namespace for each
     block registered with IBEX."""
     for i in g.get_blocks():
-        if not isinstance(i, str):
+        if not isinstance(i, (str, six.text_type)):
             continue
         temp = BlockMotion(i)
         __builtins__[i.upper()] = temp

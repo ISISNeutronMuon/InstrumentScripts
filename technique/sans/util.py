@@ -1,8 +1,10 @@
 """Useful utilities for scriping"""
+from datetime import timedelta, datetime
 from functools import wraps
 import logging
 from logging import info
-from .genie import SwitchGenie
+from mock import Mock
+from .genie import SwitchGenie, mock_gen
 
 
 def dae_setter(suffix, measurement_type):
@@ -93,7 +95,6 @@ def pretty_print_time(seconds):
     str
       A string giving the time needed in hours and an approximate ETA.
     """
-    from datetime import timedelta, datetime
     hours = seconds / 3600.0
     delta = timedelta(0, seconds)
     skeleton = "The script should finish in {} hours\nat {}"
@@ -106,8 +107,6 @@ def user_script(script):
     @wraps(script)
     def inner(*args, **kwargs):
         """Mock run a script before running it for real."""
-        from mock import Mock
-        from .genie import mock_gen
         code = script.__name__ + "("
         code += ", ".join(map(str, args))
         for k in kwargs:

@@ -9,9 +9,13 @@ any generic scripts.
 """
 
 from abc import ABCMeta, abstractmethod
+import ast
+import csv
 from logging import info, warning
+import os.path
 from six import add_metaclass
 from .genie import gen
+from .util import user_script
 
 
 def _get_times(times):
@@ -621,13 +625,10 @@ of parameters accepted. """
           users return.
 
         """
-        from .util import user_script
 
         @user_script
         def inner():
             """Actually load and run the script"""
-            import csv
-            import ast
             with open(file_path, "r") as csvfile:
                 reader = csv.DictReader(csvfile)
                 for row in reader:
@@ -658,9 +659,6 @@ of parameters accepted. """
         edited and customised as needed.
 
         """
-        import csv
-        import ast
-        import os.path
         with open(file_path, "r") as src, open(file_path + ".py", "w") as out:
             out.write("from SansScripting import *\n")
             out.write("@user_script\n")

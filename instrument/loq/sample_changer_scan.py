@@ -8,6 +8,7 @@ environment.
 
 """
 from __future__ import print_function, division, unicode_literals
+from datetime import datetime
 
 from general.scans.detector import BlockDetector
 from general.scans.scans import ContinuousScan, ContinuousMove
@@ -25,7 +26,6 @@ class LoqSampleChanger(Defaults):
 
     @staticmethod
     def log_file():
-        from datetime import datetime
         now = datetime.now()
         return "loq_sample_changer_scan_{}_{}_{}_{}_{}_{}.dat".format(
             now.year, now.month, now.day, now.hour, now.minute, now.second)
