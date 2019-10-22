@@ -1,5 +1,12 @@
 2019-10-22    <adam.washington@stfc.ac.uk>
 
+	* doc/source/sans/proposed.rst: Remove old proposed changes to
+	SANS module.  These proposals were accepted and added over a year
+	ago.
+
+	* doc/source/sans/guide.rst: Add instrument scientist guide to
+	SANS documentation.
+
 	* general/scans/motion.py (populate): Fix bug with populate not
 	accept blocks with unicode names.
 
@@ -27,7 +34,8 @@
 	* general/scans/fit.py: Removed lint
 
 	* doc/source/index.rst: Added graphs.rst to the main documentation
-	index
+	index.  Added instrument scientist guide to sans on main
+	index. Remove proposed sans changes.
 
 	* doc/source/graphs.rst: Added charts of the module and function
 	dependencies to the documentation.
