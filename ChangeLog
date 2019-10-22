@@ -1,3 +1,50 @@
+2019-10-22    <adam.washington@stfc.ac.uk>
+
+	* test.sh (PYTHON_VERSION): Only generate documentation under
+	python 3.  The new dependency graph generators only work under
+	Python 3 due to the use of the singledispatch decorator to help
+	navigate the abstract syntax tree of the python source.  With
+	Python 2 receiving it's end of life in less than three months, I'm
+	not to concerned about this decision.
+
+	* technique/sans/util.py: Remove lint
+
+	* technique/sans/instrument.py: Remove lint
+
+	* instrument/loq/scans.py: Remove lint
+
+	* instrument/loq/sample_changer_scan.py: Remove lint
+
+	* instrument/larmor/scans.py: Remove lint
+
+	* general/scans/scans.py: Remove lint
+
+	* general/scans/monoid.py (ListOfMonoids.err): Removed lint
+
+	* general/scans/fit.py: Removed lint
+
+	* doc/source/index.rst: Added graphs.rst to the main documentation
+	index
+
+	* doc/source/graphs.rst: Added charts of the module and function
+	dependencies to the documentation.
+
+	* doc/functions.py: Add functions.py to chart the connections
+	between functions.
+
+	* doc/call.py: Add call.py to chart the connections between modules.
+
+	* .travis.yml (before_script): Install graphviz on the CI server
+	for graphs in the documentation.
+
+	* .pylintrc (ignore-imports): Ignore duplicate imports across
+	modules.  Many instrument modules will wind up needing to import
+	the same functions, so the duplication is to be expected.  This
+	could be bypassed by making the imports more implicit, but that
+	would make the code less readable.
+
+	* .gitignore: Ignore dotfiles produced as byproduct of documentation generation
+
 2019-09-09    <adam.washington@stfc.ac.uk?
         * instrument/larmor/sans: Don't try to access changer_pos before
 	the blocks are initialised.
