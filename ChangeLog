@@ -1,3 +1,10 @@
+2019-10-23    <adam.washington@stfc.ac.uk>
+
+	* general/scans/fit.py (CentreOfMassFit.fit_plot_action.action):
+	Have the vertical line from the centre of mass fit be orange (to
+	contrast with the data points), instead of blue (the same colour
+	as the points).
+
 2019-10-22    <adam.washington@stfc.ac.uk>
 
 	* general/scans/motion.py (BlockMotion.__init__): BlockMotion will

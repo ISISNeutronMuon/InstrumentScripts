@@ -554,7 +554,7 @@ class CentreOfMassFit(Fit):
             values = np.array(y.values())
             errs = np.array(y.err())
             params = self.fit(x, values, errs)
-            axis.axvline(x=params[0])
+            axis.axvline(x=params[0], color="orange")
             axis.legend([self.title(params)])
             return params
         return action
