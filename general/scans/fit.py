@@ -319,12 +319,12 @@ class GaussianFit(CurveFit):
         return guess
 
     def readable(self, fit):
-        err = fit[1]
+        err = np.sqrt(fit[1])
         fit = fit[0]
-        return {"center": fit[0], "center_err": err[0],
-                "sigma": fit[1], "sigma_err": err[1],
-                "amplitude": fit[2], "amplitude_err": err[2],
-                "background": fit[3], "background_err": err[3]}
+        return {"center": fit[0], "center_err": err[0, 0],
+                "sigma": fit[1], "sigma_err": err[1, 1],
+                "amplitude": fit[2], "amplitude_err": err[2, 2],
+                "background": fit[3], "background_err": err[3, 3]}
 
     def title(self, params):
         # pylint: disable=arguments-differ
@@ -370,12 +370,12 @@ class DampedOscillatorFit(CurveFit):
         return [peak, 1, np.pi / np.abs(peak - valley), max(x) - min(x)]
 
     def readable(self, fit):
-        err = fit[1]
+        err = np.sqrt(fit[1])
         fit = fit[0]
-        return {"center": fit[0], "center_err": err[0],
-                "amplitude": fit[1], "amplitude_err": err[1],
-                "frequency": fit[2], "frequency_err": err[2],
-                "width": fit[3], "width_err": err[3]}
+        return {"center": fit[0], "center_err": err[0, 0],
+                "amplitude": fit[1], "amplitude_err": err[1, 1],
+                "frequency": fit[2], "frequency_err": err[2, 2],
+                "width": fit[3], "width_err": err[3, 3]}
 
     def title(self, params):
         # pylint: disable=arguments-differ
@@ -421,12 +421,12 @@ class ErfFit(CurveFit):
             min(y)]  # background
 
     def readable(self, fit):
-        err = fit[1]
+        err = np.sqrt(fit[1])
         fit = fit[0]
-        return {"center": fit[0], "center_err": err[0],
-                "stretch": fit[1], "stretch_err": err[1],
-                "scale": fit[2], "scale_err": err[2],
-                "background": fit[3], "background_err": err[3]}
+        return {"center": fit[0], "center_err": err[0, 0],
+                "stretch": fit[1], "stretch_err": err[1, 1],
+                "scale": fit[2], "scale_err": err[2, 2],
+                "background": fit[3], "background_err": err[3, 3]}
 
     def title(self, fit):
         # pylint: disable=arguments-differ
@@ -467,12 +467,12 @@ class TopHatFit(CurveFit):
             min(y)]  # background
 
     def readable(self, fit):
-        err = fit[1]
+        err = np.sqrt(fit[1])
         fit = fit[0]
-        return {"center": fit[0], "center_err": err[0],
-                "width": fit[1], "width_err": err[1],
-                "height": fit[2], "height_err": err[2],
-                "background": fit[3], "background_err": err[3]}
+        return {"center": fit[0], "center_err": err[0, 0],
+                "width": fit[1], "width_err": err[1, 1],
+                "height": fit[2], "height_err": err[2, 2],
+                "background": fit[3], "background_err": err[3, 3]}
 
     def title(self, fit):
         # pylint: disable=arguments-differ
