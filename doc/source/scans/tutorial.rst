@@ -305,10 +305,9 @@ Perform Fits
   Taking a count at theta=1.60 and two theta=0.00
   Taking a count at theta=1.80 and two theta=0.00
   Taking a count at theta=2.00 and two theta=0.00
-  >>> abs(fit["center"] - 1.0) < 0.2
+  >>> abs(fit["center"] - 1.1) < fit["center_err"]
   True
 
-  .. figure:: gaussian.png
      :alt: Fitting a gaussian
 
   There is a simple peak finder as well.  It finds the largest data
@@ -364,7 +363,7 @@ of the previous measurement and perform fits on it.
 
 >>> from general.scans.scans import last_scan
 >>> fit = last_scan().fit(Gaussian, save="replay.png")
->>> abs(fit["center"] - 1.0) < 0.2
+>>> abs(fit["center"] - 1.1) < fit["center_err"]
 True
 
   .. image:: replay.png
@@ -374,7 +373,7 @@ If you want to run an older scan, it's also possible to select the
 saved results of a scan file and load it instead.
 
 >>> fit = last_scan("mock_scan_02.dat").fit(Gaussian, save="replay2.png")
->>> abs(fit["center"] - 1.0) < 0.2
+>>> abs(fit["center"] - 1.1) < fit["center_err"]
 True
 
 

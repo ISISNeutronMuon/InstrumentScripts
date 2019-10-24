@@ -1,3 +1,20 @@
+2019-10-24    <adam.washington@stfc.ac.uk>
+
+	* general/scans/scans.py (Scan.fit): Account for classes that
+	return uncertainties when checking for multiple values.
+
+	* general/scans/fit.py (GaussianFit.readable): Include
+	uncertainties on GaussianFit.
+	(DampedOscillatorFit.readable): Include uncertainties on DampedOscillatorFit.
+	(ErfFit.readable): Include uncertainties on ErfFit.
+	(TopHatFit.readable): Include uncertainties on TopHotFit
+
+	*  (CurveFit.fit): Return both the fit and the covariance matrix.
+	(CurveFit.get_y): Only perform the fit on the values and not the covariance.
+
+	* doc/sources/scans/tutorial.rst: Show how to use the
+	uncertainties returned by some fitting methods.
+
 2019-10-23    <adam.washington@stfc.ac.uk>
 
 	* general/scans/fit.py (CentreOfMassFit.fit_plot_action.action):
