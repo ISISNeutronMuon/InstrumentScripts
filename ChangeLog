@@ -1,5 +1,9 @@
 2019-10-25    <adam.washington@stfc.ac.uk>
 
+	* general/scans/fit.py (smart_number_format): Add
+	smart_number_format to give a decent set of numerical digits
+	across a wider range of orders of magnitude.
+
 	* instrument/larmor/scans.py (generic_pol.inner_pol): Set the
 	default y-axis label to Polarisation for all generic_pol plot
 
