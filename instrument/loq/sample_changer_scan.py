@@ -22,7 +22,8 @@ class LoqSampleChanger(Defaults):
     """
     This class represents the default functions for the Loq instrument.
     """
-    detector = BlockDetector("sample_changer_scan_intensity", "Diode Intensity")
+    detector = BlockDetector("sample_changer_scan_intensity",
+                             "Diode Intensity")
 
     @staticmethod
     def log_file():

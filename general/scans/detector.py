@@ -133,7 +133,8 @@ def dae_periods(pre_init=lambda: None, period_function=len, unit="Intensity"):
     """Decorate to add single run number support to a detector function"""
     def inner(func):
         """wrapper"""
-        return DaePeriods(func, pre_init, period_function=period_function, unit=unit)
+        return DaePeriods(func, pre_init, period_function=period_function,
+                          unit=unit)
     return inner
 
 

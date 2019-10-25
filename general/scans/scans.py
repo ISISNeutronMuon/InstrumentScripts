@@ -800,10 +800,10 @@ class ReplayScan(Scan):
 
     @property
     def reverse(self):
-        return ReplayScan(self.xs[::-1], self.ys[::-1], self.axis)
+        return ReplayScan(self.xs[::-1], self.ys[::-1], self.axis, self.result)
 
     def map(self, func):
-        return ReplayScan(map(func, self.xs), self.ys, self.axis)
+        return ReplayScan(map(func, self.xs), self.ys, self.axis, self.result)
 
     def __len__(self):
         return min(len(self.xs), len(self.ys))
