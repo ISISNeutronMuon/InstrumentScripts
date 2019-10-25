@@ -47,7 +47,7 @@ class LoqSampleChanger(Defaults):
         """
         # pylint: disable=arguments-differ
         if isinstance(motion, str):
-            motion = BlockMotion(motion)
+            motion = BlockMotion(motion, "mm")
         elif isinstance(motion, Motion):
             pass
         else:
@@ -84,7 +84,7 @@ class LoqSampleChanger(Defaults):
         return "{}()".format(self.__class__.__name__)
 
 
-axis = BlockMotion("sample_changer_scan_axis")
+axis = BlockMotion("sample_changer_scan_axis", "mm")
 
 _loq_sample_changer = LoqSampleChanger()
 

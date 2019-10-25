@@ -1,3 +1,30 @@
+2019-10-25    <adam.washington@stfc.ac.uk>
+
+	* instrument/loq/sample_changer_scan.py (LoqSampleChanger.scan):
+	Add default units to motion axis when give a motion name.
+
+	* instrument/loq/scans.py: Create a local wrapper for populate
+	* instrument/larmor/scans.py: Create a local wrapper for populate
+	* instrument/zoom/scans.py: Create a local wrapper for populate
+
+	* instrument/larmor/__init__.py: No explicit populate import
+	* instrument/zoom/__init__.py: No explicit populate import
+	* instrument/loq/__init__.py: No explicit populate import
+
+	* general/scans/motion.py (Motion.__init__): Add unit to Motion class
+	(BlockMotion.__init__): dd unit to BlockMotion constructor.
+	(pv_motion): Have pv_motion auto-locate unit
+	(populate): Move function into Defaults class
+
+	* general/scans/defaults.py (Defaults.scan): Add units to motion when passed a string
+	(Defaults.populate): Make populate a part of the defaults, instead
+	of just a function in general.scans.motion.
+	(Defaults.get_units): Add get_units to return the physical units of a motion
+
+	* doc/source/scans/tutorial.rst: Import populate from correct site
+
+	* doc/source/scans/instrument.rst: Import populate from correct site
+
 2019-10-24    <adam.washington@stfc.ac.uk>
 
 	* general/scans/scans.py (Scan.fit): Account for classes that

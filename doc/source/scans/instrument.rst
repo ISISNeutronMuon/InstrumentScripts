@@ -11,7 +11,6 @@ Guide for Instrument Scientists
      >>> # matplotlib.use("Agg")
      >>> ();from instrument.larmor import *;()  # doctest:+ELLIPSIS
      (...)
-     >>> from general.scans.motion import populate
      >>> populate()
 
 Introduction
