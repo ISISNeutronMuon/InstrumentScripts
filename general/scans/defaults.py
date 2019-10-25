@@ -11,10 +11,16 @@ in the middle of a user run when a missing method is called.
 """
 
 from abc import ABCMeta, abstractmethod
-from six import add_metaclass
+from six import add_metaclass, text_type
 from .scans import SimpleScan
 from .motion import Motion, BlockMotion
 from .util import get_points, TIME_KEYS
+
+try:
+    # pylint: disable=import-error
+    from genie_python import genie as g
+except ImportError:
+    from .mocks import g
 
 
 @add_metaclass(ABCMeta)
@@ -138,8 +144,8 @@ class Defaults(object):
 
         if isinstance(motion, Motion):
             pass
-        elif isinstance(motion, str):
-            motion = BlockMotion(motion)
+        elif isinstance(motion, (str, text_type)):
+            motion = BlockMotion(motion, self.get_units(motion))
         else:
             raise TypeError(
                 "Cannot run scan on axis {}. Try a string or a motion "
@@ -282,3 +288,22 @@ class Defaults(object):
             return self.scan(motor, **kwargs)
         finally:
             motor(init)
+
+    def populate(self):
+        """Create Motion objects in the GLOBAL namespace for each
+        block registered with IBEX."""
+        for i in g.get_blocks():
+            if not isinstance(i, (str, text_type)):
+                continue
+            temp = BlockMotion(i, self.get_units(i))
+            __builtins__[i.upper()] = temp
+            __builtins__[i] = temp
+            __builtins__[i.lower()] = temp
+
+    _UNITS = {"Theta": u"°", "Two_Theta": u"°"}
+
+    def get_units(self, motion):
+        """Get the physical measurement units associated with a block name."""
+        if motion in self._UNITS:
+            return self._UNITS[motion]
+        return "Unknown Unit"

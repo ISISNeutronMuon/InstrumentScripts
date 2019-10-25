@@ -168,10 +168,14 @@ class Scan(object):
                     detector(self, save=save, **kwargs) as detect:
                 for x in self:
                     # FIXME: Handle multidimensional plots
-                    (label, position) = next(iter(x.items()))
+                    ((label, unit), position) = next(iter(x.items()))
                     acc, value = detect(acc, **just_times(kwargs))
                     if isinstance(value, float):
                         value = Average(value)
+                    if not xs:
+                        logfile.write(
+                            "{} ({})\t{}\tUncertainty\n".format(
+                                label, unit, detector.unit))
                     if position in xs:
                         ys[xs.index(position)] += value
                     else:
@@ -180,7 +184,8 @@ class Scan(object):
                     logfile.write("{}\t{}\t{}\n".format(xs[-1], str(ys[-1]),
                                                         str(ys[-1].err())))
                     axis.clear()
-                    axis.set_xlabel(label)
+                    axis.set_xlabel("{} ({})".format(label, unit))
+                    axis.set_ylabel(detector.unit)
                     if isinstance(self.min(), tuple):
                         rng = [1.05 * self.min()[0] - 0.05 * self.max()[0],
                                1.05 * self.max()[0] - 0.05 * self.min()[0]]
@@ -299,7 +304,7 @@ class SimpleScan(Scan):
             self.action(i)
             g.waitfor_move()
             dic = OrderedDict()
-            dic[self.name] = self.action()
+            dic[(self.name, self.action.unit)] = self.action()
             yield dic
 
     def __len__(self):
@@ -643,8 +648,8 @@ class ProductScan(Scan):
                     logfile.write(
                         "{}\t{}\n".format(xs[-1], str(values[-1])))
                     axis.clear()
-                    axis.set_xlabel(keys[1])
-                    axis.set_ylabel(keys[0])
+                    axis.set_xlabel("{} ({})".format(keys[1][0], keys[1][1]))
+                    axis.set_ylabel("{} ({})".format(keys[0][0], keys[0][1]))
                     miny, minx = self.min()
                     maxy, maxx = self.max()
                     rng = [1.05 * minx - 0.05 * maxx,
@@ -780,10 +785,11 @@ class ForeverContinuousScan(ContinuousScan):
 class ReplayScan(Scan):
     """A Scan that merely repeated the output of a previous scan"""
 
-    def __init__(self, xs, ys, axis):
+    def __init__(self, xs, ys, axis, result):
         self.xs = xs
         self.ys = ys
         self.axis = axis
+        self.result = result
         # self.defaults = ReplayDetector(xs, ys)
 
     def min(self):
@@ -794,10 +800,10 @@ class ReplayScan(Scan):
 
     @property
     def reverse(self):
-        return ReplayScan(self.xs[::-1], self.ys[::-1], self.axis)
+        return ReplayScan(self.xs[::-1], self.ys[::-1], self.axis, self.result)
 
     def map(self, func):
-        return ReplayScan(map(func, self.xs), self.ys, self.axis)
+        return ReplayScan(map(func, self.xs), self.ys, self.axis, self.result)
 
     def __len__(self):
         return min(len(self.xs), len(self.ys))
@@ -828,6 +834,7 @@ of trying to fake a detector."""
             rng = [1.05 * self.min() - 0.05 * self.max(),
                    1.05 * self.max() - 0.05 * self.min()]
         axis.set_xlabel(self.axis)
+        axis.set_ylabel(self.result)
         axis.set_xlim(rng[0], rng[1])
         rng = _plot_range(ys)
         axis.set_ylim(rng[0], rng[1])
@@ -857,6 +864,9 @@ def last_scan(path=None, axis="replay"):
         path = max([f for f in os.listdir(os.getcwd()) if f[-4:] == ".dat"],
                    key=os.path.getctime)
     with open(path, "r") as infile:
+        base = infile.readline()
+        axis = base.split("\t")[0]
+        result = base.split("\t")[1]
         xs, ys, errs = np.loadtxt(infile, unpack=True)
         ys = [Average((y / e)**2, y / e**2) for y, e in zip(ys, errs)]
-        return ReplayScan(xs, ys, axis)
+        return ReplayScan(xs, ys, axis, result)

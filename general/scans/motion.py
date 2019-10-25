@@ -13,7 +13,6 @@ can be controlled by an instrument.  Although it is called Motion,
 it will also handle temperatures, currents, and other physical properties.
 """
 
-import six
 try:
     # pylint: disable=import-error
     from genie_python import genie as g
@@ -44,10 +43,11 @@ class Motion(object):
 
     def __init__(self, getter, setter, title, low=None, high=None,
                  velocity_getter=None, velocity_setter=None,
-                 tolerance_getter=None):
+                 tolerance_getter=None, unit=None):
         self.getter = getter
         self.setter = setter
         self.title = title
+        self.unit = unit
         self._low = low
         self._high = high
 
@@ -166,7 +166,7 @@ class BlockMotion(Motion):
       A string containing the name of the ibex block to control
     """
 
-    def __init__(self, block):
+    def __init__(self, block, unit):
         blocks = g.get_blocks()
         if block not in blocks:
             new_name = [name for name in blocks
@@ -178,7 +178,7 @@ class BlockMotion(Motion):
         Motion.__init__(self,
                         lambda: g.cget(block)["value"],
                         lambda x: g.cset(block, x),
-                        block,
+                        block, unit=unit,
                         # Workarounds until a better solution to get fields
                         # from blocks is implemented in IBEX. Note that IBEX
                         # blocks must point at AXIS:MTR rather than AXIS for
@@ -196,21 +196,10 @@ def pv_motion(pv_str, name):
     return Motion(lambda: g.get_pv(pv_str),
                   lambda x: g.set_pv(pv_str, x),
                   name,
+                  unit=g.get_pv(pv_str+".EGU"),
                   velocity_getter=lambda: g.get_pv(
                       "{}.VELO".format(pv_str)),
                   velocity_setter=lambda x: g.set_pv(
                       "{}.VELO".format(pv_str), x),
                   tolerance_getter=lambda: g.get_pv(
                       "{}.RDBD".format(pv_str)))
-
-
-def populate():
-    """Create Motion objects in the GLOBAL namespace for each
-    block registered with IBEX."""
-    for i in g.get_blocks():
-        if not isinstance(i, (str, six.text_type)):
-            continue
-        temp = BlockMotion(i)
-        __builtins__[i.upper()] = temp
-        __builtins__[i] = temp
-        __builtins__[i.lower()] = temp
