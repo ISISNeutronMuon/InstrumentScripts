@@ -300,7 +300,7 @@ class Defaults(object):
             __builtins__[i] = temp
             __builtins__[i.lower()] = temp
 
-    _UNITS = {"Theta": u"°", "Two_Theta": u"°"}
+    _UNITS = {"Theta": u"deg", "Two_Theta": u"deg"}
 
     def get_units(self, motion):
         """Get the physical measurement units associated with a block name."""
