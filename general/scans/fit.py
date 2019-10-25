@@ -164,7 +164,7 @@ class PolyFit(Fit):
         # pylint: disable=arguments-differ
         xs = ["x^{}".format(i) for i in range(1, len(params))]
         xs = ([""] + xs)[::-1]
-        terms = ["{:0.3g}".format(t) + i for i, t in zip(xs, params)]
+        terms = [smart_number_format(t) + i for i, t in zip(xs, params)]
         return self._title + ": $y = " + " + ".join(terms) + "$"
 
 
@@ -329,9 +329,12 @@ class GaussianFit(CurveFit):
     def title(self, params):
         # pylint: disable=arguments-differ
         params = self.readable(params)
+        for k in params:
+            if isinstance(params[k], float):
+                params[k] = smart_number_format(params[k])
         return (self._title + ": " +
-                "y={amplitude:.3g}*exp((x-{center:.3g})$^2$" +
-                "/{sigma:.3g})+{background:.1g}").format(**params)
+                "y={amplitude:}*exp((x-{center:})$^2$" +
+                "/{sigma:})+{background:}").format(**params)
 
 
 class DampedOscillatorFit(CurveFit):
@@ -380,10 +383,13 @@ class DampedOscillatorFit(CurveFit):
     def title(self, params):
         # pylint: disable=arguments-differ
         params = self.readable(params)
+        for k in params:
+            if isinstance(params[k], float):
+                params[k] = smart_number_format(params[k])
         return (self._title + ": " +
-                "y={amplitude:.3g}*exp(-((x-{center:.3g})" +
-                "/{width:.3g})$^2$)*" +
-                "cos({frequency:.3g}*(x-{center:.3g}))").format(**params)
+                "y={amplitude:}*exp(-((x-{center:})" +
+                "/{width:})$^2$)*" +
+                "cos({frequency:}*(x-{center:}))").format(**params)
 
 
 class ErfFit(CurveFit):
@@ -431,7 +437,10 @@ class ErfFit(CurveFit):
     def title(self, fit):
         # pylint: disable=arguments-differ
         params = self.readable(fit)
-        return "Edge at {center:.3g}".format(**params)
+        for k in params:
+            if isinstance(params[k], float):
+                params[k] = smart_number_format(params[k])
+        return "Edge at {center:}".format(**params)
 
 
 class TopHatFit(CurveFit):
@@ -477,7 +486,10 @@ class TopHatFit(CurveFit):
     def title(self, fit):
         # pylint: disable=arguments-differ
         params = self.readable(fit)
-        return "Top Hat at {center:.3g} of width {width:.3g}".format(**params)
+        for k in params:
+            if isinstance(params[k], float):
+                params[k] = smart_number_format(params[k])
+        return "Top Hat at {center:} of width {width:}".format(**params)
 
 
 class CentreOfMassFit(Fit):
@@ -574,6 +586,15 @@ class CentreOfMassFit(Fit):
             axis.legend([self.title(params)])
             return params
         return action
+
+
+def smart_number_format(x):
+    """Turn numbers into strings with a smart number of digits"""
+    if abs(x) >= 1000:
+        return "{:.2e}".format(x)
+    if abs(x) < 0.1:
+        return "{:.2e}".format(x)
+    return "{:.3f}".format(x)
 
 
 #: A linear regression
