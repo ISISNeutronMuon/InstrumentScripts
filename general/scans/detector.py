@@ -12,9 +12,10 @@ from .monoid import Average, MonoidList
 class DetectorManager(object):
     """Manage routines for pulling data from the instrument"""
 
-    def __init__(self, f):
+    def __init__(self, f, unit="Intensity"):
         self._f = f
         self.scan = None
+        self.unit = unit
 
     def __call__(self, scan, **kwargs):
         self.scan = scan
@@ -45,10 +46,12 @@ class BlockDetector(DetectorManager):
     A helper class for using an IBEX block as a detector.
     """
 
-    def __init__(self, blockname):
+    def __init__(self, blockname, unit=None):
         self.blockname = blockname
+        if not unit:
+            unit = blockname
         self._f = lambda acc: (acc, get_block(self.blockname))
-        DetectorManager.__init__(self, self._f)
+        DetectorManager.__init__(self, self._f, unit)
 
     def __call__(self, scan, **kwargs):
         return self

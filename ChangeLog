@@ -1,5 +1,18 @@
 2019-10-25    <adam.washington@stfc.ac.uk>
 
+	* instrument/loq/sample_changer_scan.py (LoqSampleChanger): Give a
+	label to the default BlockDetector.
+
+	* general/scans/scans.py (Scan.plot): Include a label on the y-axis of plots
+	(ReplayScan.__init__): Give a vertical axis label to the ReplayScan
+	(ReplayScan.plot): Plot the axis label when plotting a ReplayScan
+	(last_scan): Read the old y-axis label from the header of the last_scan
+
+	* general/scans/detector.py (DetectorManager.__init__): Give an
+	axis label to the DetectorManager.
+	(BlockDetector.__init__): Have BlockDetectors default to their
+	block name if no label is given.
+
 	* general/scans/scans.py (SimpleScan.__iter__): Include units
 	alongside axis labels when iterating.
 	(ProductScan.plot): Include units on both axes of 2D plots

@@ -174,8 +174,8 @@ class Scan(object):
                         value = Average(value)
                     if not xs:
                         logfile.write(
-                            "{} ({})\tIntensity\tUncertainty\n".format(
-                                label, unit))
+                            "{} ({})\t{}\tUncertainty\n".format(
+                                label, unit, detector.unit))
                     if position in xs:
                         ys[xs.index(position)] += value
                     else:
@@ -185,6 +185,7 @@ class Scan(object):
                                                         str(ys[-1].err())))
                     axis.clear()
                     axis.set_xlabel("{} ({})".format(label, unit))
+                    axis.set_ylabel(detector.unit)
                     if isinstance(self.min(), tuple):
                         rng = [1.05 * self.min()[0] - 0.05 * self.max()[0],
                                1.05 * self.max()[0] - 0.05 * self.min()[0]]
@@ -784,10 +785,11 @@ class ForeverContinuousScan(ContinuousScan):
 class ReplayScan(Scan):
     """A Scan that merely repeated the output of a previous scan"""
 
-    def __init__(self, xs, ys, axis):
+    def __init__(self, xs, ys, axis, result):
         self.xs = xs
         self.ys = ys
         self.axis = axis
+        self.result = result
         # self.defaults = ReplayDetector(xs, ys)
 
     def min(self):
@@ -832,6 +834,7 @@ of trying to fake a detector."""
             rng = [1.05 * self.min() - 0.05 * self.max(),
                    1.05 * self.max() - 0.05 * self.min()]
         axis.set_xlabel(self.axis)
+        axis.set_ylabel(self.result)
         axis.set_xlim(rng[0], rng[1])
         rng = _plot_range(ys)
         axis.set_ylim(rng[0], rng[1])
@@ -863,6 +866,7 @@ def last_scan(path=None, axis="replay"):
     with open(path, "r") as infile:
         base = infile.readline()
         axis = base.split("\t")[0]
+        result = base.split("\t")[1]
         xs, ys, errs = np.loadtxt(infile, unpack=True)
         ys = [Average((y / e)**2, y / e**2) for y, e in zip(ys, errs)]
-        return ReplayScan(xs, ys, axis)
+        return ReplayScan(xs, ys, axis, result)
