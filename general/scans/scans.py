@@ -643,8 +643,8 @@ class ProductScan(Scan):
                     logfile.write(
                         "{}\t{}\n".format(xs[-1], str(values[-1])))
                     axis.clear()
-                    axis.set_xlabel(keys[1])
-                    axis.set_ylabel(keys[0])
+                    axis.set_xlabel("{} ({})".format(keys[1][0], keys[1][1]))
+                    axis.set_ylabel("{} ({})".format(keys[0][0], keys[0][1]))
                     miny, minx = self.min()
                     maxy, maxx = self.max()
                     rng = [1.05 * minx - 0.05 * maxx,

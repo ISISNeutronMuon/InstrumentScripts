@@ -2,6 +2,7 @@
 
 	* general/scans/scans.py (SimpleScan.__iter__): Include units
 	alongside axis labels when iterating.
+	(ProductScan.plot): Include units on both axes of 2D plots
 
 	* general/scans/scans.py (Scan.plot): Add units to x-axis of scan plots
 
