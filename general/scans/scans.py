@@ -168,7 +168,7 @@ class Scan(object):
                     detector(self, save=save, **kwargs) as detect:
                 for x in self:
                     # FIXME: Handle multidimensional plots
-                    (label, position) = next(iter(x.items()))
+                    ((label, unit), position) = next(iter(x.items()))
                     acc, value = detect(acc, **just_times(kwargs))
                     if isinstance(value, float):
                         value = Average(value)
@@ -180,7 +180,7 @@ class Scan(object):
                     logfile.write("{}\t{}\t{}\n".format(xs[-1], str(ys[-1]),
                                                         str(ys[-1].err())))
                     axis.clear()
-                    axis.set_xlabel(label)
+                    axis.set_xlabel("{} ({})".format(label, unit))
                     if isinstance(self.min(), tuple):
                         rng = [1.05 * self.min()[0] - 0.05 * self.max()[0],
                                1.05 * self.max()[0] - 0.05 * self.min()[0]]
@@ -299,7 +299,7 @@ class SimpleScan(Scan):
             self.action(i)
             g.waitfor_move()
             dic = OrderedDict()
-            dic[self.name] = self.action()
+            dic[(self.name, self.action.unit)] = self.action()
             yield dic
 
     def __len__(self):

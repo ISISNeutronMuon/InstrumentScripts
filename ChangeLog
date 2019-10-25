@@ -1,5 +1,10 @@
 2019-10-25    <adam.washington@stfc.ac.uk>
 
+	* general/scans/scans.py (SimpleScan.__iter__): Include units
+	alongside axis labels when iterating.
+
+	* general/scans/scans.py (Scan.plot): Add units to x-axis of scan plots
+
 	* instrument/loq/sample_changer_scan.py (LoqSampleChanger.scan):
 	Add default units to motion axis when give a motion name.
 
