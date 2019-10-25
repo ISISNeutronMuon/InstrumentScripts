@@ -1,5 +1,16 @@
 2019-10-25    <adam.washington@stfc.ac.uk>
 
+	* instrument/larmor/scans.py (generic_pol.inner_pol): Set the
+	default y-axis label to Polarisation for all generic_pol plot
+
+	* general/scans/detector.py (dae_periods.inner): Let anything with
+	the dae_periods decorator choose its y-axis label
+	(specific_spectra): Set the y-axis label yor all specfici_spectra
+	plots
+
+	* general/scans/detector.py: Allow setting the y-axis label
+	(DaePeriods.__init__): Allow setting the y-axis label
+
 	* instrument/loq/sample_changer_scan.py (LoqSampleChanger): Give a
 	label to the default BlockDetector.
 

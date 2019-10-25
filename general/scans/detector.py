@@ -68,7 +68,7 @@ class DaePeriods(DetectorManager):
     of their measurements in a single DAE run, instead of constantly
     starting and stoping the DAE."""
 
-    def __init__(self, f, pre_init, period_function=len):
+    def __init__(self, f, pre_init, period_function=len, unit="Intensity"):
         """Create a new detector manager that runs in a single Dae run
 
         Parameters
@@ -89,7 +89,7 @@ class DaePeriods(DetectorManager):
         self.period_function = period_function
         self._scan = None
         self._kwargs = {}
-        DetectorManager.__init__(self, f)
+        DetectorManager.__init__(self, f, unit)
 
     def __call__(self, scan, save, **kwargs):
         self._pre_init()
@@ -129,11 +129,11 @@ class DaePeriods(DetectorManager):
             g.abort()
 
 
-def dae_periods(pre_init=lambda: None, period_function=len):
+def dae_periods(pre_init=lambda: None, period_function=len, unit="Intensity"):
     """Decorate to add single run number support to a detector function"""
     def inner(func):
         """wrapper"""
-        return DaePeriods(func, pre_init, period_function=period_function)
+        return DaePeriods(func, pre_init, period_function=period_function, unit=unit)
     return inner
 
 
@@ -152,7 +152,7 @@ def specific_spectra(spectra_list, preconfig=lambda: None):
     Will create a plot with two data points on it.  The first will be
     all of the counts in monitor four.  The second will be the combined
     sum of the counts in channels 1000 through 1999, inclusive."""
-    @dae_periods(preconfig)
+    @dae_periods(preconfig, unit="Integrated Intensity")
     def inner(acc, **kwargs):
         """Get counts on a set of channels"""
         local_kwargs = {}
