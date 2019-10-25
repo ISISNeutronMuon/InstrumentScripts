@@ -3,6 +3,8 @@
 	* general/scans/scans.py (SimpleScan.__iter__): Include units
 	alongside axis labels when iterating.
 	(ProductScan.plot): Include units on both axes of 2D plots
+	(Scan.plot): Plot axes labels and units during replay scans
+	(last_scan): Added columns headers to scan log files
 
 	* general/scans/scans.py (Scan.plot): Add units to x-axis of scan plots
 

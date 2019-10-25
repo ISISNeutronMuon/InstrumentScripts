@@ -68,6 +68,7 @@ Plot Motor Scan
      >>> lines = infile.readlines()
      >>> infile.close()
      >>> for line in lines: print(line.split("\t")[0])
+     Theta (°)
      0.0
      0.5
      1.0

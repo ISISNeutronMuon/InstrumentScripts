@@ -172,6 +172,10 @@ class Scan(object):
                     acc, value = detect(acc, **just_times(kwargs))
                     if isinstance(value, float):
                         value = Average(value)
+                    if not xs:
+                        logfile.write(
+                            "{} ({})\tIntensity\tUncertainty\n".format(
+                                label, unit))
                     if position in xs:
                         ys[xs.index(position)] += value
                     else:
@@ -857,6 +861,8 @@ def last_scan(path=None, axis="replay"):
         path = max([f for f in os.listdir(os.getcwd()) if f[-4:] == ".dat"],
                    key=os.path.getctime)
     with open(path, "r") as infile:
+        base = infile.readline()
+        axis = base.split("\t")[0]
         xs, ys, errs = np.loadtxt(infile, unpack=True)
         ys = [Average((y / e)**2, y / e**2) for y, e in zip(ys, errs)]
         return ReplayScan(xs, ys, axis)
