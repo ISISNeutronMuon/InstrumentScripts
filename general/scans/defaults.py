@@ -11,8 +11,12 @@ in the middle of a user run when a missing method is called.
 """
 
 from abc import ABCMeta, abstractmethod
+import os
 from six import add_metaclass, text_type
-from .scans import SimpleScan
+import matplotlib.pyplot as plt
+import numpy as np
+from .scans import SimpleScan, ReplayScan
+from .monoid import Average
 from .motion import Motion, BlockMotion
 from .util import get_points, TIME_KEYS
 
@@ -43,6 +47,18 @@ class Defaults(object):
         """
         Returns the name of a unique log file where the scan data can be saved.
         """
+
+    @staticmethod
+    def get_fig():
+        """
+        Get a figure for the next scan.  The default method is to
+        create a new figure for each scan, but this can be overridden
+        to re-use the same figure, if the instrument scientist
+        chooses.
+        """
+        fig, axis = plt.subplots()
+        plt.show()
+        return (fig, axis)
 
     def scan(self, motion, start=None, stop=None, step=None, frames=None,
              **kwargs):
@@ -307,3 +323,26 @@ class Defaults(object):
         if motion in self._UNITS:
             return self._UNITS[motion]
         return "Unknown Unit"
+
+    def last_scan(self, path=None, axis="replay"):
+        """Load the last run scan and replay that scan
+
+        PARAMETERS
+        ----------
+        path
+        The log file to replay.  If None, replay the most recent scan
+        axis
+        The label for the x axis
+
+        """
+        if path is None:
+            path = max([f for f in os.listdir(os.getcwd())
+                        if f[-4:] == ".dat"],
+                       key=os.path.getctime)
+        with open(path, "r") as infile:
+            base = infile.readline()
+            axis = base.split("\t")[0]
+            result = base.split("\t")[1]
+            xs, ys, errs = np.loadtxt(infile, unpack=True)
+            ys = [Average((y / e)**2, y / e**2) for y, e in zip(ys, errs)]
+            return ReplayScan(xs, ys, axis, result, self)

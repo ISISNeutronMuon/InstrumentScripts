@@ -39,6 +39,7 @@ ascan = local_wrapper(_zm, "ascan")
 dscan = local_wrapper(_zm, "dscan")
 rscan = local_wrapper(_zm, "rscan")
 populate = local_wrapper(_zm, "populate")
+last_scan = local_wrapper(_zm, "last_scan")
 
 print("Remember to populate")
 monitor1 = zoom_monitor(1)

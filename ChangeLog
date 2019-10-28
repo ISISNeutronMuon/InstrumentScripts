@@ -1,3 +1,17 @@
+2019-10-28    <adam.washington@stfc.ac.uk>
+
+	* general/scans/scans.py (Scan.plot): Get figures from get_fig
+	(ContinuousScan.plot): Get figures from get_fig
+	(ProductScan.plot): Get figures from get_fig
+	(ReplayScan.plot): Get figures from get_fig
+
+	* general/scans/defaults.py (Defaults.get_fig): Add a get_fig
+	function to supply figures for scans.  This can be overloaded by
+	the beamlines to force all plots into a single figure or allow
+	multiple simultaneous plots
+	(Defaults.last_scan): Made last_scan a method of the Defaults
+	class to allow it to access the defaults.
+
 2019-10-25    <adam.washington@stfc.ac.uk>
 
 	* general/scans/fit.py (smart_number_format): Add
