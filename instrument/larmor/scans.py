@@ -39,6 +39,7 @@ class Larmor(Defaults):
     This class represents the default functions for the Larmor instrument.
     """
 
+    SINGLE_FIGURE = True
     detector = specific_spectra([[4]], _trans_mode)
 
     @staticmethod

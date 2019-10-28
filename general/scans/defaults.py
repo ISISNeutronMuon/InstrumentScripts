@@ -31,6 +31,10 @@ except ImportError:
 class Defaults(object):
     """A defaults object to store the correct functions for this instrument"""
 
+    SINGLE_FIGURE = False
+    _fig = None
+    _axis = None
+
     @staticmethod
     @abstractmethod
     def detector(**kwargs):
@@ -48,14 +52,17 @@ class Defaults(object):
         Returns the name of a unique log file where the scan data can be saved.
         """
 
-    @staticmethod
-    def get_fig():
+    def get_fig(self):
         """
         Get a figure for the next scan.  The default method is to
         create a new figure for each scan, but this can be overridden
         to re-use the same figure, if the instrument scientist
         chooses.
         """
+        if self.SINGLE_FIGURE:
+            if not self._fig or not self._axis:
+                self._fig, self._axis = plt.subplots()
+            return (self._fig, self._axis)
         fig, axis = plt.subplots()
         plt.show()
         return (fig, axis)
