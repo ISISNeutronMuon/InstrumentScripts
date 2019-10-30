@@ -29,7 +29,14 @@ def get_pv_from_block(name):
     return "PV:UNKNOWN"
 
 
+def pv_exists(pv_name):
+    """Fake pv_exists for mock genie_python"""
+    return pv_name in PVS
+
+
 g.adv.get_pv_from_block.side_effect = get_pv_from_block
+# pylint: disable=protected-access
+g.__api.pv_exists.side_effect = pv_exists
 
 
 PVS = {"PV:THETA.EGU": "deg", "PV:TWO_THETA.EGU": "deg",
@@ -50,7 +57,7 @@ def get_pv(pv_name, **kwargs):
     """
     # pylint: disable=unused-argument
     # return PVS.get(pv_name, 0)
-    return PVS[pv_name]
+    return PVS.get(pv_name, "")
 
 
 g.set_pv = set_pv

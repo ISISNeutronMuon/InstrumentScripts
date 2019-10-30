@@ -305,11 +305,12 @@ class Defaults(object):
     @staticmethod
     def get_units(motion):
         """Get the physical measurement units associated with a block name."""
-        try:
-            pv_name = g.adv.get_pv_from_block(motion)
-            if "." in pv_name:
-                # Remove any headers
-                pv_name = pv_name.split(".")[0]
-            return g.get_pv(pv_name+".EGU")
-        except KeyError:
-            return ""
+        pv_name = g.adv.get_pv_from_block(motion)
+        if "." in pv_name:
+            # Remove any headers
+            pv_name = pv_name.split(".")[0]
+        unit_name = pv_name + ".EGU"
+        # pylint: disable=protected-access
+        if g.__api.pv_exists(unit_name):
+            return g.get_pv(unit_name)
+        return ""
