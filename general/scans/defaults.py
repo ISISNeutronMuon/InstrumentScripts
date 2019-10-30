@@ -311,6 +311,6 @@ class Defaults(object):
             pv_name = pv_name.split(".")[0]
         unit_name = pv_name + ".EGU"
         # pylint: disable=protected-access
-        if g.__api.pv_exists(unit_name):
+        if getattr(g, "__api").pv_exists(unit_name):
             return g.get_pv(unit_name)
         return ""
