@@ -222,7 +222,7 @@ Motor Objects
   And find out about the tolerance of a motor:
 
   >>> theta.tolerance
-  0
+  1.5
 
   If there is no Motion object for a specific axis, the user can give
   the name in a string and use that.  If the axis isn't a string or a

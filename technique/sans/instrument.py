@@ -204,7 +204,7 @@ class ScanningInstrument(object):
         value stored in the journal for the next run, which should be
         set to the new value.
         """
-        self.set_pv("PARS:SAMPLE:MEAS:TYPE", value)
+        self.send_pv("PARS:SAMPLE:MEAS:TYPE", value)
 
     @property
     def measurement_label(self):
@@ -225,7 +225,7 @@ class ScanningInstrument(object):
         value stored in the journal for the next run, which should be
         set to the new value.
         """
-        self.set_pv("PARS:SAMPLE:MEAS:LABEL", value)
+        self.send_pv("PARS:SAMPLE:MEAS:LABEL", value)
 
     @property
     def measurement_id(self):
@@ -246,7 +246,7 @@ class ScanningInstrument(object):
         value stored in the journal for the next run, which should be
         set to the new value.
         """
-        self.set_pv("PARS:SAMPLE:MEAS:ID", value)
+        self.send_pv("PARS:SAMPLE:MEAS:ID", value)
 
     @abstractmethod
     def setup_dae_scanning(self):  # pragma: no cover
@@ -721,10 +721,10 @@ of parameters accepted. """
         """
         return gen.get_pv(self._PV_BASE + name)
 
-    def set_pv(self, name, value):
+    def send_pv(self, name, value):
         """Set the given PV within the sub heirarchy of the instrument.
 
-        For example, on Larmor, set_pv("DAE:WIRING_FILE", f) would
+        For example, on Larmor, send_pv("DAE:WIRING_FILE", f) would
         change the value of the PV for "IN:LARMOR:DAE:WIRING_FILE" to
         the value in f.
 

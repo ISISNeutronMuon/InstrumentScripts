@@ -302,8 +302,14 @@ class Defaults(object):
 
     _UNITS = {"Theta": u"deg", "Two_Theta": u"deg"}
 
-    def get_units(self, motion):
+    @staticmethod
+    def get_units(motion):
         """Get the physical measurement units associated with a block name."""
-        if motion in self._UNITS:
-            return self._UNITS[motion]
-        return "Unknown Unit"
+        try:
+            pv_name = g.adv.get_pv_from_block(motion)
+            if "." in pv_name:
+                # Remove any headers
+                pv_name = pv_name.split(".")[0]
+            return g.get_pv(pv_name+".EGU")
+        except KeyError:
+            return ""
