@@ -76,7 +76,7 @@ get_user_dir()
 def generic_pol(spectra, preconfig=lambda: None):
     """Create a polarised detector object over a list of spectra"""
     @dae_periods(preconfig, lambda x: 2 * len(x))
-    def inner_pol(**kwargs):
+    def inner_pol(acc, **kwargs):
         """
         Get a single polarisation measurement
         """
@@ -114,7 +114,7 @@ def generic_pol(spectra, preconfig=lambda: None):
                     np.sum(spec2["signal"][slc]) * 100.0,
                     np.sum(mon2["signal"]) * 100.0)
                 pols[idx] += Polarisation(ups, down)
-        return MonoidList(pols)
+        return (acc, MonoidList(pols))
     return inner_pol
 
 
