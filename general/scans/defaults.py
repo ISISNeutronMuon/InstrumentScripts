@@ -62,6 +62,7 @@ class Defaults(object):
         if self.SINGLE_FIGURE:
             if not self._fig or not self._axis:
                 self._fig, self._axis = plt.subplots()
+                plt.show()
             return (self._fig, self._axis)
         fig, axis = plt.subplots()
         plt.show()
