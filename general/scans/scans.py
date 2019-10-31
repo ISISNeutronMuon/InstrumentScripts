@@ -54,6 +54,12 @@ def _plot_range(array):
     # array = [float(x) for x in array]
     low = array.min()
     high = array.max()
+    if not (np.isfinite(low) and np.isfinite(high)):
+        return (-1, 1)
+    if not np.isfinite(low):
+        low = high-1
+    if not np.isfinite(high):
+        high = low + 1
     diff = high - low
     return (low - 0.05 * diff,
             high + 0.05 * diff)
