@@ -325,11 +325,18 @@ class Defaults(object):
 
     _UNITS = {"Theta": u"deg", "Two_Theta": u"deg"}
 
-    def get_units(self, motion):
+    @staticmethod
+    def get_units(motion):
         """Get the physical measurement units associated with a block name."""
-        if motion in self._UNITS:
-            return self._UNITS[motion]
-        return "Unknown Unit"
+        pv_name = g.adv.get_pv_from_block(motion)
+        if "." in pv_name:
+            # Remove any headers
+            pv_name = pv_name.split(".")[0]
+        unit_name = pv_name + ".EGU"
+        # pylint: disable=protected-access
+        if g.__api.pv_exists(unit_name):
+            return g.get_pv(unit_name)
+        return ""
 
     def last_scan(self, path=None, axis="replay"):
         """Load the last run scan and replay that scan

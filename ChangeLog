@@ -1,3 +1,8 @@
+2019-10-30    <adam.washington@stfc.ac.uk>
+
+	* general/scans/defaults.py (Defaults.get_units): Check that a
+	block has units before trying to read those units.
+
 2019-10-28    <adam.washington@stfc.ac.uk>
 
 	* general/scans/scans.py (Scan.plot): Get figures from get_fig
@@ -11,6 +16,10 @@
 	multiple simultaneous plots
 	(Defaults.last_scan): Made last_scan a method of the Defaults
 	class to allow it to access the defaults.
+
+	* technique/sans/instrument.py (ScanningInstrument.send_pv):
+	Rename set_pv to send_pv in the SANS module so as not to overload
+	set_pv from genie.
 
 2019-10-25    <adam.washington@stfc.ac.uk>
 
