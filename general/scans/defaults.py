@@ -11,8 +11,12 @@ in the middle of a user run when a missing method is called.
 """
 
 from abc import ABCMeta, abstractmethod
+import os
 from six import add_metaclass, text_type
-from .scans import SimpleScan
+import matplotlib.pyplot as plt
+import numpy as np
+from .scans import SimpleScan, ReplayScan
+from .monoid import Average
 from .motion import Motion, BlockMotion
 from .util import get_points, TIME_KEYS
 
@@ -26,6 +30,10 @@ except ImportError:
 @add_metaclass(ABCMeta)
 class Defaults(object):
     """A defaults object to store the correct functions for this instrument"""
+
+    SINGLE_FIGURE = False
+    _fig = None
+    _axis = None
 
     @staticmethod
     @abstractmethod
@@ -43,6 +51,22 @@ class Defaults(object):
         """
         Returns the name of a unique log file where the scan data can be saved.
         """
+
+    def get_fig(self):
+        """
+        Get a figure for the next scan.  The default method is to
+        create a new figure for each scan, but this can be overridden
+        to re-use the same figure, if the instrument scientist
+        chooses.
+        """
+        if self.SINGLE_FIGURE:
+            if not self._fig or not self._axis:
+                self._fig, self._axis = plt.subplots()
+                plt.show()
+            return (self._fig, self._axis)
+        fig, axis = plt.subplots()
+        plt.show()
+        return (fig, axis)
 
     def scan(self, motion, start=None, stop=None, step=None, frames=None,
              **kwargs):
@@ -305,11 +329,35 @@ class Defaults(object):
     @staticmethod
     def get_units(motion):
         """Get the physical measurement units associated with a block name."""
-        try:
-            pv_name = g.adv.get_pv_from_block(motion)
-            if "." in pv_name:
-                # Remove any headers
-                pv_name = pv_name.split(".")[0]
-            return g.get_pv(pv_name+".EGU")
-        except KeyError:
-            return ""
+        pv_name = g.adv.get_pv_from_block(motion)
+        if "." in pv_name:
+            # Remove any headers
+            pv_name = pv_name.split(".")[0]
+        unit_name = pv_name + ".EGU"
+        # pylint: disable=protected-access
+        if getattr(g, "__api").pv_exists(unit_name):
+            return g.get_pv(unit_name)
+        return ""
+
+    def last_scan(self, path=None, axis="replay"):
+        """Load the last run scan and replay that scan
+
+        PARAMETERS
+        ----------
+        path
+        The log file to replay.  If None, replay the most recent scan
+        axis
+        The label for the x axis
+
+        """
+        if path is None:
+            path = max([f for f in os.listdir(os.getcwd())
+                        if f[-4:] == ".dat"],
+                       key=os.path.getctime)
+        with open(path, "r") as infile:
+            base = infile.readline()
+            axis = base.split("\t")[0]
+            result = base.split("\t")[1]
+            xs, ys, errs = np.loadtxt(infile, unpack=True)
+            ys = [Average((y / e)**2, y / e**2) for y, e in zip(ys, errs)]
+            return ReplayScan(xs, ys, axis, result, self)

@@ -14,7 +14,6 @@ from abc import ABCMeta, abstractmethod
 from collections import Iterable, OrderedDict
 from contextlib import contextmanager
 from datetime import timedelta, datetime
-import os
 import time
 import warnings
 import numpy as np
@@ -55,6 +54,12 @@ def _plot_range(array):
     # array = [float(x) for x in array]
     low = array.min()
     high = array.max()
+    if not (np.isfinite(low) and np.isfinite(high)):
+        return (-1, 1)
+    if not np.isfinite(low):
+        low = high-1
+    if not np.isfinite(high):
+        high = low + 1
     diff = high - low
     return (low - 0.05 * diff,
             high + 0.05 * diff)
@@ -155,8 +160,7 @@ class Scan(object):
 
         detector = self._normalise_detector(detector)
 
-        fig, axis = plt.subplots()
-        plt.show()
+        fig, axis = self.defaults.get_fig()
 
         xs = []
         ys = ListOfMonoids()
@@ -389,8 +393,7 @@ class ContinuousScan(Scan):
         warnings.simplefilter("ignore", UserWarning)
 
         detector = self._normalise_detector(detector)
-        fig, axis = plt.subplots()
-        plt.show()
+        fig, axis = self.defaults.get_fig()
 
         xs = []
         ys = ListOfMonoids()
@@ -613,8 +616,7 @@ class ProductScan(Scan):
 
         detector = self._normalise_detector(detector)
 
-        fig, axis = plt.subplots()
-        plt.show()
+        fig, axis = self.defaults.get_fig()
 
         xs = []
         ys = []
@@ -785,11 +787,12 @@ class ForeverContinuousScan(ContinuousScan):
 class ReplayScan(Scan):
     """A Scan that merely repeated the output of a previous scan"""
 
-    def __init__(self, xs, ys, axis, result):
+    def __init__(self, xs, ys, axis, result, defaults):
         self.xs = xs
         self.ys = ys
         self.axis = axis
         self.result = result
+        self.defaults = defaults
         # self.defaults = ReplayDetector(xs, ys)
 
     def min(self):
@@ -800,10 +803,12 @@ class ReplayScan(Scan):
 
     @property
     def reverse(self):
-        return ReplayScan(self.xs[::-1], self.ys[::-1], self.axis, self.result)
+        return ReplayScan(self.xs[::-1], self.ys[::-1], self.axis,
+                          self.result, self.defaults)
 
     def map(self, func):
-        return ReplayScan(map(func, self.xs), self.ys, self.axis, self.result)
+        return ReplayScan(map(func, self.xs), self.ys, self.axis,
+                          self.result, self.defaults)
 
     def __len__(self):
         return min(len(self.xs), len(self.ys))
@@ -823,8 +828,7 @@ of trying to fake a detector."""
         xs = self.xs
         ys = ListOfMonoids(self.ys)
 
-        fig, axis = plt.subplots()
-        plt.show()
+        fig, axis = self.defaults.get_fig()
 
         axis.clear()
         if isinstance(self.min(), tuple):
@@ -847,26 +851,3 @@ of trying to fake a detector."""
         plt.draw()
 
         return action_remainder
-
-
-def last_scan(path=None, axis="replay"):
-    """Load the last run scan and replay that scan
-
-    PARAMETERS
-    ----------
-    path
-      The log file to replay.  If None, replay the most recent scan
-    axis
-      The label for the x axis
-
-    """
-    if path is None:
-        path = max([f for f in os.listdir(os.getcwd()) if f[-4:] == ".dat"],
-                   key=os.path.getctime)
-    with open(path, "r") as infile:
-        base = infile.readline()
-        axis = base.split("\t")[0]
-        result = base.split("\t")[1]
-        xs, ys, errs = np.loadtxt(infile, unpack=True)
-        ys = [Average((y / e)**2, y / e**2) for y, e in zip(ys, errs)]
-        return ReplayScan(xs, ys, axis, result)

@@ -39,6 +39,7 @@ class Larmor(Defaults):
     This class represents the default functions for the Larmor instrument.
     """
 
+    SINGLE_FIGURE = True
     detector = specific_spectra([[4]], _trans_mode)
 
     @staticmethod
@@ -131,3 +132,4 @@ ascan = local_wrapper(_lm, "ascan")
 dscan = local_wrapper(_lm, "dscan")
 rscan = local_wrapper(_lm, "rscan")
 populate = local_wrapper(_lm, "populate")
+last_scan = local_wrapper(_lm, "last_scan")

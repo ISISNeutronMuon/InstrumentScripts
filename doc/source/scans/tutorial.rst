@@ -361,7 +361,6 @@ It's fairly common to only realise that you should be fitting data
 :meth:`scans.last_scan` allows you to replay the results
 of the previous measurement and perform fits on it.
 
->>> from general.scans.scans import last_scan
 >>> fit = last_scan().fit(Gaussian, save="replay.png")
 >>> abs(fit["center"] - 1.1) < fit["center_err"]
 True
