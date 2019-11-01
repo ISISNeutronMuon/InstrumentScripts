@@ -9,9 +9,13 @@ any generic scripts.
 """
 
 from abc import ABCMeta, abstractmethod
+import ast
+import csv
 from logging import info, warning
+import os.path
 from six import add_metaclass
 from .genie import gen
+from .util import user_script
 
 
 def _get_times(times):
@@ -30,10 +34,19 @@ class ScanningInstrument(object):
     title_footer = ""
     _TIMINGS = ["uamps", "frames", "seconds", "minutes", "hours"]
     _PV_BASE = None
+    _block_accessors = ["changer_pos", "method_iterator"]
 
     def __init__(self):
         self.setup_sans = self.setup_dae_event
         self.setup_trans = self.setup_dae_transmission
+
+    def method_iterator(self):
+        """Iterate through the class's public functions"""
+        for method in dir(self):
+            if method[0] != "_" and method not in locals() and \
+               method not in self._block_accessors and \
+               callable(getattr(self, method)):
+                yield method
 
     def set_default_dae(self, mode=None, trans=False):
         """Set the default DAE mode for SANS or TRANS measuremnts.
@@ -193,7 +206,7 @@ class ScanningInstrument(object):
         value stored in the journal for the next run, which should be
         set to the new value.
         """
-        self.set_pv("PARS:SAMPLE:MEAS:TYPE", value)
+        self.send_pv("PARS:SAMPLE:MEAS:TYPE", value)
 
     @property
     def measurement_label(self):
@@ -214,7 +227,7 @@ class ScanningInstrument(object):
         value stored in the journal for the next run, which should be
         set to the new value.
         """
-        self.set_pv("PARS:SAMPLE:MEAS:LABEL", value)
+        self.send_pv("PARS:SAMPLE:MEAS:LABEL", value)
 
     @property
     def measurement_id(self):
@@ -235,7 +248,7 @@ class ScanningInstrument(object):
         value stored in the journal for the next run, which should be
         set to the new value.
         """
-        self.set_pv("PARS:SAMPLE:MEAS:ID", value)
+        self.send_pv("PARS:SAMPLE:MEAS:ID", value)
 
     @abstractmethod
     def setup_dae_scanning(self):  # pragma: no cover
@@ -614,13 +627,10 @@ of parameters accepted. """
           users return.
 
         """
-        from .util import user_script
 
         @user_script
         def inner():
             """Actually load and run the script"""
-            import csv
-            import ast
             with open(file_path, "r") as csvfile:
                 reader = csv.DictReader(csvfile)
                 for row in reader:
@@ -651,9 +661,6 @@ of parameters accepted. """
         edited and customised as needed.
 
         """
-        import csv
-        import ast
-        import os.path
         with open(file_path, "r") as src, open(file_path + ".py", "w") as out:
             out.write("from SansScripting import *\n")
             out.write("@user_script\n")
@@ -716,10 +723,10 @@ of parameters accepted. """
         """
         return gen.get_pv(self._PV_BASE + name)
 
-    def set_pv(self, name, value):
+    def send_pv(self, name, value):
         """Set the given PV within the sub heirarchy of the instrument.
 
-        For example, on Larmor, set_pv("DAE:WIRING_FILE", f) would
+        For example, on Larmor, send_pv("DAE:WIRING_FILE", f) would
         change the value of the PV for "IN:LARMOR:DAE:WIRING_FILE" to
         the value in f.
 

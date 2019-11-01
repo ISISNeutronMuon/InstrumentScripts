@@ -265,7 +265,7 @@ class ListOfMonoids(list):
         Get the uncertainty values from the List
         """
         if isinstance(self[0], MonoidList):
-            return np.array([[v for v in y.err()] for y in self]).T
+            return np.array([y.err() for y in self]).T
         return [y.err() for y in self]
 
     def plot(self, axis, xs):

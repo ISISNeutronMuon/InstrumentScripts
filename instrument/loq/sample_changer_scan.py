@@ -8,6 +8,7 @@ environment.
 
 """
 from __future__ import print_function, division, unicode_literals
+from datetime import datetime
 
 from general.scans.detector import BlockDetector
 from general.scans.scans import ContinuousScan, ContinuousMove
@@ -21,11 +22,11 @@ class LoqSampleChanger(Defaults):
     """
     This class represents the default functions for the Loq instrument.
     """
-    detector = BlockDetector("sample_changer_scan_intensity")
+    detector = BlockDetector("sample_changer_scan_intensity",
+                             "Diode Intensity")
 
     @staticmethod
     def log_file():
-        from datetime import datetime
         now = datetime.now()
         return "loq_sample_changer_scan_{}_{}_{}_{}_{}_{}.dat".format(
             now.year, now.month, now.day, now.hour, now.minute, now.second)
@@ -47,7 +48,7 @@ class LoqSampleChanger(Defaults):
         """
         # pylint: disable=arguments-differ
         if isinstance(motion, str):
-            motion = BlockMotion(motion)
+            motion = BlockMotion(motion, "mm")
         elif isinstance(motion, Motion):
             pass
         else:
@@ -84,7 +85,7 @@ class LoqSampleChanger(Defaults):
         return "{}()".format(self.__class__.__name__)
 
 
-axis = BlockMotion("sample_changer_scan_axis")
+axis = BlockMotion("sample_changer_scan_axis", "mm")
 
 _loq_sample_changer = LoqSampleChanger()
 
