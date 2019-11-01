@@ -168,13 +168,13 @@ class LOQ(ScanningInstrument):
     def _detector_turn_on(delay=True):
         raise NotImplementedError("Detector toggling is not supported LOQ")
         # for x in range(8):
-        #     self.set_pv("CAEN:hv0:4:{}:pwonoff".format(x), "On")
+        #     self.send_pv("CAEN:hv0:4:{}:pwonoff".format(x), "On")
 
     @staticmethod
     def _detector_turn_off(delay=True):
         raise NotImplementedError("Detector toggling is not supported on LOQ")
         # for x in range(8):
-        #     self.set_pv("CAEN:hv0:4:{}:pwonoff".format(x), "Off")
+        #     self.send_pv("CAEN:hv0:4:{}:pwonoff".format(x), "Off")
 
     def _configure_sans_custom(self):
         gen.cset(Tx_Mon="OUT")
@@ -188,9 +188,9 @@ class LOQ(ScanningInstrument):
     # pylint: disable=invalid-name
     def J1(self, temperature_1, temperature_2):
         """Run off Julabo 1"""
-        self.set_pv("JULABO_01:MODE:SP", "OFF")
+        self.send_pv("JULABO_01:MODE:SP", "OFF")
         sleep(1)
-        self.set_pv("JULABO_02:MODE:SP", "OFF")
+        self.send_pv("JULABO_02:MODE:SP", "OFF")
         gen.waitfor_move()
         gen.cset(Valve="J1")
         gen.waitfor_move()
@@ -202,9 +202,9 @@ class LOQ(ScanningInstrument):
         sleep(1)
         gen.cset(Internal_Setpoint_2=temperature_2)
         gen.waitfor_move()
-        self.set_pv("JULABO_01:MODE:SP", "ON")
+        self.send_pv("JULABO_01:MODE:SP", "ON")
         sleep(1)
-        self.set_pv("JULABO_02:MODE:SP", "ON")
+        self.send_pv("JULABO_02:MODE:SP", "ON")
         gen.waitfor_move()
 
     @staticmethod
@@ -229,7 +229,6 @@ class LOQ(ScanningInstrument):
         gen.cset(Julabo_2_Circulator="ON")
         gen.waitfor_move()
 
-block_accessors = ["changer_pos"]
 
 obj = LOQ()
 for method in dir(obj):

@@ -18,7 +18,29 @@ g.get_period.side_effect = lambda: g.period
 g.get_frames.side_effect = lambda: g.frames
 
 
-PVS = {}
+def get_pv_from_block(name):
+    """
+    Fake get_pv_from_block for mock genie_python
+    """
+    if name == "Theta":
+        return "PV:THETA"
+    if name == "Two_Theta":
+        return "PV:TWO_THETA"
+    return "PV:UNKNOWN"
+
+
+def pv_exists(pv_name):
+    """Fake pv_exists for mock genie_python"""
+    return pv_name in PVS
+
+
+g.adv.get_pv_from_block.side_effect = get_pv_from_block
+# pylint: disable=protected-access
+g.__api.pv_exists.side_effect = pv_exists
+
+
+PVS = {"PV:THETA.EGU": "deg", "PV:TWO_THETA.EGU": "deg",
+       "CS:SB:Theta.RDBD": 1.5}
 
 
 def set_pv(pv_name, value, **kwargs):
@@ -34,7 +56,8 @@ def get_pv(pv_name, **kwargs):
     Fake get_pv for mock genie_python
     """
     # pylint: disable=unused-argument
-    return PVS.get(pv_name, 0)
+    # return PVS.get(pv_name, 0)
+    return PVS.get(pv_name, "")
 
 
 g.set_pv = set_pv

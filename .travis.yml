@@ -7,7 +7,7 @@ python:
 install: "pip install -r requirements.txt"
 before_script:
   # Start a fake x server so that matplotlib doesn't fail
-  - sudo apt-get install python-numpy python-scipy latexmk texlive-latex-recommended texlive-latex-extra texlive-fonts-recommended
+  - sudo apt-get install python-numpy python-scipy latexmk texlive-latex-recommended texlive-latex-extra texlive-fonts-recommended graphviz
 script:
   - ./test.sh
 cache: pip

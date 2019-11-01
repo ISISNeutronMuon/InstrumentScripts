@@ -166,7 +166,7 @@ involves only having two spectra covering the entire main detecor."""
 
     @dae_setter("TRANS", "transmission")
     def setup_dae_transmission(self):
-        self.set_pv("PARS:SAMPLE:MEAS:TYPE", "transmission")
+        self.send_pv("PARS:SAMPLE:MEAS:TYPE", "transmission")
         gen.change_sync('isis')
         self._generic_scan(
             r"C:\Instrument\Settings\Tables\detector_monitors_only.dat",
@@ -187,9 +187,9 @@ involves only having two spectra covering the entire main detecor."""
                   {"low": 0.0, "high": 0.0, "step": 0.0,
                    "trange": 2, "log": 0}])
         gen.cset(T0Phase=0)
-        self.set_pv("MK3CHOPR_01: CH2: DIR: SP", "CW")
+        self.send_pv("MK3CHOPR_01: CH2: DIR: SP", "CW")
         gen.cset(TargetDiskPhase=8200)
-        self.set_pv("MK3CHOPR_01: CH3: DIR: SP", "CCW")
+        self.send_pv("MK3CHOPR_01: CH3: DIR: SP", "CCW")
         gen.cset(InstrumentDiskPhase=77650)
 
     @dae_setter("SANS", "sans")
@@ -380,19 +380,19 @@ involves only having two spectra covering the entire main detecor."""
         return voltage_status
 
     def _detector_turn_on(self, delay=True):
-        self.set_pv("CAEN:hv0:0:8:pwonoff", "On")
-        self.set_pv("CAEN:hv0:0:9:pwonoff", "On")
-        self.set_pv("CAEN:hv0:0:10:pwonoff", "On")
-        self.set_pv("CAEN:hv0:0:11:pwonoff", "On")
+        self.send_pv("CAEN:hv0:0:8:pwonoff", "On")
+        self.send_pv("CAEN:hv0:0:9:pwonoff", "On")
+        self.send_pv("CAEN:hv0:0:10:pwonoff", "On")
+        self.send_pv("CAEN:hv0:0:11:pwonoff", "On")
         if delay:
             info("Waiting For Detector To Power Up (180s)")
             sleep(180)
 
     def _detector_turn_off(self, delay=True):
-        self.set_pv("CAEN:hv0:0:8:pwonoff", "Off")
-        self.set_pv("CAEN:hv0:0:9:pwonoff", "Off")
-        self.set_pv("CAEN:hv0:0:10:pwonoff", "Off")
-        self.set_pv("CAEN:hv0:0:11:pwonoff", "Off")
+        self.send_pv("CAEN:hv0:0:8:pwonoff", "Off")
+        self.send_pv("CAEN:hv0:0:9:pwonoff", "Off")
+        self.send_pv("CAEN:hv0:0:10:pwonoff", "Off")
+        self.send_pv("CAEN:hv0:0:11:pwonoff", "Off")
         if delay:
             info("Waiting For Detector To Power Down (60s)")
             sleep(60)
@@ -436,17 +436,17 @@ involves only having two spectra covering the entire main detecor."""
 
     def _generic_home_slit(self, slit):
         # home north and west
-        self.set_pv(slit + "JN:MTR.HOMR", 1)
-        self.set_pv(slit + "JW:MTR.HOMR", 1)
+        self.send_pv(slit + "JN:MTR.HOMR", 1)
+        self.send_pv(slit + "JW:MTR.HOMR", 1)
         gen.waitfor_move()
-        self.set_pv(slit + "JN:MTR.VAL", "20")
-        self.set_pv(slit + "JW:MTR.VAL", "20")
+        self.send_pv(slit + "JN:MTR.VAL", "20")
+        self.send_pv(slit + "JW:MTR.VAL", "20")
         # home south and east
-        self.set_pv(slit + "JS:MTR.HOMR", 1)
-        self.set_pv(slit + "JE:MTR.HOMR", 1)
+        self.send_pv(slit + "JS:MTR.HOMR", 1)
+        self.send_pv(slit + "JE:MTR.HOMR", 1)
         gen.waitfor_move()
-        self.set_pv(slit + "JS:MTR.VAL", "20")
-        self.set_pv(slit + "JE:MTR.VAL", "20")
+        self.send_pv(slit + "JS:MTR.VAL", "20")
+        self.send_pv(slit + "JE:MTR.VAL", "20")
         gen.waitfor_move()
 
     def homecoarsejaws(self):
@@ -512,20 +512,16 @@ involves only having two spectra covering the entire main detecor."""
         """Initialise the pi flipper."""
         script = ["*IDN?", "ERR?", "SVO 1 1", "RON 1 1",
                   "VEL 1 180", "ACC 1 90", "DEC 1 90"]
-        self.set_pv("SDTEST_01: P2: COMM", script[0])
+        self.send_pv("SDTEST_01: P2: COMM", script[0])
         for line in script[1:]:
             sleep(1)
-            self.set_pv("SDTEST_01: P2: COMM", line)
+            self.send_pv("SDTEST_01: P2: COMM", line)
 
     def home_pi_rotation(self):
         """Calibrate the pi flipper."""
-        self.set_pv("SDTEST_01: P2: COMM", "FRF 1")
+        self.send_pv("SDTEST_01: P2: COMM", "FRF 1")
 
-block_accessors = ["changer_pos"]
 
 obj = Larmor()
-for method in dir(obj):
-    if method[0] != "_" and method not in locals() and \
-       method not in block_accessors and \
-       callable(getattr(obj, method)):
-        locals()[method] = local_wrapper(obj, method)
+for method in obj.method_iterator():
+    locals()[method] = local_wrapper(obj, method)

@@ -25,7 +25,6 @@ Plot Motor Scan
   detector intensity as the motor moves from 0 to 2 exclusively in
   steps of 0.6.
 
-  >>> from general.scans.motion import populate
   >>> populate()
   >>> scan(theta, 0, 2, 0.6, 50)
   Taking a count at theta=0.00 and two theta=0.00
@@ -69,6 +68,7 @@ Plot Motor Scan
      >>> lines = infile.readlines()
      >>> infile.close()
      >>> for line in lines: print(line.split("\t")[0])
+     Theta (deg)
      0.0
      0.5
      1.0
@@ -222,12 +222,12 @@ Motor Objects
   And find out about the tolerance of a motor:
 
   >>> theta.tolerance
-  0
+  1.5
 
   If there is no Motion object for a specific axis, the user can give
   the name in a string and use that.  If the axis isn't a string or a
-  Motion object, the scan will fail.  Also, the string must be the
-  same case as in the IBEX block.
+  Motion object, the scan will fail.  Also, the string does **not** need
+  to match the case of the IBEX block.
 
   >>> scan("Theta", start=0, stop=10, stride=2, frames=5)
   Taking a count at theta=0.00 and two theta=0.00
@@ -238,9 +238,12 @@ Motor Objects
   Taking a count at theta=10.00 and two theta=0.00
 
   >>> scan("theta", start=0, stop=10, stride=2, frames=5)
-  Traceback (most recent call last):
-      ...
-  RuntimeError: Unknown block theta.  Does the capitalisation match IBEX?
+  Taking a count at theta=0.00 and two theta=0.00
+  Taking a count at theta=2.00 and two theta=0.00
+  Taking a count at theta=4.00 and two theta=0.00
+  Taking a count at theta=6.00 and two theta=0.00
+  Taking a count at theta=8.00 and two theta=0.00
+  Taking a count at theta=10.00 and two theta=0.00
 
   >>> scan(True, start=0, stop=10, count=5) # doctest: +NORMALIZE_WHITESPACE
   Traceback (most recent call last):
@@ -266,7 +269,7 @@ Perform Fits
   Taking a count at theta=1.00 and two theta=0.00
   Taking a count at theta=1.50 and two theta=0.00
   Taking a count at theta=2.00 and two theta=0.00
-  >>> abs(fit["slope"] - 0.64) < 0.02
+  >>> abs(fit["slope"] - 0.64) < 0.025
   True
 
   In this instance, the user requested a linear fit.  The result was an
@@ -302,10 +305,9 @@ Perform Fits
   Taking a count at theta=1.60 and two theta=0.00
   Taking a count at theta=1.80 and two theta=0.00
   Taking a count at theta=2.00 and two theta=0.00
-  >>> abs(fit["center"] - 1.0) < 0.2
+  >>> abs(fit["center"] - 1.1) < fit["center_err"]
   True
 
-  .. figure:: gaussian.png
      :alt: Fitting a gaussian
 
   There is a simple peak finder as well.  It finds the largest data
@@ -359,9 +361,8 @@ It's fairly common to only realise that you should be fitting data
 :meth:`scans.last_scan` allows you to replay the results
 of the previous measurement and perform fits on it.
 
->>> from general.scans.scans import last_scan
 >>> fit = last_scan().fit(Gaussian, save="replay.png")
->>> abs(fit["center"] - 1.0) < 0.2
+>>> abs(fit["center"] - 1.1) < fit["center_err"]
 True
 
   .. image:: replay.png
@@ -371,7 +372,7 @@ If you want to run an older scan, it's also possible to select the
 saved results of a scan file and load it instead.
 
 >>> fit = last_scan("mock_scan_02.dat").fit(Gaussian, save="replay2.png")
->>> abs(fit["center"] - 1.0) < 0.2
+>>> abs(fit["center"] - 1.1) < fit["center_err"]
 True
 
 
