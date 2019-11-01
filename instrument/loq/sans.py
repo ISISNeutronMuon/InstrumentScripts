@@ -233,7 +233,7 @@ class LOQ(ScanningInstrument):
 obj = LOQ()
 for method in dir(obj):
     if method[0] != "_" and method not in locals() and \
-       method not in block_accessors and \
+       method not in obj._block_accessors and \
        callable(getattr(obj, method)):
         locals()[method.lower()] = local_wrapper(obj, method)
         locals()[method.upper()] = local_wrapper(obj, method)
