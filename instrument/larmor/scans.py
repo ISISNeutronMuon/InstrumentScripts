@@ -8,6 +8,7 @@ environment.
 
 """
 from __future__ import print_function
+from datetime import datetime
 import os.path
 import numpy as np
 try:
@@ -38,11 +39,11 @@ class Larmor(Defaults):
     This class represents the default functions for the Larmor instrument.
     """
 
+    SINGLE_FIGURE = True
     detector = specific_spectra([[4]], _trans_mode)
 
     @staticmethod
     def log_file():
-        from datetime import datetime
         now = datetime.now()
         return "larmor_scan_{}_{}_{}_{}_{}_{}.dat".format(
             now.year, now.month, now.day, now.hour, now.minute, now.second)
@@ -75,7 +76,7 @@ get_user_dir()
 
 def generic_pol(spectra, preconfig=lambda: None):
     """Create a polarised detector object over a list of spectra"""
-    @dae_periods(preconfig, lambda x: 2 * len(x))
+    @dae_periods(preconfig, lambda x: 2 * len(x), unit="Polarisation")
     def inner_pol(acc, **kwargs):
         """
         Get a single polarisation measurement
@@ -130,3 +131,5 @@ scan = local_wrapper(_lm, "scan")
 ascan = local_wrapper(_lm, "ascan")
 dscan = local_wrapper(_lm, "dscan")
 rscan = local_wrapper(_lm, "rscan")
+populate = local_wrapper(_lm, "populate")
+last_scan = local_wrapper(_lm, "last_scan")

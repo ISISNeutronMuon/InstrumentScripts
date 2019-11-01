@@ -11,7 +11,7 @@ Sans measurement module
    :caption: Contents:
 
    tutorial
-   proposed
+   guide
 
 The sans module provides the common scripts needed to perform simple
 measurements on any of the SANS beam-lines.  It's also extensible by

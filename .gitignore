@@ -1,6 +1,8 @@
 *.py[co] 
 *.swp 
 *~ 
+*.dot.pdf
+*.dot
 *.egg-info 
 .idea/
 /doc/build

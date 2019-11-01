@@ -1,3 +1,176 @@
+2019-10-30    <adam.washington@stfc.ac.uk>
+
+	* general/scans/defaults.py (Defaults.get_units): Check that a
+	block has units before trying to read those units.
+
+2019-10-28    <adam.washington@stfc.ac.uk>
+
+	* general/scans/scans.py (Scan.plot): Get figures from get_fig
+	(ContinuousScan.plot): Get figures from get_fig
+	(ProductScan.plot): Get figures from get_fig
+	(ReplayScan.plot): Get figures from get_fig
+
+	* general/scans/defaults.py (Defaults.get_fig): Add a get_fig
+	function to supply figures for scans.  This can be overloaded by
+	the beamlines to force all plots into a single figure or allow
+	multiple simultaneous plots
+	(Defaults.last_scan): Made last_scan a method of the Defaults
+	class to allow it to access the defaults.
+
+	* technique/sans/instrument.py (ScanningInstrument.send_pv):
+	Rename set_pv to send_pv in the SANS module so as not to overload
+	set_pv from genie.
+
+2019-10-25    <adam.washington@stfc.ac.uk>
+
+	* general/scans/fit.py (smart_number_format): Add
+	smart_number_format to give a decent set of numerical digits
+	across a wider range of orders of magnitude.
+
+	* instrument/larmor/scans.py (generic_pol.inner_pol): Set the
+	default y-axis label to Polarisation for all generic_pol plot
+
+	* general/scans/detector.py (dae_periods.inner): Let anything with
+	the dae_periods decorator choose its y-axis label
+	(specific_spectra): Set the y-axis label yor all specfici_spectra
+	plots
+
+	* general/scans/detector.py: Allow setting the y-axis label
+	(DaePeriods.__init__): Allow setting the y-axis label
+
+	* instrument/loq/sample_changer_scan.py (LoqSampleChanger): Give a
+	label to the default BlockDetector.
+
+	* general/scans/scans.py (Scan.plot): Include a label on the y-axis of plots
+	(ReplayScan.__init__): Give a vertical axis label to the ReplayScan
+	(ReplayScan.plot): Plot the axis label when plotting a ReplayScan
+	(last_scan): Read the old y-axis label from the header of the last_scan
+
+	* general/scans/detector.py (DetectorManager.__init__): Give an
+	axis label to the DetectorManager.
+	(BlockDetector.__init__): Have BlockDetectors default to their
+	block name if no label is given.
+
+	* general/scans/scans.py (SimpleScan.__iter__): Include units
+	alongside axis labels when iterating.
+	(ProductScan.plot): Include units on both axes of 2D plots
+	(Scan.plot): Plot axes labels and units during replay scans
+	(last_scan): Added columns headers to scan log files
+
+	* general/scans/scans.py (Scan.plot): Add units to x-axis of scan plots
+
+	* instrument/loq/sample_changer_scan.py (LoqSampleChanger.scan):
+	Add default units to motion axis when give a motion name.
+
+	* instrument/loq/scans.py: Create a local wrapper for populate
+	* instrument/larmor/scans.py: Create a local wrapper for populate
+	* instrument/zoom/scans.py: Create a local wrapper for populate
+
+	* instrument/larmor/__init__.py: No explicit populate import
+	* instrument/zoom/__init__.py: No explicit populate import
+	* instrument/loq/__init__.py: No explicit populate import
+
+	* general/scans/motion.py (Motion.__init__): Add unit to Motion class
+	(BlockMotion.__init__): dd unit to BlockMotion constructor.
+	(pv_motion): Have pv_motion auto-locate unit
+	(populate): Move function into Defaults class
+
+	* general/scans/defaults.py (Defaults.scan): Add units to motion when passed a string
+	(Defaults.populate): Make populate a part of the defaults, instead
+	of just a function in general.scans.motion.
+	(Defaults.get_units): Add get_units to return the physical units of a motion
+
+	* doc/source/scans/tutorial.rst: Import populate from correct site
+
+	* doc/source/scans/instrument.rst: Import populate from correct site
+
+2019-10-24    <adam.washington@stfc.ac.uk>
+
+	* general/scans/scans.py (Scan.fit): Account for classes that
+	return uncertainties when checking for multiple values.
+
+	* general/scans/fit.py (GaussianFit.readable): Include
+	uncertainties on GaussianFit.
+	(DampedOscillatorFit.readable): Include uncertainties on DampedOscillatorFit.
+	(ErfFit.readable): Include uncertainties on ErfFit.
+	(TopHatFit.readable): Include uncertainties on TopHotFit
+
+	*  (CurveFit.fit): Return both the fit and the covariance matrix.
+	(CurveFit.get_y): Only perform the fit on the values and not the covariance.
+
+	* doc/sources/scans/tutorial.rst: Show how to use the
+	uncertainties returned by some fitting methods.
+
+2019-10-23    <adam.washington@stfc.ac.uk>
+
+	* general/scans/fit.py (CentreOfMassFit.fit_plot_action.action):
+	Have the vertical line from the centre of mass fit be orange (to
+	contrast with the data points), instead of blue (the same colour
+	as the points).
+
+2019-10-22    <adam.washington@stfc.ac.uk>
+
+	* general/scans/motion.py (BlockMotion.__init__): BlockMotion will
+	now find the block in ANY case if the block isn't present in the
+	chosen case.  This also gives case insensitivity the scan
+	function when the axis is passed as a string.
+
+	* doc/source/sans/proposed.rst: Remove old proposed changes to
+	SANS module.  These proposals were accepted and added over a year
+	ago.
+
+	* doc/source/sans/guide.rst: Add instrument scientist guide to
+	SANS documentation.
+
+	* general/scans/motion.py (populate): Fix bug with populate not
+	accept blocks with unicode names.
+
+	* test.sh (PYTHON_VERSION): Only generate documentation under
+	python 3.  The new dependency graph generators only work under
+	Python 3 due to the use of the singledispatch decorator to help
+	navigate the abstract syntax tree of the python source.  With
+	Python 2 receiving it's end of life in less than three months, I'm
+	not to concerned about this decision.
+
+	* technique/sans/util.py: Remove lint
+
+	* technique/sans/instrument.py: Remove lint
+
+	* instrument/loq/scans.py: Remove lint
+
+	* instrument/loq/sample_changer_scan.py: Remove lint
+
+	* instrument/larmor/scans.py: Remove lint
+
+	* general/scans/scans.py: Remove lint
+
+	* general/scans/monoid.py (ListOfMonoids.err): Removed lint
+
+	* general/scans/fit.py: Removed lint
+
+	* doc/source/index.rst: Added graphs.rst to the main documentation
+	index.  Added instrument scientist guide to sans on main
+	index. Remove proposed sans changes.
+
+	* doc/source/graphs.rst: Added charts of the module and function
+	dependencies to the documentation.
+
+	* doc/functions.py: Add functions.py to chart the connections
+	between functions.
+
+	* doc/call.py: Add call.py to chart the connections between modules.
+
+	* .travis.yml (before_script): Install graphviz on the CI server
+	for graphs in the documentation.
+
+	* .pylintrc (ignore-imports): Ignore duplicate imports across
+	modules.  Many instrument modules will wind up needing to import
+	the same functions, so the duplication is to be expected.  This
+	could be bypassed by making the imports more implicit, but that
+	would make the code less readable.
+
+	* .gitignore: Ignore dotfiles produced as byproduct of documentation generation
+
 2019-09-09    <adam.washington@stfc.ac.uk?
         * instrument/larmor/sans: Don't try to access changer_pos before
 	the blocks are initialised.

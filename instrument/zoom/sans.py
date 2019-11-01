@@ -75,20 +75,20 @@ class Zoom(ScanningInstrument):
     def _detector_turn_on(self, delay=True):
         raise NotImplementedError("Detector toggling is not supported Zoom")
         # for x in range(8):
-        #     self.set_pv("CAEN:hv0:4:{}:pwonoff".format(x), "On")
+        #     self.send_pv("CAEN:hv0:4:{}:pwonoff".format(x), "On")
 
     def _detector_turn_off(self, delay=True):
         raise NotImplementedError("Detector toggling is not supported on Zoom")
         # for x in range(8):
-        #     self.set_pv("CAEN:hv0:4:{}:pwonoff".format(x), "Off")
+        #     self.send_pv("CAEN:hv0:4:{}:pwonoff".format(x), "Off")
 
     def _configure_sans_custom(self):
         # move the transmission monitor out
-        self.set_pv("VACUUM:MONITOR:4:EXTRACT", "EXTRACT")
+        self.send_pv("VACUUM:MONITOR:4:EXTRACT", "EXTRACT")
 
     def _configure_trans_custom(self):
         # move the transmission monitor in
-        self.set_pv("VACUUM:MONITOR:4:INSERT", "INSERT")
+        self.send_pv("VACUUM:MONITOR:4:INSERT", "INSERT")
 
 
 obj = Zoom()
