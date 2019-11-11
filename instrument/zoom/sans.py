@@ -67,7 +67,7 @@ class Zoom(ScanningInstrument):
     def _detector_is_on(self):
         """Is the detector currently on?"""
         voltage_status = all([
-            self.get_pv(
+            self.ask_pv(
                 "CAEN:hv0:4:{}:status".format(x)).lower() == "on"
             for x in range(8)])
         return voltage_status
