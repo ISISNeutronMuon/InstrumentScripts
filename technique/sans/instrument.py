@@ -107,11 +107,11 @@ class ScanningInstrument(object):
         """
         gen.change(nperiods=1)
         gen.change_start()
-        if self.get_pv("DAE:DETECTOR_FILE") != wiring:
+        if self.ask_pv("DAE:DETECTOR_FILE") != wiring:
             gen.change_tables(detector=detector)
-        if self.get_pv("DAE:SPECTRA_FILE") != wiring:
+        if self.ask_pv("DAE:SPECTRA_FILE") != wiring:
             gen.change_tables(spectra=spectra)
-        if self.get_pv("DAE:WIRING_FILE") != wiring:
+        if self.ask_pv("DAE:WIRING_FILE") != wiring:
             gen.change_tables(wiring=wiring)
         for tcb in tcbs:
             gen.change_tcb(**tcb)
@@ -188,7 +188,7 @@ class ScanningInstrument(object):
     @property
     def measurement_type(self):
         """Get the measurement type form the journal."""
-        return self.get_pv("PARS:SAMPLE:MEAS:TYPE")
+        return self.ask_pv("PARS:SAMPLE:MEAS:TYPE")
 
     @measurement_type.setter
     def measurement_type(self, value):
@@ -209,7 +209,7 @@ class ScanningInstrument(object):
     @property
     def measurement_label(self):
         """Get the measurement label from the journal"""
-        return self.get_pv("PARS:SAMPLE:MEAS:LABEL")
+        return self.ask_pv("PARS:SAMPLE:MEAS:LABEL")
 
     @measurement_label.setter
     def measurement_label(self, value):
@@ -230,7 +230,7 @@ class ScanningInstrument(object):
     @property
     def measurement_id(self):
         """Get the measurement id from the journal"""
-        return self.get_pv("PARS:SAMPLE:MEAS:ID")
+        return self.ask_pv("PARS:SAMPLE:MEAS:ID")
 
     @measurement_id.setter
     def measurement_id(self, value):  # pragma: no cover
@@ -712,10 +712,10 @@ of parameters accepted. """
         """List the supported DAE modes on this beamline."""
         return [x[10:] for x in dir(self) if x.startswith("setup_dae_")]
 
-    def get_pv(self, name):
+    def ask_pv(self, name):
         """Get the given PV within the sub heirarchy of the instrument.
 
-        For example, on Larmor, get_pv("DAE:WIRING_FILE") would return
+        For example, on Larmor, ask_pv("DAE:WIRING_FILE") would return
         the value of the PV for "IN:LARMOR:DAE:WIRING_FILE"
 
         """

@@ -6,6 +6,12 @@
 	* general/scans/defaults.py (Defaults.populate): During populate,
 	get units in a lazy manner.
 
+2019-11-11    <adam.washington@stfc.ac.uk>
+
+	* technique/sans/instrument.py (ScanningInstrument.ask_pv): Rename
+	get_pv to ask_pv so as not to overload the name of the
+	genie_python function.
+
 2019-10-30    <adam.washington@stfc.ac.uk>
 
 	* general/scans/defaults.py (Defaults.get_units): Check that a
