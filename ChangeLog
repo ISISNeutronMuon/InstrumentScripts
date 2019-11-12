@@ -1,3 +1,11 @@
+2019-11-12    <adam.washington@stfc.ac.uk>
+
+	* general/scans/motion.py (Motion.unit): Turn unit into a property
+	to allow for lazy evaluation
+
+	* general/scans/defaults.py (Defaults.populate): During populate,
+	get units in a lazy manner.
+
 2019-10-30    <adam.washington@stfc.ac.uk>
 
 	* general/scans/defaults.py (Defaults.get_units): Check that a

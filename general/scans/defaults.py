@@ -319,7 +319,7 @@ class Defaults(object):
         for i in g.get_blocks():
             if not isinstance(i, (str, text_type)):
                 continue
-            temp = BlockMotion(i, self.get_units(i))
+            temp = BlockMotion(i, lambda cap=i: self.get_units(cap))
             __builtins__[i.upper()] = temp
             __builtins__[i] = temp
             __builtins__[i.lower()] = temp
