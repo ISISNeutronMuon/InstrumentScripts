@@ -43,10 +43,16 @@ def run_angle(sample, angle, count_uamps=None, count_seconds=None, s1vg=None, s2
     constants = get_instrument_constants()
     movement._set_translation(sample.translation)  # Move this first before the heights as this can cause some drift.
     mode = movement._change_to_mode(mode)
+    
+    print("Mode {}".format(mode))
 
-    if mode is "LIQUID":
+    if mode == "LIQUID":
         # Not being used on Crisp come back to this if loop
         movement._set_smangle_if_not_none(angle)
+    elif mode == "Polarised NR":
+        movement._set_smangle_if_not_none(smangle)
+        movement._set_phi_psi(1.5 + sample.phi_offset, 0 + sample.psi_offset)
+        #TODO: 1.5 should be user defined this is not right for polerised nr it should be in in liqud?
     else:
         # assume angle sample can be set
         movement._set_phi_psi(angle + sample.phi_offset, 0 + sample.psi_offset)
@@ -74,7 +80,7 @@ def run_angle(sample, angle, count_uamps=None, count_seconds=None, s1vg=None, s2
             movement._count_for_time(count_seconds)
 
 
-def transmission(sample, title, count_seconds, s1vg, s2vg, s1hg=None, s2hg=None, s3hg=None, s4hg=None,
+def transmission(sample, title, s1vg, s2vg, count_seconds=None, count_uamps=None, count_frames=None, s1hg=None, s2hg=None, s3hg=None, s4hg=None,
                  height_offset=None, smangle=None, mode=None, dry_run=False):
     """
     Perform a transmission
@@ -82,13 +88,15 @@ def transmission(sample, title, count_seconds, s1vg, s2vg, s1hg=None, s2hg=None,
         sample (techniques.reflectometry.sample.Sample): The sample to measure
         title: Title to set
         count_seconds: time to count for in seconds
+        count_uamps
+        count_frames
         s1vg: slit 1 vertical gap
         s2vg: slit 2 vertical gap
         s1hg: slit 1 horizontal gap; None to leave unchanged
         s2hg: slit 2 horizontal gap; None to leave unchanged
         s3hg: slit 3 horizontal gap; None to leave unchanged
         s4hg: slit 4 horizontal gap; None to leave unchanged
-        height_offset: Height offset from normal to set the samepl to
+        height_offset: Height offset from normal to set the sample to
         smangle: super mirror angle; None for don't use a super mirror
         mode: mode to run in; None don't change mode
         dry_run: True to print what happens; False to do experiment
@@ -125,13 +133,17 @@ def transmission(sample, title, count_seconds, s1vg, s2vg, s1hg=None, s2hg=None,
             movement._set_height2_offset(sample.height2_offset - height_offset, constants)
 
         movement._set_h_gaps(s1hg, s2hg, s3hg, s4hg)
-        movement._set_slit_gaps(0.0, constants, s1vg, s2vg, constants.s3max, constants.s3max, sample)
+        movement._set_slit_gaps(0.0, constants, s1vg, s2vg, constants.s3max, constants.s4max, sample)
         movement._wait_for_move()
 
         title = "{} transmission {} VGs({} {}) HGs({} {} {} {})".format(title, subtitle, s1vg, s2vg,
                                                                         s1hg, s2hg, s3hg, s4hg)
         movement._update_title(title)
-        movement._count_for_time(count_seconds)
+        if count_uamps is not None:
+            movement._count_for_uamps(count_uamps)
+        elif count_seconds is not None:
+            movement._count_for_time(count_seconds)
+        
 
         movement._set_height_offset(sample.height)
         movement._set_height2_offset(sample.height2_offset, constants)
@@ -217,26 +229,25 @@ def contrast_change(valve_position, concentrations, flow, volume=None, seconds=N
           .format(valve_position, concentrations, flow, volume, seconds, waiting))
 
     if not dry_run:
-        g.cset("knauer", valve_position)
-        g.cset("concA", concentrations[0])
-        g.cset("concB", concentrations[1])
-        g.cset("concC", concentrations[2])
-        g.cset("concD", concentrations[3])
+        g.cset("Knauer", valve_position)
+        g.cset("Component_A", concentrations[0])
+        g.cset("Component_B", concentrations[1])
+        g.cset("Component_C", concentrations[2])
+        g.cset("Component_D", concentrations[3])
         g.cset("hplcflow", flow)
         if volume is not None:
-            g.cset("pump_set_volume", volume)
-        if seconds is not None:
-            g.cset("pump_for_time", seconds)
+            g.cset("pump_for_Volume", volume)
+        elif seconds is not None:
+            g.cset("pump_for_Time", seconds)
         else:
             print("Error concentration not set neither volume or time set!")
             return
-
+        g.cset("start_timed", 1)
         g.waitfor_time(seconds=1)
 
-        if wait:
-            g.waitfor_block("Pump_Status", "PUMPING")
-        else:
-            g.waitfor_block("Pump_Status", "FINISHED")
+#        if wait:
+#            g.waitfor_block("Pump_is_on", "RUNNNING")
+#            g.waitfor_block("Pump_is_on", "STOPPED")
 
 
 def slit_check(theta, footprint, resolution):
@@ -267,7 +278,7 @@ class _Movement(object):
     def _change_to_mode(self, mode):
         if mode is not None:
             print("Change to mode: {}".format(mode))
-            if self.dry_run:
+            if not self.dry_run:
                 g.cset("MODE", mode)
         else:
             mode = g.cget("MODE")["value"]
@@ -285,12 +296,13 @@ class _Movement(object):
     def _update_title(self, title):
         if self.dry_run:
             print("New Title: {}".format(title))
+        else:
             g.change_title(title)
 
     def _set_height_offset(self, height):
         print("Sample: height offset from beam={}".format(height))
         if not self.dry_run:
-            g.cset("HEIGHT_OFFSET", height)
+            g.cset("SAMPLEOFFSET", height)
 
     def _set_height2_offset(self, height, constants):
         if constants.has_height2:
@@ -303,7 +315,7 @@ class _Movement(object):
     def _set_translation(self, translation):
         print("Translation to {}".format(translation))
         if not self.dry_run:
-            g.cset("TRANSLATION", translation)
+            g.cset("TRANS", translation)
             g.waitfor_move()
 
     def _set_slit_gaps(self, theta, constants, s1vg, s2vg, s3vg, s4vg, sample):
@@ -395,4 +407,4 @@ class _Movement(object):
             print("SM angle: {}".format(smangle))
             if not self.dry_run:
                 g.cset("SMANGLE", smangle)
-                g.cset("SM_in", "IN")
+                g.cset("SMINBEAM", "IN")

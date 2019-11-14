@@ -46,7 +46,8 @@ INSTRUMENT_CONSTANTS = {
                 s1s2=2596.0,
                 s2sa=343.0,
                 max_theta=2,  # usual maximum angle
-                s4max=20.0,  # max s4vg at maxTheta
+                s4max=5,  # max s4vg at maxTheta
+                s3max=10,  # max s4vg at maxTheta
                 sm_sa=2311,
                 has_height2=False),
     "DEFAULT": InstrumentConstant(
