@@ -43,7 +43,7 @@ def run_angle(sample, angle, count_uamps=None, count_seconds=None, s1vg=None, s2
     constants = get_instrument_constants()
     movement._set_translation(sample.translation)  # Move this first before the heights as this can cause some drift.
     mode = movement._change_to_mode(mode)
-    
+
     print("Mode {}".format(mode))
 
     if mode == "LIQUID":
@@ -143,7 +143,6 @@ def transmission(sample, title, s1vg, s2vg, count_seconds=None, count_uamps=None
             movement._count_for_uamps(count_uamps)
         elif count_seconds is not None:
             movement._count_for_time(count_seconds)
-        
 
         movement._set_height_offset(sample.height)
         movement._set_height2_offset(sample.height2_offset, constants)
@@ -229,25 +228,23 @@ def contrast_change(valve_position, concentrations, flow, volume=None, seconds=N
           .format(valve_position, concentrations, flow, volume, seconds, waiting))
 
     if not dry_run:
-        g.cset("Knauer", valve_position)
+        g.cset("knauer", valve_position)
         g.cset("Component_A", concentrations[0])
         g.cset("Component_B", concentrations[1])
         g.cset("Component_C", concentrations[2])
         g.cset("Component_D", concentrations[3])
         g.cset("hplcflow", flow)
         if volume is not None:
-            g.cset("pump_for_Volume", volume)
+            g.cset("pump_for_volume", volume)
         elif seconds is not None:
-            g.cset("pump_for_Time", seconds)
+            g.cset("pump_for_time", seconds)
         else:
             print("Error concentration not set neither volume or time set!")
             return
         g.cset("start_timed", 1)
-        g.waitfor_time(seconds=1)
-
-#        if wait:
-#            g.waitfor_block("Pump_is_on", "RUNNNING")
-#            g.waitfor_block("Pump_is_on", "STOPPED")
+        g.waitfor_block("pump_is_on", "RUNNING")
+        if wait:
+            g.waitfor_block("pump_is_on", "STOPPED")
 
 
 def slit_check(theta, footprint, resolution):

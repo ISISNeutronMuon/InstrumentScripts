@@ -38,16 +38,16 @@ INSTRUMENT_CONSTANTS = {
                 sm_sa=1375.0),
     "SURF": InstrumentConstant(
                 s1s2=1448.0,
-                s2sa=389.0,
+                s2sa=247, #389.0,
                 max_theta=1.8,  # usual maximum angle
                 s4max=10.0,  # max s4vg at maxTheta
-                sm_sa=1088.26),
+                sm_sa=1096, #1088.26,
+                has_height2=False),
     "CRISP": InstrumentConstant(
                 s1s2=2596.0,
                 s2sa=343.0,
                 max_theta=2,  # usual maximum angle
-                s4max=5,  # max s4vg at maxTheta
-                s3max=10,  # max s4vg at maxTheta
+                s4max=20.0,  # max s4vg at maxTheta
                 sm_sa=2311,
                 has_height2=False),
     "DEFAULT": InstrumentConstant(
