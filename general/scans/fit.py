@@ -5,6 +5,7 @@ fits (i.e. Linear and Gaussian).
 
 """
 from abc import ABCMeta, abstractmethod
+import warnings
 import numpy as np
 from six import add_metaclass
 from scipy.special import erf  # pylint: disable=no-name-in-module
@@ -53,7 +54,7 @@ class Fit(object):
 
     def fit_quality(self, x, y, err, params):
         """Find the quality of a fit for a data set"""
-        return np.mean(((self.get_y(x, params)-y) / err)**2)
+        return np.mean(((self.get_y(x, params) - y) / err)**2)
 
     def title(self, params):
         """
@@ -145,7 +146,7 @@ class PolyFit(Fit):
         Fit.__init__(self, degree + 1, title)
 
     def fit(self, x, y, err):
-        return np.polyfit(x, y, self.degree - 1, w=1/err)
+        return np.polyfit(x, y, self.degree - 1, w=1 / err)
 
     def get_y(self, x, fit):
         return np.polyval(fit, x)
@@ -163,7 +164,7 @@ class PolyFit(Fit):
         # pylint: disable=arguments-differ
         xs = ["x^{}".format(i) for i in range(1, len(params))]
         xs = ([""] + xs)[::-1]
-        terms = ["{:0.3g}".format(t) + i for i, t in zip(xs, params)]
+        terms = [smart_number_format(t) + i for i, t in zip(xs, params)]
         return self._title + ": $y = " + " + ".join(terms) + "$"
 
 
@@ -221,7 +222,7 @@ class PeakFit(Fit):
         Fit.__init__(self, 3, "Peak")
 
     def _make_window(self, x, center):
-        return np.abs(x-center) < self._window
+        return np.abs(x - center) < self._window
 
     def fit(self, x, y, err):
         x = np.array(x)
@@ -230,7 +231,7 @@ class PeakFit(Fit):
         window = self._make_window(x, x[base])
         fit = np.polyfit(x[window], y[window], 2)
         self._fit = fit
-        return np.array([-fit[1]/2/fit[0]])
+        return np.array([-fit[1] / 2 / fit[0]])
 
     def fit_quality(self, x, y, err, params):
         return 1  # Cannot measure χ² for a peak
@@ -284,10 +285,10 @@ class CurveFit(Fit):
         # raise maxfev to 10,000, this allows scipy to make more function
         # calls, improving the chances of getting a good/correct fit.
         return curve_fit(self._model, x, y, self.guess(x, y), maxfev=10000,
-                         sigma=err)[0]
+                         sigma=err)
 
     def get_y(self, x, fit):
-        return self._model(x, *fit)
+        return self._model(x, *fit[0])
 
 
 class GaussianFit(CurveFit):
@@ -297,7 +298,6 @@ class GaussianFit(CurveFit):
 
     def __init__(self):
         CurveFit.__init__(self, 4, "Gaussian Fit")
-        import warnings
         warnings.simplefilter("ignore", OptimizeWarning)
 
     @staticmethod
@@ -313,21 +313,28 @@ class GaussianFit(CurveFit):
 
     @staticmethod
     def guess(x, y):
-        mean = np.sum(x*y)/np.sum(y)
-        guess = [mean, np.sqrt(np.sum(y*(x - mean)**2)/np.sum(y)),
+        mean = np.sum(x * y) / np.sum(y)
+        guess = [mean, np.sqrt(np.sum(y * (x - mean)**2) / np.sum(y)),
                  np.max(y) - np.min(y), np.min(y)]
         return guess
 
     def readable(self, fit):
-        return {"center": fit[0], "sigma": fit[1],
-                "amplitude": fit[2], "background": fit[3]}
+        err = np.sqrt(fit[1])
+        fit = fit[0]
+        return {"center": fit[0], "center_err": err[0, 0],
+                "sigma": fit[1], "sigma_err": err[1, 1],
+                "amplitude": fit[2], "amplitude_err": err[2, 2],
+                "background": fit[3], "background_err": err[3, 3]}
 
     def title(self, params):
         # pylint: disable=arguments-differ
         params = self.readable(params)
+        for k in params:
+            if isinstance(params[k], float):
+                params[k] = smart_number_format(params[k])
         return (self._title + ": " +
-                "y={amplitude:.3g}*exp((x-{center:.3g})$^2$" +
-                "/{sigma:.3g})+{background:.1g}").format(**params)
+                "y={amplitude:}*exp((x-{center:})$^2$" +
+                "/{sigma:})+{background:}").format(**params)
 
 
 class DampedOscillatorFit(CurveFit):
@@ -356,25 +363,33 @@ class DampedOscillatorFit(CurveFit):
           The standard deviation of the damping.
 
         """
-        return amp * np.cos((x-center)*freq)*np.exp(-((x-center)/width)**2)
+        return amp * np.cos((x - center) * freq) * \
+            np.exp(-((x - center) / width)**2)
 
     @staticmethod
     def guess(x, y):
         peak = x[np.argmax(y)]
         valley = x[np.argmin(y)]
-        return [peak, 1, np.pi/np.abs(peak-valley), max(x)-min(x)]
+        return [peak, 1, np.pi / np.abs(peak - valley), max(x) - min(x)]
 
     def readable(self, fit):
-        return {"center": fit[0], "amplitude": fit[1],
-                "frequency": fit[2], "width": fit[3]}
+        err = np.sqrt(fit[1])
+        fit = fit[0]
+        return {"center": fit[0], "center_err": err[0, 0],
+                "amplitude": fit[1], "amplitude_err": err[1, 1],
+                "frequency": fit[2], "frequency_err": err[2, 2],
+                "width": fit[3], "width_err": err[3, 3]}
 
     def title(self, params):
         # pylint: disable=arguments-differ
         params = self.readable(params)
+        for k in params:
+            if isinstance(params[k], float):
+                params[k] = smart_number_format(params[k])
         return (self._title + ": " +
-                "y={amplitude:.3g}*exp(-((x-{center:.3g})" +
-                "/{width:.3g})$^2$)*" +
-                "cos({frequency:.3g}*(x-{center:.3g}))").format(**params)
+                "y={amplitude:}*exp(-((x-{center:})" +
+                "/{width:})$^2$)*" +
+                "cos({frequency:}*(x-{center:}))").format(**params)
 
 
 class ErfFit(CurveFit):
@@ -391,7 +406,6 @@ class ErfFit(CurveFit):
 
     def __init__(self):
         CurveFit.__init__(self, 4, "Erf Fit")
-        import warnings
         warnings.simplefilter("ignore", OptimizeWarning)
 
     @staticmethod
@@ -402,24 +416,31 @@ class ErfFit(CurveFit):
         an xscale of stretch and a yscale of scale over a base of
         background.
         """
-        return background + scale * erf(stretch*(xs-cen))
+        return background + scale * erf(stretch * (xs - cen))
 
     @staticmethod
     def guess(x, y):
         return [
             np.mean(x),  # center
-            (max(x)-min(x))/2,  # stretch
-            (max(y)-min(y))/2,  # scale
+            (max(x) - min(x)) / 2,  # stretch
+            (max(y) - min(y)) / 2,  # scale
             min(y)]  # background
 
     def readable(self, fit):
-        return {"center": fit[0], "stretch": fit[1],
-                "scale": fit[2], "background": fit[3]}
+        err = np.sqrt(fit[1])
+        fit = fit[0]
+        return {"center": fit[0], "center_err": err[0, 0],
+                "stretch": fit[1], "stretch_err": err[1, 1],
+                "scale": fit[2], "scale_err": err[2, 2],
+                "background": fit[3], "background_err": err[3, 3]}
 
     def title(self, fit):
         # pylint: disable=arguments-differ
         params = self.readable(fit)
-        return "Edge at {center:.3g}".format(**params)
+        for k in params:
+            if isinstance(params[k], float):
+                params[k] = smart_number_format(params[k])
+        return "Edge at {center:}".format(**params)
 
 
 class TopHatFit(CurveFit):
@@ -432,7 +453,6 @@ class TopHatFit(CurveFit):
 
     def __init__(self):
         CurveFit.__init__(self, 5, "Top Hat Fit")
-        import warnings
         warnings.simplefilter("ignore", OptimizeWarning)
 
     @staticmethod
@@ -444,25 +464,32 @@ class TopHatFit(CurveFit):
         background.
         """
         ys = xs * 0
-        ys[np.abs(xs-cen) < width/2] = height
+        ys[np.abs(xs - cen) < width / 2] = height
         return background + ys
 
     @staticmethod
     def guess(x, y):
         return [
             np.mean(x),  # center
-            (max(x)-min(x))/2,  # stretch
-            (max(y)-min(y))/2,  # scale
+            (max(x) - min(x)) / 2,  # stretch
+            (max(y) - min(y)) / 2,  # scale
             min(y)]  # background
 
     def readable(self, fit):
-        return {"center": fit[0], "width": fit[1],
-                "height": fit[2], "background": fit[3]}
+        err = np.sqrt(fit[1])
+        fit = fit[0]
+        return {"center": fit[0], "center_err": err[0, 0],
+                "width": fit[1], "width_err": err[1, 1],
+                "height": fit[2], "height_err": err[2, 2],
+                "background": fit[3], "background_err": err[3, 3]}
 
     def title(self, fit):
         # pylint: disable=arguments-differ
         params = self.readable(fit)
-        return "Top Hat at {center:.3g} of width {width:.3g}".format(**params)
+        for k in params:
+            if isinstance(params[k], float):
+                params[k] = smart_number_format(params[k])
+        return "Top Hat at {center:} of width {width:}".format(**params)
 
 
 class CentreOfMassFit(Fit):
@@ -482,9 +509,9 @@ class CentreOfMassFit(Fit):
     The interpolation is needed because otherwise the point density may not be
     constant.
     """
+
     def __init__(self):
         Fit.__init__(self, degree=1, title="Centre of mass")
-        import warnings
         warnings.simplefilter("ignore", RuntimeWarning)
 
     def fit(self, x, y, err):
@@ -555,10 +582,19 @@ class CentreOfMassFit(Fit):
             values = np.array(y.values())
             errs = np.array(y.err())
             params = self.fit(x, values, errs)
-            axis.axvline(x=params[0])
+            axis.axvline(x=params[0], color="orange")
             axis.legend([self.title(params)])
             return params
         return action
+
+
+def smart_number_format(x):
+    """Turn numbers into strings with a smart number of digits"""
+    if abs(x) >= 1000:
+        return "{:.2e}".format(x)
+    if abs(x) < 0.1:
+        return "{:.2e}".format(x)
+    return "{:.3f}".format(x)
 
 
 #: A linear regression

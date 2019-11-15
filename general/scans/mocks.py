@@ -18,7 +18,29 @@ g.get_period.side_effect = lambda: g.period
 g.get_frames.side_effect = lambda: g.frames
 
 
-PVS = {}
+def get_pv_from_block(name):
+    """
+    Fake get_pv_from_block for mock genie_python
+    """
+    if name == "Theta":
+        return "PV:THETA"
+    if name == "Two_Theta":
+        return "PV:TWO_THETA"
+    return "PV:UNKNOWN"
+
+
+def pv_exists(pv_name):
+    """Fake pv_exists for mock genie_python"""
+    return pv_name in PVS
+
+
+g.adv.get_pv_from_block.side_effect = get_pv_from_block
+# pylint: disable=protected-access
+g.__api.pv_exists.side_effect = pv_exists
+
+
+PVS = {"PV:THETA.EGU": "deg", "PV:TWO_THETA.EGU": "deg",
+       "CS:SB:Theta.RDBD": 1.5}
 
 
 def set_pv(pv_name, value, **kwargs):
@@ -34,7 +56,8 @@ def get_pv(pv_name, **kwargs):
     Fake get_pv for mock genie_python
     """
     # pylint: disable=unused-argument
-    return PVS.get(pv_name, 0)
+    # return PVS.get(pv_name, 0)
+    return PVS.get(pv_name, "")
 
 
 g.set_pv = set_pv
@@ -67,9 +90,9 @@ g.get_blocks.side_effect = instrument.keys
 def fake_spectrum(channel, period):  # pragma: no cover
     """Create a fake intensity spectrum."""
     if channel == 1:
-        return {"signal": np.zeros(1000)+1}
+        return {"signal": np.zeros(1000) + 1}
     x = np.arange(1000)
-    base = np.cos(0.01*(instrument["Theta"]+1.05)*x)+1
+    base = np.cos(0.01 * (instrument["Theta"] + 1.05) * x) + 1
     if period % 2 == 0:
         base = 2 - base
     base *= 100000
@@ -80,7 +103,7 @@ def fake_spectrum(channel, period):  # pragma: no cover
         base *= 0
         print("Taking a count at theta=%0.2f and two theta=%0.2f" %
               (g.cget("Theta")["value"], g.cget("Two_Theta")["value"]))
-        base += (1+np.cos(g.cget("Theta")["value"])) * \
+        base += (1 + np.cos(g.cget("Theta")["value"])) * \
             np.sqrt(g.cget("Theta")["value"]) + \
             g.cget("Two_Theta")["value"] ** 2 + \
             0.05 * np.random.rand()

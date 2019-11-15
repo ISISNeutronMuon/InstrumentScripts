@@ -13,9 +13,11 @@ from abc import ABCMeta, abstractmethod
 # pylint: disable=no-name-in-module
 from collections import Iterable, OrderedDict
 from contextlib import contextmanager
+from datetime import timedelta, datetime
 import time
-import six
+import warnings
 import numpy as np
+import six
 from six import add_metaclass
 import matplotlib.pyplot as plt
 
@@ -52,7 +54,13 @@ def _plot_range(array):
     # array = [float(x) for x in array]
     low = array.min()
     high = array.max()
-    diff = high-low
+    if not (np.isfinite(low) and np.isfinite(high)):
+        return (-1, 1)
+    if not np.isfinite(low):
+        low = high-1
+    if not np.isfinite(high):
+        high = low + 1
+    diff = high - low
     return (low - 0.05 * diff,
             high + 0.05 * diff)
 
@@ -148,27 +156,30 @@ class Scan(object):
         The measurement parameter can be used to set what type of measurement
         is to be taken.  If the save parameter is set to a file name, then the
         plot will be saved in that file."""
-        import warnings
         warnings.simplefilter("ignore", UserWarning)
 
         detector = self._normalise_detector(detector)
 
-        fig, axis = plt.subplots()
-        plt.show()
+        fig, axis = self.defaults.get_fig()
 
         xs = []
         ys = ListOfMonoids()
 
+        acc = None
         action_remainder = None
         try:
             with open(self.defaults.log_file(), "w") as logfile, \
-                 detector(self, save=save, **kwargs) as detect:
+                    detector(self, save=save, **kwargs) as detect:
                 for x in self:
                     # FIXME: Handle multidimensional plots
-                    (label, position) = next(iter(x.items()))
-                    value = detect(**just_times(kwargs))
+                    ((label, unit), position) = next(iter(x.items()))
+                    acc, value = detect(acc, **just_times(kwargs))
                     if isinstance(value, float):
                         value = Average(value)
+                    if not xs:
+                        logfile.write(
+                            "{} ({})\t{}\tUncertainty\n".format(
+                                label, unit, detector.unit))
                     if position in xs:
                         ys[xs.index(position)] += value
                     else:
@@ -177,13 +188,14 @@ class Scan(object):
                     logfile.write("{}\t{}\t{}\n".format(xs[-1], str(ys[-1]),
                                                         str(ys[-1].err())))
                     axis.clear()
-                    axis.set_xlabel(label)
+                    axis.set_xlabel("{} ({})".format(label, unit))
+                    axis.set_ylabel(detector.unit)
                     if isinstance(self.min(), tuple):
-                        rng = [1.05*self.min()[0] - 0.05 * self.max()[0],
-                               1.05*self.max()[0] - 0.05 * self.min()[0]]
+                        rng = [1.05 * self.min()[0] - 0.05 * self.max()[0],
+                               1.05 * self.max()[0] - 0.05 * self.min()[0]]
                     else:
-                        rng = [1.05*self.min() - 0.05 * self.max(),
-                               1.05*self.max() - 0.05 * self.min()]
+                        rng = [1.05 * self.min() - 0.05 * self.max(),
+                               1.05 * self.max() - 0.05 * self.min()]
                     axis.set_xlim(rng[0], rng[1])
                     rng = _plot_range(ys)
                     axis.set_ylim(rng[0], rng[1])
@@ -231,7 +243,9 @@ class Scan(object):
         if result is None:
             raise RuntimeError(
                 "Could not get result from plot. Perhaps the fit failed?")
-        if isinstance(result[0], Iterable) and not isinstance(fit, ExactFit):
+        if isinstance(result[0], Iterable) and \
+           not isinstance(fit, ExactFit) and \
+           not isinstance(result, tuple):
             result = np.array([x for x in result if x is not None])
             result = np.median(result, axis=0)
 
@@ -251,7 +265,6 @@ class Scan(object):
         time of completion.
 
         """
-        from datetime import timedelta, datetime
         total = len(self) * (pad + estimate(**kwargs))
         # We can't test the time printing code since the result would
         # always change.
@@ -295,7 +308,7 @@ class SimpleScan(Scan):
             self.action(i)
             g.waitfor_move()
             dic = OrderedDict()
-            dic[self.name] = self.action()
+            dic[(self.name, self.action.unit)] = self.action()
             yield dic
 
     def __len__(self):
@@ -312,6 +325,7 @@ class ContinuousMove(object):
     An object representing a continuous move from start to stop at a constant
     speed.
     """
+
     def __init__(self, start, stop, speed):
         self.start = start
         self.stop = stop
@@ -376,16 +390,15 @@ class ContinuousScan(Scan):
              update_freq=1.0, **kwargs):
         """Run over a continuous range, plotting every update_freq seconds"""
         # pylint: disable=arguments-differ
-        import warnings
         warnings.simplefilter("ignore", UserWarning)
 
         detector = self._normalise_detector(detector)
-        fig, axis = plt.subplots()
-        plt.show()
+        fig, axis = self.defaults.get_fig()
 
         xs = []
         ys = ListOfMonoids()
 
+        acc = None
         action_remainder = None
 
         try:
@@ -408,8 +421,9 @@ class ContinuousScan(Scan):
                         while abs(self.motion() - move.stop) > \
                                 self.motion.tolerance:
 
-                            position, value = self.motion(), Exact(
-                                detect(**just_times(kwargs)))
+                            position = self.motion()
+                            acc, value = detect(acc, **just_times(kwargs))
+                            value = Exact(value)
 
                             xs.append(position)
                             ys.append(value)
@@ -432,7 +446,8 @@ class ContinuousScan(Scan):
                             axis.set_ylim(rng[0], rng[1])
                             ys.plot(axis, xs)
                             if action:
-                                action_remainder = action(xs, ys, axis)
+                                action_remainder = action(xs, ys, axis,
+                                                          action_remainder)
 
                             plt.draw()
 
@@ -593,7 +608,6 @@ class ProductScan(Scan):
         # pylint: disable=too-many-locals
         """An overloading of Scan.plot to handle multidimensional
         scans."""
-        import warnings
         warnings.simplefilter("ignore", UserWarning)
 
         if g and g.get_runstate() != "SETUP":
@@ -602,8 +616,7 @@ class ProductScan(Scan):
 
         detector = self._normalise_detector(detector)
 
-        fig, axis = plt.subplots()
-        plt.show()
+        fig, axis = self.defaults.get_fig()
 
         xs = []
         ys = []
@@ -612,12 +625,12 @@ class ProductScan(Scan):
         for _ in range(len(self.outer)):
             values.append([np.nan] * len(self.inner))
 
-        action_remainder = None
+        acc = action_remainder = None
         try:
             with open(self.defaults.log_file(), "w") as logfile, \
-                 detector(self, save) as detect:
+                    detector(self, save) as detect:
                 for x in self:
-                    value = detect(**kwargs)
+                    acc, value = detect(acc, **kwargs)
 
                     keys = list(x.keys())
                     keys[1] = keys[1]
@@ -637,15 +650,15 @@ class ProductScan(Scan):
                     logfile.write(
                         "{}\t{}\n".format(xs[-1], str(values[-1])))
                     axis.clear()
-                    axis.set_xlabel(keys[1])
-                    axis.set_ylabel(keys[0])
+                    axis.set_xlabel("{} ({})".format(keys[1][0], keys[1][1]))
+                    axis.set_ylabel("{} ({})".format(keys[0][0], keys[0][1]))
                     miny, minx = self.min()
                     maxy, maxx = self.max()
-                    rng = [1.05*minx - 0.05 * maxx,
-                           1.05*maxx - 0.05 * minx]
+                    rng = [1.05 * minx - 0.05 * maxx,
+                           1.05 * maxx - 0.05 * minx]
                     axis.set_xlim(rng[0], rng[1])
-                    rng = [1.05*miny - 0.05 * maxy,
-                           1.05*maxy - 0.05 * miny]
+                    rng = [1.05 * miny - 0.05 * maxy,
+                           1.05 * maxy - 0.05 * miny]
                     axis.set_ylim(rng[0], rng[1])
                     axis.pcolor(
                         self._estimate_locations(xs, len(self.inner),
@@ -672,12 +685,12 @@ class ProductScan(Scan):
         if len(xs) >= 2:
             deltax = np.mean(steps)
         else:
-            deltax = (high-low)/float(size)
+            deltax = (high - low) / float(size)
 
-        first = np.array([xs[0]]-deltax/2)
+        first = np.array([xs[0]] - deltax / 2)
         remainder = size + 1 - len(xs)
-        end = np.linspace(xs[-1] + deltax/2, high, remainder)[1:]
-        return np.hstack([first, xs+deltax/2, end])
+        end = np.linspace(xs[-1] + deltax / 2, high, remainder)[1:]
+        return np.hstack([first, xs + deltax / 2, end])
 
 
 class ParallelScan(Scan):
@@ -760,6 +773,7 @@ class ForeverContinuousScan(ContinuousScan):
     """
     A special case of a forever scan that can operate with continuous moves.
     """
+
     def __len__(self):
         raise ValueError(
             "Can't get length of continuous scan that runs forever.")
@@ -773,10 +787,12 @@ class ForeverContinuousScan(ContinuousScan):
 class ReplayScan(Scan):
     """A Scan that merely repeated the output of a previous scan"""
 
-    def __init__(self, xs, ys, axis):
+    def __init__(self, xs, ys, axis, result, defaults):
         self.xs = xs
         self.ys = ys
         self.axis = axis
+        self.result = result
+        self.defaults = defaults
         # self.defaults = ReplayDetector(xs, ys)
 
     def min(self):
@@ -787,10 +803,12 @@ class ReplayScan(Scan):
 
     @property
     def reverse(self):
-        return ReplayScan(self.xs[::-1], self.ys[::-1], self.axis)
+        return ReplayScan(self.xs[::-1], self.ys[::-1], self.axis,
+                          self.result, self.defaults)
 
     def map(self, func):
-        return ReplayScan(map(func, self.xs), self.ys, self.axis)
+        return ReplayScan(map(func, self.xs), self.ys, self.axis,
+                          self.result, self.defaults)
 
     def __len__(self):
         return min(len(self.xs), len(self.ys))
@@ -810,17 +828,17 @@ of trying to fake a detector."""
         xs = self.xs
         ys = ListOfMonoids(self.ys)
 
-        fig, axis = plt.subplots()
-        plt.show()
+        fig, axis = self.defaults.get_fig()
 
         axis.clear()
         if isinstance(self.min(), tuple):
-            rng = [1.05*self.min()[0] - 0.05 * self.max()[0],
-                   1.05*self.max()[0] - 0.05 * self.min()[0]]
+            rng = [1.05 * self.min()[0] - 0.05 * self.max()[0],
+                   1.05 * self.max()[0] - 0.05 * self.min()[0]]
         else:
-            rng = [1.05*self.min() - 0.05 * self.max(),
-                   1.05*self.max() - 0.05 * self.min()]
+            rng = [1.05 * self.min() - 0.05 * self.max(),
+                   1.05 * self.max() - 0.05 * self.min()]
         axis.set_xlabel(self.axis)
+        axis.set_ylabel(self.result)
         axis.set_xlim(rng[0], rng[1])
         rng = _plot_range(ys)
         axis.set_ylim(rng[0], rng[1])
@@ -833,24 +851,3 @@ of trying to fake a detector."""
         plt.draw()
 
         return action_remainder
-
-
-def last_scan(path=None, axis="replay"):
-    """Load the last run scan and replay that scan
-
-    PARAMETERS
-    ----------
-    path
-      The log file to replay.  If None, replay the most recent scan
-    axis
-      The label for the x axis
-
-    """
-    import os
-    if path is None:
-        path = max([f for f in os.listdir(os.getcwd()) if f[-4:] == ".dat"],
-                   key=os.path.getctime)
-    with open(path, "r") as infile:
-        xs, ys, errs = np.loadtxt(infile, unpack=True)
-        ys = [Average((y/e)**2, y/e**2) for y, e in zip(ys, errs)]
-        return ReplayScan(xs, ys, axis)

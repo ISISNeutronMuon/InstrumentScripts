@@ -60,6 +60,7 @@ class Average(Monoid):
     """
     This monoid calculates the average of its values.
     """
+
     def __init__(self, x, count=1):
         self.total = x
         self.count = count
@@ -90,7 +91,7 @@ class Average(Monoid):
     def __str__(self):
         if self.count == 0:
             return str(np.nan)
-        return str(self.total/self.count)
+        return str(self.total / self.count)
 
     def __repr__(self):
         return "Average({}, count={})".format(self.total, self.count)
@@ -100,6 +101,7 @@ class Exact(Average):
     """
     A monoid representing an exact measurement.
     """
+
     def err(self):
         return 0
 
@@ -108,6 +110,7 @@ class Sum(Monoid):
     """
     This monoid calculates the sum total of the values presented
     """
+
     def __init__(self, x):
         self.total = x
 
@@ -137,6 +140,7 @@ class Polarisation(Monoid):
     This monoid calculates the polarisation from the total of all of
     the up and down counts.
     """
+
     def __init__(self, ups, downs=0):
         self.ups = ups
         self.downs = downs
@@ -170,11 +174,11 @@ class Polarisation(Monoid):
         # ignored
         if float(ups) == float(downs):
             return np.sqrt(
-                downs.err()**2+ups.err()**2)/(float(ups)+float(downs))
+                downs.err()**2 + ups.err()**2) / (float(ups) + float(downs))
 
-        return float(self)*np.sqrt(downs.err()**2+ups.err()**2) \
-            * np.sqrt((float(ups)-float(downs))**-2 +
-                      (float(ups)+float(downs))**-2)
+        return float(self) * np.sqrt(downs.err()**2 + ups.err()**2) \
+            * np.sqrt((float(ups) - float(downs))**-2 +
+                      (float(ups) + float(downs))**-2)
 
     @staticmethod
     def zero():
@@ -191,6 +195,7 @@ class MonoidList(Monoid):
     """
     This class turns a collection of Monoids into its own Monoid.
     """
+
     def __init__(self, values):
         self.values = values
 
@@ -239,6 +244,7 @@ class ListOfMonoids(list):
     A modified list class with special helpers for handlings
     lists of Monoids
     """
+
     def __init__(self, *args):
         list.__init__(self, *args)
         try:
@@ -259,7 +265,7 @@ class ListOfMonoids(list):
         Get the uncertainty values from the List
         """
         if isinstance(self[0], MonoidList):
-            return np.array([[v for v in y.err()] for y in self]).T
+            return np.array([y.err() for y in self]).T
         return [y.err() for y in self]
 
     def plot(self, axis, xs):
