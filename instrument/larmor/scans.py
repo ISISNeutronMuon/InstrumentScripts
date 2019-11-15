@@ -133,3 +133,8 @@ dscan = local_wrapper(_lm, "dscan")
 rscan = local_wrapper(_lm, "rscan")
 populate = local_wrapper(_lm, "populate")
 last_scan = local_wrapper(_lm, "last_scan")
+
+
+def new_figure():
+    """Force Larmor to start plotting a new figure."""
+    _lm.get_fig(force=True)

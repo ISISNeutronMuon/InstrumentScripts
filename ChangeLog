@@ -1,3 +1,9 @@
+2019-11-15    <adam.washington@stfc.ac.uk>
+
+	* general/scans/defaults.py (Defaults.get_fig): Add force option
+	to get_fig to mandate the creation of a new figure for single
+	figure configurations.
+
 2019-11-12    <adam.washington@stfc.ac.uk>
 
 	* general/scans/motion.py (Motion.unit): Turn unit into a property

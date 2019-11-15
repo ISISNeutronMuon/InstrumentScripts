@@ -52,15 +52,20 @@ class Defaults(object):
         Returns the name of a unique log file where the scan data can be saved.
         """
 
-    def get_fig(self):
+    def get_fig(self, force=False):
         """
         Get a figure for the next scan.  The default method is to
         create a new figure for each scan, but this can be overridden
         to re-use the same figure, if the instrument scientist
         chooses.
+
+        If true, the force parameter creates a new graph, even when a
+        single figure has been requested.
+
         """
         if self.SINGLE_FIGURE:
-            if not self._fig or not self._axis:
+            if not (force or self._fig and self._axis):
+                plt.close("all")
                 self._fig, self._axis = plt.subplots()
                 plt.show()
             return (self._fig, self._axis)
