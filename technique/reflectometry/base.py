@@ -3,7 +3,7 @@ Base routine for reflectometry techniques
 """
 from collections import OrderedDict
 from contextlib import contextmanager
-from math import tan, radians, sin, fabs
+from math import tan, radians, sin
 
 from six.moves import input
 from genie_python import genie as g
@@ -135,9 +135,10 @@ def transmission(sample, title, s1vg, s2vg, count_seconds=None, count_uamps=None
         movement._set_h_gaps(s1hg, s2hg, s3hg, s4hg)
         movement._set_slit_gaps(0.0, constants, s1vg, s2vg, constants.s3max, constants.s4max, sample)
         movement._wait_for_move()
+        horizontal_gaps = [g.cget("s{}hg".format(num)) for num in [1, 2, 3, 4]]
 
         title = "{} transmission {} VGs({} {}) HGs({} {} {} {})".format(title, subtitle, s1vg, s2vg,
-                                                                        s1hg, s2hg, s3hg, s4hg)
+                                                                        *horizontal_gaps)
         movement._update_title(title)
         if count_uamps is not None:
             movement._count_for_uamps(count_uamps)
@@ -197,54 +198,6 @@ def reset_hgaps(dry_run=False):
 
         if not dry_run:
             g.waitfor_time(seconds=5)
-
-
-def contrast_change(valve_position, concentrations, flow, volume=None, seconds=None, wait=False, dry_run=False):
-    """
-    Perform a contrast change.
-    Args:
-        valve_position: valve_position to set for the Knaur valve
-        concentrations: Concentrations to set from A to D
-        flow: flow rate
-        volume: volume to pump; if None then pump for a time instead
-        seconds: number of seconds to pump; volume is pumped in preference
-        wait: True wait for completion; False don't wait
-        dry_run: True don't do anything just print what it will do; False otherwise
-
-    Returns:
-
-    """
-    print("** Contrast change for valve{} **".format(valve_position))
-    movement = _Movement(dry_run)
-    movement._dry_run_warning()
-    if len(concentrations) != 4:
-        print("There must be 4 concentrations, you provided {}".format(len(concentrations)))
-    sum_of_concentrations = sum(concentrations)
-    if fabs(100 - sum_of_concentrations) > 0.01:
-        print("Concentrations don't add up to 100%! {} = {}".format(concentrations, sum_of_concentrations))
-    waiting = "" if wait else "NOT "
-
-    print("Concentration: Valve {}, concentrations {}, flow {},  volume {}, time {}, and {}waiting for completion"
-          .format(valve_position, concentrations, flow, volume, seconds, waiting))
-
-    if not dry_run:
-        g.cset("knauer", valve_position)
-        g.cset("Component_A", concentrations[0])
-        g.cset("Component_B", concentrations[1])
-        g.cset("Component_C", concentrations[2])
-        g.cset("Component_D", concentrations[3])
-        g.cset("hplcflow", flow)
-        if volume is not None:
-            g.cset("pump_for_volume", volume)
-        elif seconds is not None:
-            g.cset("pump_for_time", seconds)
-        else:
-            print("Error concentration not set neither volume or time set!")
-            return
-        g.cset("start_timed", 1)
-        g.waitfor_block("pump_is_on", "RUNNING")
-        if wait:
-            g.waitfor_block("pump_is_on", "STOPPED")
 
 
 def slit_check(theta, footprint, resolution):

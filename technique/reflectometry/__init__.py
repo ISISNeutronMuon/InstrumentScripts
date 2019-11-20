@@ -1,6 +1,4 @@
 
-import base
-import sample
-from .base import run_angle, contrast_change, transmission, slit_check
+from .base import run_angle, transmission, slit_check
+from .contrast_change import contrast_change
 from .sample import SampleGenerator, Sample
-from .utils import zero_motor_at
