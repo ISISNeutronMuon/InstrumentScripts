@@ -30,6 +30,10 @@ class Crisp(Defaults):
     This class represents a scan of a block.
     """
 
+    block = None
+    monitor_number = None
+    detector_number = None
+
     @staticmethod
     def _sum(monitor, low, high):
         time_steps = monitor["time"]
@@ -46,7 +50,7 @@ class Crisp(Defaults):
     
     @staticmethod
     @dae_periods()
-    def detector(**kwargs):
+    def detector(acc, **kwargs):
         """
         Perform a detector measurement
         Args:
@@ -67,8 +71,8 @@ class Crisp(Defaults):
         non_zero_spectrum = 0
         while non_zero_spectrum < 5:  # 5 tries to get a non-None spectrum from the DAE
             # get spectrum in counts for both spectra
-            monitor_spec = g.get_spectrum(2, g.get_period(), False)
-            detector_spec = g.get_spectrum(3, g.get_period(), False)
+            monitor_spec = g.get_spectrum(Crisp.monitor_number, g.get_period(), False)
+            detector_spec = g.get_spectrum(Crisp.detector_number, g.get_period(), False)
             if monitor_spec is not None and detector_spec is not None:
                 monitor_spec = Crisp._sum(monitor_spec, 1050.0, 15500.0)
                 detector_spec = Crisp._sum(detector_spec, 1450.0, 16500.0)
@@ -77,8 +81,16 @@ class Crisp(Defaults):
                 else:
                     non_zero_spectrum += 1
                     print("Spectrum as zero, retry")
+
+        if acc is None:
+            acc = 0
+        else:
+            acc += 1
+        detector_spec = Crisp.detector_specs[acc]
+        monitor_spec = Crisp.monitor_specs[acc]
+
         print("... finished measuring (det/mon: {}/{})".format(detector_spec, monitor_spec))
-        return Average(detector_spec, monitor_spec)
+        return acc, Average(detector_spec, monitor_spec)
 
     @staticmethod
     def log_file():
@@ -88,53 +100,18 @@ class Crisp(Defaults):
         axis = "Scan"
         from datetime import datetime
         now = datetime.now()
-        return os.path.join("U:\\", "Users", "TEST", "{}_{}_{}_{}_{}_{}_{}.dat".format(
-            axis, now.year, now.month, now.day, now.hour, now.minute, now.second))
+        return os.path.join("U:\\", "scripts", "TEST", "{}_{}_{}_{}_{}_{}_{}.dat".format(
+            Crisp.block, now.year, now.month, now.day, now.hour, now.minute, now.second))
+
+def crisp_scan(block, scan_from, scan_to, count, frames, monitor_number=2, detector_number=3):
+    crisp = Crisp()
+    Crisp.detector_specs = [0, 1, 2, 1, 0]
+    Crisp.monitor_specs = [1] * len(Crisp.detector_specs)
+    Crisp.block = block
+    Crisp.monitor_number = monitor_number
+    Crisp.detector_number = detector_number
+
+    crisp.scan(block, scan_from, scan_to, count=count, frames=frames)
 
 
-def specific_spectra(monitor_number, detector_number=3, preconfig=lambda: None):
-    """
-    For scanning with different monitor/detector spectra. Example use:
-        scan("smrot", -0.5, 0.5, count=21, frames=500, detector=specific_spectra(1,3)
-
-    Args:
-        monitor_number: the montior number to use
-        detector_number: detecor number to use
-        preconfig:
-
-    Returns:
-
-    """
-    @dae_periods(preconfig)
-    def _inner(**kwargs):
-        curr_frames = g.get_frames()
-        print("frame count: {}".format(curr_frames))
-        print("Measuring")
-        g.waitfor_move()
-        g.waitfor_time(1)
-        g.resume()
-        frames = kwargs["frames"]
-
-        g.waitfor_frames(curr_frames + frames)
-        g.pause()
-        g.waitfor_time(1)
-        non_zero_spectrum = 0 
-        while non_zero_spectrum < 5:  # 5 tries of a non-None spectrum
-            # get spectrum in counts for botg spectra
-            monitor_spec = g.get_spectrum(monitor_number, g.get_period(), False)
-            detector_spec = g.get_spectrum(detector_number, g.get_period(), False)
-            if monitor_spec is not None and detector_spec is not None:
-                
-                monitor_spec = Crisp._sum(monitor_spec, 1050.0, 15500.0)
-                detector_spec = Crisp._sum(detector_spec, 1450.0, 16500.0)
-                if monitor_spec > 0.0 and detector_spec > 0.0:
-                    break
-                else:
-                    non_zero_spectrum += 1
-        print("det/mon: {}/{}".format(detector_spec, monitor_spec))
-        print("... finished measuring")
-        return Average(detector_spec, monitor_spec)
-    return _inner
-
-
-scan = local_wrapper(Crisp(), "scan")
+scan = crisp_scan
