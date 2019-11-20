@@ -11,8 +11,8 @@ from genie_python import genie as g
 from technique.reflectometry.instrument_constants import get_instrument_constants
 
 
-def run_angle(sample, angle, count_uamps=None, count_seconds=None, s1vg=None, s2vg=None, s3vg=None, s4vg=None,
-              smangle=None, mode=None, auto_height=False, dry_run=False):
+def run_angle(sample, angle, count_uamps=None, count_seconds=None, count_frames=None, s1vg=None, s2vg=None, s3vg=None,
+              s4vg=None, smangle=None, mode=None, auto_height=False, dry_run=False):
     """
     Move to a given theta with slits set. If a current or time are given then take a measurement otherwise just go to
     the position.
@@ -20,10 +20,12 @@ def run_angle(sample, angle, count_uamps=None, count_seconds=None, s1vg=None, s2
     Args:
         sample (techniques.reflectometry.sample.Sample): The sample to measure
         angle: The angle to measure at
-        count_uamps: the current to run the measurement for; None use count time
-            (if both counts are none then don't count)
-        count_seconds: the time to run the measurement for if uamps not set; None for use current
-            (if both counts are none then don't count)
+        count_uamps: the current to run the measurement for; None for use other count
+            (if all counts are none then don't count)
+        count_seconds: the time to run the measurement for if uamps not set; None for use other count
+            (if all counts are none then don't count)
+        count_frames: the number of frames to wait for; None for use other count
+            (if all counts are none then don't count)
         s1vg: slit 1 vertical gap; None to use sample footprint and resolution
         s2vg: slit 2 vertical gap; None to use sample footprint and resolution
         s3vg: slit 3 vertical gap; None use fraction of maximum based on theta
@@ -69,7 +71,7 @@ def run_angle(sample, angle, count_uamps=None, count_seconds=None, s1vg=None, s2
     movement._update_title("{} {} th={}".format(sample.title, sample.subtitle, angle))
 
     # count
-    if count_seconds is None and count_uamps is None:
+    if count_seconds is None and count_uamps is None and count_frames is None:
         print("Setup only no measurement")
     else:
         if auto_height:
@@ -78,9 +80,12 @@ def run_angle(sample, angle, count_uamps=None, count_seconds=None, s1vg=None, s2
             movement._count_for_uamps(count_uamps)
         elif count_seconds is not None:
             movement._count_for_time(count_seconds)
+        elif count_frames is not None:
+            movement._count_for_frames(count_frames)
 
 
-def transmission(sample, title, s1vg, s2vg, count_seconds=None, count_uamps=None, count_frames=None, s1hg=None, s2hg=None, s3hg=None, s4hg=None,
+def transmission(sample, title, s1vg, s2vg, count_seconds=None, count_uamps=None, count_frames=None, s1hg=None,
+                 s2hg=None, s3hg=None, s4hg=None,
                  height_offset=None, smangle=None, mode=None, dry_run=False):
     """
     Perform a transmission
@@ -88,8 +93,8 @@ def transmission(sample, title, s1vg, s2vg, count_seconds=None, count_uamps=None
         sample (techniques.reflectometry.sample.Sample): The sample to measure
         title: Title to set
         count_seconds: time to count for in seconds
-        count_uamps
-        count_frames
+        count_uamps: number of micro amps to count for
+        count_frames: number of frames to count for
         s1vg: slit 1 vertical gap
         s2vg: slit 2 vertical gap
         s1hg: slit 1 horizontal gap; None to leave unchanged
@@ -144,6 +149,8 @@ def transmission(sample, title, s1vg, s2vg, count_seconds=None, count_uamps=None
             movement._count_for_uamps(count_uamps)
         elif count_seconds is not None:
             movement._count_for_time(count_seconds)
+        elif count_frames is not None:
+            movement._count_for_frames(count_frames)
 
         movement._set_height_offset(sample.height)
         movement._set_height2_offset(sample.height2_offset, constants)
@@ -340,6 +347,14 @@ class _Movement(object):
         if not self.dry_run:
             g.begin()
             g.waitfor_uamps(count_uamps)
+            g.end()
+
+    def _count_for_frames(self, count_frames):
+        print("Wait for {} frames count (i.e. count this number of frames from the current frame)".format(count_frames))
+        if not self.dry_run:
+            final_frame = count_frames + g.get_frames()
+            g.begin()
+            g.waitfor_frames(final_frame)
             g.end()
 
     def _set_phi_psi(self, phi, psi):
