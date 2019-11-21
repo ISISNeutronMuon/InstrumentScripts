@@ -92,7 +92,7 @@ class Demo(Defaults):
         return os.path.join("C:\\", "scripts", "TEST", "{}_{}_{}_{}_{}_{}_{}.dat".format(
             Demo.block, now.year, now.month, now.day, now.hour, now.minute, now.second))
 
-def demo_scan(block, scan_from, scan_to, count, frames, monitor_number=2, detector_number=3):
+def demo_scan(block, scan_from, scan_to, count, frames, monitor_number=2, detector_number=3, **kwargs):
     demo = Demo()
     points = np.linspace(scan_from, scan_to, num=count)
     centre = 0.0
@@ -104,7 +104,7 @@ def demo_scan(block, scan_from, scan_to, count, frames, monitor_number=2, detect
     Demo.monitor_number = monitor_number
     Demo.detector_number = detector_number
 
-    demo.scan(block, scan_from, scan_to, count=count, frames=frames)
+    return demo.scan(block, scan_from, scan_to, count=count, frames=frames, **kwargs)
 
 
 scan = demo_scan

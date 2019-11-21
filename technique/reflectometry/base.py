@@ -140,10 +140,9 @@ def transmission(sample, title, s1vg, s2vg, count_seconds=None, count_uamps=None
         movement._set_h_gaps(s1hg, s2hg, s3hg, s4hg)
         movement._set_slit_gaps(0.0, constants, s1vg, s2vg, constants.s3max, constants.s4max, sample)
         movement._wait_for_move()
-        horizontal_gaps = [g.cget("s{}hg".format(num)) for num in [1, 2, 3, 4]]
+        horizontal_gaps = [g.cget("s{}hg".format(num))["value"] for num in [1, 2, 3, 4]]
 
-        title = "{} transmission {} VGs({} {}) HGs({} {} {} {})".format(title, subtitle, s1vg, s2vg,
-                                                                        *horizontal_gaps)
+        title = "{} transmission {} VGs ({} {}) HGs ({} {} {} {})".format(title, subtitle, s1vg, s2vg, *horizontal_gaps)
         movement._update_title(title)
         if count_uamps is not None:
             movement._count_for_uamps(count_uamps)
