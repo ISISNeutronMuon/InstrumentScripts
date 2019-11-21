@@ -43,6 +43,7 @@ def run_angle(sample, angle, count_uamps=None, count_seconds=None, count_frames=
 
     movement._dry_run_warning()
     constants = get_instrument_constants()
+    movement._change_to_1_period()
     movement._set_translation(sample.translation)  # Move this first before the heights as this can cause some drift.
     mode = movement._change_to_mode(mode)
 
@@ -331,8 +332,7 @@ class _Movement(object):
                 g.cset("S4HG", s4hg)
 
     def _change_to_1_period(self):
-        if not self.dry_run:
-            g.change_period(1)
+        g.change_number_soft_periods(1)
 
     def _count_for_time(self, seconds):
         print("Measure for {} s".format(seconds))
