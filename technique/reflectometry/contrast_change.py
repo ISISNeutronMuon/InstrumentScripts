@@ -11,7 +11,7 @@ def contrast_change(valve_position, concentrations, flow, volume=None, seconds=N
     Args:
         valve_position: valve position to set for the Knaur valve
         concentrations: List of concentrations from A to D, e.g. [10, 20, 30, 40]
-        flow: flow rate
+        flow: flow rate (as per device usually mL/min)
         volume: volume to pump; if None then pump for a time instead
         seconds: number of seconds to pump; if noth volume and seconds set then volume is used
         wait: True wait for completion; False don't wait
