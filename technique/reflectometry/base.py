@@ -69,7 +69,7 @@ def run_angle(sample, angle, count_uamps=None, count_seconds=None, count_frames=
 
     movement._set_slit_gaps(angle, constants, s1vg, s2vg, s3vg, s4vg, sample)
     movement._wait_for_move()
-    movement._update_title("{} {} th={}".format(sample.title, sample.subtitle, angle))
+    movement._update_title("{} {} th={}".format(sample.title, sample.subtitle, angle), add_current_gaps=True)
 
     # count
     if count_seconds is None and count_uamps is None and count_frames is None:
@@ -141,10 +141,8 @@ def transmission(sample, title, s1vg, s2vg, count_seconds=None, count_uamps=None
         movement._set_h_gaps(s1hg, s2hg, s3hg, s4hg)
         movement._set_slit_gaps(0.0, constants, s1vg, s2vg, constants.s3max, constants.s4max, sample)
         movement._wait_for_move()
-        horizontal_gaps = [g.cget("s{}hg".format(num))["value"] for num in [1, 2, 3, 4]]
 
-        title = "{} transmission {} VGs ({} {}) HGs ({} {} {} {})".format(title, subtitle, s1vg, s2vg, *horizontal_gaps)
-        movement._update_title(title)
+        movement._update_title(title, add_current_gaps=True)
         if count_uamps is not None:
             movement._count_for_uamps(count_uamps)
         elif count_seconds is not None:
@@ -250,11 +248,18 @@ class _Movement(object):
         if not self.dry_run:
             g.cset("theta", theta)
 
-    def _update_title(self, title):
-        if self.dry_run:
-            print("New Title: {}".format(title))
+    def _update_title(self, title, add_current_gaps):
+        if add_current_gaps:
+            gaps = [g.cget("s{}vg".format(num))["value"] for num in [1, 2, 3, 4]]
+            gaps.extend([g.cget("s{}hg".format(num))["value"] for num in [1, 2, 3, 4]])
+            new_title = "{} VGs ({} {} {} {}) HGs ({} {} {} {})".format(title, *gaps)
         else:
-            g.change_title(title)
+            new_title = title
+            
+        if self.dry_run:
+            print("New Title: {}".format(new_title))
+        else:
+            g.change_title(new_title)
 
     def _set_height_offset(self, height):
         print("Sample: height offset from beam={}".format(height))
