@@ -9,11 +9,12 @@ from datetime import datetime
 from general.scans.defaults import Defaults
 from general.scans.detector import specific_spectra
 from general.scans.util import local_wrapper
+from instrument.zoom.sans import setup_dae_transmission
 
 
 def zoom_monitor(spectrum):
     """A generating function for detectors for monitor spectra"""
-    return specific_spectra([[spectrum]])
+    return specific_spectra([[spectrum]], setup_dae_transmission)
 
 
 class Zoom(Defaults):
@@ -21,7 +22,7 @@ class Zoom(Defaults):
     This class represents the default functions for the Zoom instrument.
     """
 
-    detector = specific_spectra([[4]])
+    detector = specific_spectra([[4]], setup_dae_transmission)
 
     @staticmethod
     def log_file():
