@@ -9,6 +9,7 @@ from datetime import datetime
 from general.scans.defaults import Defaults
 from general.scans.detector import specific_spectra
 from general.scans.util import local_wrapper
+# pylint: disable=no-name-in-module
 from instrument.zoom.sans import setup_dae_transmission
 
 
