@@ -155,6 +155,13 @@ class Defaults(object):
           defined by your instrument scientist.  If you need something
           ad hoc, then check the documentation on specific_spectra for
           more details
+        save
+          By default, the scan routines save a text file of the scan
+          results, but no run number is assigned and the data is not
+          stored in the archive.  The run log file remains the only
+          record of the scan.  If the save parameter is set to true,
+          then a full run number is assigned and all of the data and
+          metadata is stored in the archive.
 
         Returns
         -------
