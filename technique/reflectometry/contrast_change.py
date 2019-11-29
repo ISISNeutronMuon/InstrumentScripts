@@ -19,7 +19,7 @@ def contrast_change(valve_position, concentrations, flow, volume=None, seconds=N
     """
     print("** Contrast change for valve{} **".format(valve_position))
     movement = _Movement(dry_run)
-    movement._dry_run_warning()
+    movement.dry_run_warning()
     if len(concentrations) != 4:
         print("There must be 4 concentrations, you provided {}".format(len(concentrations)))
     sum_of_concentrations = sum(concentrations)

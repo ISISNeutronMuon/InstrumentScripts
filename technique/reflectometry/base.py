@@ -14,62 +14,58 @@ from technique.reflectometry.instrument_constants import get_instrument_constant
 def run_angle(sample, angle, count_uamps=None, count_seconds=None, count_frames=None, s1vg=None, s2vg=None, s3vg=None,
               s4vg=None, smangle=None, mode=None, auto_height=False, dry_run=False):
     """
-    Move to a given theta with slits set. If a current or time are given then take a measurement otherwise just go to
-    the position.
+    Move to a given theta and smangle with slits set. If a current, time or frame count are given then take a
+    measurement.
 
     Args:
         sample (techniques.reflectometry.sample.Sample): The sample to measure
-        angle: The angle to measure at
-        count_uamps: the current to run the measurement for; None for use other count
-            (if all counts are none then don't count)
-        count_seconds: the time to run the measurement for if uamps not set; None for use other count
-            (if all counts are none then don't count)
-        count_frames: the number of frames to wait for; None for use other count
-            (if all counts are none then don't count)
+        angle: The angle to measure at, theta and in liquid mode also the sm angle
+        count_uamps: the current to run the measurement for; None for use count_seconds
+        count_seconds: the time to run the measurement for if uamps not set; None for use count_frames
+        count_frames: the number of frames to wait for; None for don't count
         s1vg: slit 1 vertical gap; None to use sample footprint and resolution
         s2vg: slit 2 vertical gap; None to use sample footprint and resolution
         s3vg: slit 3 vertical gap; None use fraction of maximum based on theta
         s4vg: slit 4 vertical gap; None use fraction of maximum based on theta
-        smangle: the super mirror angle if set sm get put in; None don't move the super mirror unless the mode has
-            changed
-        mode: mode to run in; None don't change modes (means super mirror is not moved in or out for instance)
-        auto_height: if True when taking data run the auto-height routine (default False)
-        dry_run: True just print what is going to happend; False do the movement
+        smangle: the super mirror angle if set super mirror in put into the beam;
+            None don't move the super mirror
+        mode: mode to run in; None don't change modes
+        auto_height: if True when taking data run the auto-height routine
+        dry_run: True just print what is going to happen; False do the experiment
     """
 
     print("** Run angle {} **".format(sample.title))
 
     movement = _Movement(dry_run)
 
-    movement._dry_run_warning()
+    movement.dry_run_warning()
     constants = get_instrument_constants()
-    movement._change_to_1_period()
-    movement._set_translation(sample.translation)  # Move this first before the heights as this can cause some drift.
-    mode = movement._change_to_mode(mode)
+    movement.change_to_soft_period_count()
+    movement.set_translation(sample.translation)  # Move this first before the heights as this can cause some drift.
+    mode = movement.change_to_mode_if_not_none(mode)
 
     print("Mode {}".format(mode))
 
     if mode == "LIQUID":
-        # Not being used on Crisp come back to this if loop
-        movement._set_smangle_if_not_none(angle)
-    elif mode == "Polarised NR":
-        movement._set_smangle_if_not_none(smangle)
-        movement._set_phi_psi(1.5 + sample.phi_offset, 0 + sample.psi_offset)
-        #TODO: 1.5 should be user defined this is not right for polerised nr it should be in in liqud?
+        # In liquid the sample is tilted by the incoming beam angle so that it is level, this is accounted for by
+        # adjusting the super mirror
+        smangle = (constants.incoming_beam_angle - angle)/2
+        movement.set_smangle_if_not_none(smangle)
     else:
-        # assume angle sample can be set
-        movement._set_phi_psi(angle + sample.phi_offset, 0 + sample.psi_offset)
-        movement._set_smangle_if_not_none(smangle)
+        # assume angle sample can be set, if there is a sm angle then set the sample to include this bounce
+        movement.set_smangle_if_not_none(smangle)
+        sm_reflection = smangle * 2.0 if smangle is not None else 0
+        movement.set_phi_psi(sm_reflection + angle + sample.phi_offset, 0 + sample.psi_offset)
 
-    movement._set_height2_offset(sample.height2_offset, constants)
-    movement._set_theta(angle)
+    movement.set_height2_offset(sample.height2_offset, constants)
+    movement.set_theta(angle)
 
     if not auto_height:
-        movement._set_height_offset(sample.height)
+        movement.set_height_offset(sample.height)
 
-    movement._set_slit_gaps(angle, constants, s1vg, s2vg, s3vg, s4vg, sample)
-    movement._wait_for_move()
-    movement._update_title("{} {} th={}".format(sample.title, sample.subtitle, angle), add_current_gaps=True)
+    movement.set_slit_gaps(angle, constants, s1vg, s2vg, s3vg, s4vg, sample)
+    movement.wait_for_move()
+    movement.update_title(sample.title, sample.subtitle, angle, smangle, add_current_gaps=True)
 
     # count
     if count_seconds is None and count_uamps is None and count_frames is None:
@@ -77,12 +73,7 @@ def run_angle(sample, angle, count_uamps=None, count_seconds=None, count_frames=
     else:
         if auto_height:
             auto_height()
-        if count_uamps is not None:
-            movement._count_for_uamps(count_uamps)
-        elif count_seconds is not None:
-            movement._count_for_time(count_seconds)
-        elif count_frames is not None:
-            movement._count_for_frames(count_frames)
+        movement.count_for(count_uamps, count_seconds, count_frames)
 
 
 def transmission(sample, title, s1vg, s2vg, count_seconds=None, count_uamps=None, count_frames=None, s1hg=None,
@@ -112,75 +103,61 @@ def transmission(sample, title, s1vg, s2vg, count_seconds=None, count_uamps=None
 
     movement = _Movement(dry_run)
 
-    movement._dry_run_warning()
+    movement.dry_run_warning()
     constants = get_instrument_constants()
-    movement._change_to_1_period()
+    movement.change_to_soft_period_count()
 
-    movement._set_translation(sample.translation)  # Move this first before the heights as this can cause some drift.
+    movement.set_translation(sample.translation)  # Move this first before the heights as this can cause some drift.
 
-    with reset_hgaps(dry_run):
-        movement._change_to_mode(mode)
+    with reset_hgaps(movement):
+        movement.change_to_mode_if_not_none(mode)
 
-        movement._set_smangle_if_not_none(smangle)
+        movement.set_smangle_if_not_none(smangle)
 
-        movement._set_height2_offset(sample.height2_offset, constants)
-        movement._set_theta(0.0)
-
-        if smangle is not None:
-            subtitle = "SM={}, ".format(smangle)
-        else:
-            subtitle = ""
+        movement.set_height2_offset(sample.height2_offset, constants)
+        movement.set_theta(0.0)
 
         if height_offset is None:
-            movement._set_height_offset(sample.height - 5)
+            movement.set_height_offset(sample.height - 5)
         elif height_offset < 10:  # if the height offset is less than can be achieved by the fine z use this
-            movement._set_height_offset(sample.height - height_offset)
+            movement.set_height_offset(sample.height - height_offset)
         else:
-            movement._set_height2_offset(sample.height2_offset - height_offset, constants)
+            movement.set_height2_offset(sample.height2_offset - height_offset, constants)
 
-        movement._set_h_gaps(s1hg, s2hg, s3hg, s4hg)
-        movement._set_slit_gaps(0.0, constants, s1vg, s2vg, constants.s3max, constants.s4max, sample)
-        movement._wait_for_move()
+        movement.set_h_gaps(s1hg, s2hg, s3hg, s4hg)
+        movement.set_slit_gaps(0.0, constants, s1vg, s2vg, constants.s3max, constants.s4max, sample)
+        movement.wait_for_move()
 
-        movement._update_title(title, add_current_gaps=True)
-        if count_uamps is not None:
-            movement._count_for_uamps(count_uamps)
-        elif count_seconds is not None:
-            movement._count_for_time(count_seconds)
-        elif count_frames is not None:
-            movement._count_for_frames(count_frames)
+        movement.update_title(title, "", None, smangle, add_current_gaps=True)
+        movement.count_for(count_uamps, count_seconds, count_frames)
 
-        movement._set_height_offset(sample.height)
-        movement._set_height2_offset(sample.height2_offset, constants)
+        movement.set_height_offset(sample.height)
+        movement.set_height2_offset(sample.height2_offset, constants)
+
         # Horizontal gaps reset by with reset_gaps
 
 
 @contextmanager
-def reset_hgaps(dry_run=False):
+def reset_hgaps(movement):
     """
     After the context is over reset the gaps back to the value before. If keyboard interupt give options for what to do.
     Args:
-        dry_run: True print what will happen; False do reset
+        movement(_Movement): object that does movement required (or pronts message for a dry run)
 
     """
-    horizontal_gaps = OrderedDict()
-    for gap_name in ("S1HG", "S2HG", "S3HG", "S4HG"):
-        horizontal_gaps[gap_name] = g.cget(gap_name)["value"]
+    horizontal_gaps = movement.get_gaps(vertical=False)
 
     def _reset_gaps():
-        print("Reset horizontal gaps to {}".format(horizontal_gaps.items()))
-        if not dry_run:
-            for gap_name, gap_size in horizontal_gaps.items():
-                g.cset(gap_name, gap_size)
-            g.waitfor_move()
+        print("Reset horizontal gaps to {}".format(horizontal_gaps.values))
+        movement.set_h_gaps(**horizontal_gaps)
+        movement.wait_for_move()
 
     try:
         yield
         _reset_gaps()
     except KeyboardInterrupt:
-        if not dry_run:
-            print("Not dry run pause")
-            g.pause()
+        movement.pause()
+
         while True:
             choice = input("ctrl-c hit do you wish to (A)bort or (E)nd or (K)eep Counting?")
             if choice is not None and choice.upper() in ["A", "E", "K"]:
@@ -188,21 +165,18 @@ def reset_hgaps(dry_run=False):
             print("Invalid choice try again!")
 
         if choice.upper() == "A":
-            if not dry_run:
-                g.abort()
+            movement.abort()
             print("Setting horizontal slit gaps to pre-tranmission values.")
             _reset_gaps()
 
         elif choice.upper() == "E":
-            if not dry_run:
-                g.end()
+            movement.end()
             _reset_gaps()
         elif choice.upper() == "K":
             print("Continuing counting, remember to set back horizontal slit gaps when the run is ended.")
-            g.resume()
+            movement.resume()
 
-        if not dry_run:
-            g.waitfor_time(seconds=5)
+        movement.wait_for_seconds(5)
 
 
 def slit_check(theta, footprint, resolution):
@@ -216,7 +190,7 @@ def slit_check(theta, footprint, resolution):
     """
     constants = get_instrument_constants()
     movement = _Movement(True)
-    s1, s2 = movement._calculate_slit_gaps(theta, footprint, resolution, constants)
+    s1, s2 = movement.calculate_slit_gaps(theta, footprint, resolution, constants)
     print("For a foortprint of {} and resolution of {} at an angle {}:".format(theta, footprint, resolution))
     print("s1vg={}".format(s1))
     print("s2vg={}".format(s2))
@@ -230,7 +204,12 @@ class _Movement(object):
     def __init__(self, dry_run):
         self.dry_run = dry_run
 
-    def _change_to_mode(self, mode):
+    def change_to_mode_if_not_none(self, mode):
+        """
+        Change the mode if not in dry run
+        :param mode: mode to change to; if None don't don't change mode
+        :return: new mode
+        """
         if mode is not None:
             print("Change to mode: {}".format(mode))
             if not self.dry_run:
@@ -239,34 +218,74 @@ class _Movement(object):
             mode = g.cget("MODE")["value"]
         return mode
 
-    def _dry_run_warning(self):
+    def dry_run_warning(self):
+        """
+        Print a warning if in dry run
+        """
         if self.dry_run:
             print("Nothing will change this is a DRY RUN!!!")
 
-    def _set_theta(self, theta):
+    def set_theta(self, theta):
+        """
+        Set theta if not in dry run
+        :param theta: new theta
+        """
         print("Theta set to: {}".format(theta))
         if not self.dry_run:
-            g.cset("theta", theta)
+            g.cset("THETA", theta)
 
-    def _update_title(self, title, add_current_gaps):
+    def get_gaps(self, vertical):
+        """
+        :param vertical: True for vertical gaps; False for Horizontal gaps
+        :return: dictionary of gaps
+        """
+        v_or_h = "V" if vertical else "H"
+        gaps = OrderedDict()
+        for slit_num in [1, 2, 3, 4]:
+            gap_pv = "S{}{}G".format(slit_num, v_or_h)
+            gaps[gap_pv.lower()] = g.cget(gap_pv)["value"]
+        return gaps
+
+    def update_title(self, title, subtitle, theta, smangle, add_current_gaps):
+        """
+        Update the current title with or without gaps if not in dry run
+        :param title: title to set
+        :param subtitle: sub title to set
+        :param theta: theta for the experiment
+        :param smangle: sm angle; if None it doesn't appear in the title
+        :param add_current_gaps: current gaps
+        """
+        new_title = "{} {}".format(title, subtitle)
+        if theta is not None:
+            new_title = "{} th={}".format(new_title, theta)
+        if smangle is not None:
+            new_title = "{} SM={}".format(new_title, smangle)
+
         if add_current_gaps:
-            gaps = [g.cget("s{}vg".format(num))["value"] for num in [1, 2, 3, 4]]
-            gaps.extend([g.cget("s{}hg".format(num))["value"] for num in [1, 2, 3, 4]])
-            new_title = "{} VGs ({} {} {} {}) HGs ({} {} {} {})".format(title, *gaps)
-        else:
-            new_title = title
-            
+            gaps = self.get_gaps(True).values()
+            gaps.extend(self.get_gaps(False).values())
+            new_title = "{} VGs ({} {} {} {}) HGs ({} {} {} {})".format(new_title, *gaps)
+
         if self.dry_run:
             print("New Title: {}".format(new_title))
         else:
             g.change_title(new_title)
 
-    def _set_height_offset(self, height):
-        print("Sample: height offset from beam={}".format(height))
+    def set_height_offset(self, height_offset):
+        """
+        Set the sample height offset if not in dry run
+        :param height_offset:
+        """
+        print("Sample: height offset from beam={}".format(height_offset))
         if not self.dry_run:
-            g.cset("SAMPLEOFFSET", height)
+            g.cset("SAMPLEOFFSET", height_offset)
 
-    def _set_height2_offset(self, height, constants):
+    def set_height2_offset(self, height, constants):
+        """
+        Set the sample height2 offset if the instrument has a height 2
+        :param height: new height offset
+        :param constants: constants for the instrument
+        """
         if constants.has_height2:
             print("Sample: height2 offset from beam={}".format(height))
             if not self.dry_run:
@@ -274,15 +293,19 @@ class _Movement(object):
         elif height != 0:
             print("ERROR: Height 2 off set is being ignored")
 
-    def _set_translation(self, translation):
+    def set_translation(self, translation):
+        """
+        Set the smaple translation if not in dry run and wait for move
+        :param translation: new translation
+        """
         print("Translation to {}".format(translation))
         if not self.dry_run:
             g.cset("TRANS", translation)
             g.waitfor_move()
 
-    def _set_slit_gaps(self, theta, constants, s1vg, s2vg, s3vg, s4vg, sample):
+    def set_slit_gaps(self, theta, constants, s1vg, s2vg, s3vg, s4vg, sample):
         """
-        Set the slit gaps either to user settings or calculated based on foot print and max slit size
+        Set the slit gaps either to user settings or calculated based on foot print and max slit size, if not in dry run
         Args:
             theta: angle theta is set to
             constants: machine constants
@@ -292,7 +315,7 @@ class _Movement(object):
             s4vg: s4 vertical gap set by user; None use percentage of maximum
             sample: sample parameters
         """
-        s1, s2 = self._calculate_slit_gaps(theta, sample.footprint, sample.resolution, constants)
+        s1, s2 = self.calculate_slit_gaps(theta, sample.footprint, sample.resolution, constants)
 
         factor = theta / constants.maxTheta
         s3 = constants.s3max * factor
@@ -317,14 +340,30 @@ class _Movement(object):
             g.cset("S3VG", s3)
             g.cset("S4VG", s4)
 
-    def _calculate_slit_gaps(self, theta, footprint, resolution, constants):
+    def calculate_slit_gaps(self, theta, footprint, resolution, constants):
+        """
+        Calulcate the slit gaps
+        :param theta: theta
+        :param footprint: footprint of the sample
+        :param resolution: resoultion required
+        :param constants: instrument constants
+        :return: slit 1 and slit 2 vertical gaps
+        """
         s1sa = constants.s1s2 + constants.s2sa
         footprint_at_theta = footprint * sin(radians(theta))
         s1 = 2 * s1sa * tan(radians(resolution * theta)) - footprint_at_theta
         s2 = (constants.s1s2 * (footprint_at_theta + s1) / s1sa) - s1
         return s1, s2
 
-    def _set_h_gaps(self, s1hg, s2hg, s3hg, s4hg):
+    def set_h_gaps(self, s1hg, s2hg, s3hg, s4hg):
+        """
+        Set the horiztonal slit gaps if not None and if not is a dry run
+        :param s1hg: slit 1 horizontal gap
+        :param s2hg: slit 2 horizontal gap
+        :param s3hg: slit 3 horizontal gap
+        :param s4hg: slit 4 horizontal gap
+        :return:
+        """
         print("Setting hgaps to {} (None's are not changed)".format([s1hg, s2hg, s3hg, s4hg]))
         if not self.dry_run:
             if s1hg is not None:
@@ -336,44 +375,109 @@ class _Movement(object):
             if s4hg is not None:
                 g.cset("S4HG", s4hg)
 
-    def _change_to_1_period(self):
-        g.change_number_soft_periods(1)
-
-    def _count_for_time(self, seconds):
-        print("Measure for {} s".format(seconds))
+    def change_to_soft_period_count(self, count=1):
+        """
+        Change the number of soft periods if not in dry run
+        :param count: number of periods
+        """
         if not self.dry_run:
-            g.begin()
-            g.waitfor_time(seconds=seconds)
-            g.end()
+            g.change_number_soft_periods(count)
+        else:
+            print("Number of periods set to {}".format(count))
 
-    def _count_for_uamps(self, count_uamps):
-        print("Wait for {} uA".format(count_uamps))
-        if not self.dry_run:
-            g.begin()
-            g.waitfor_uamps(count_uamps)
-            g.end()
-
-    def _count_for_frames(self, count_frames):
-        print("Wait for {} frames count (i.e. count this number of frames from the current frame)".format(count_frames))
-        if not self.dry_run:
-            final_frame = count_frames + g.get_frames()
-            g.begin()
-            g.waitfor_frames(final_frame)
-            g.end()
-
-    def _set_phi_psi(self, phi, psi):
+    def set_phi_psi(self, phi, psi):
+        """
+        Set phi and psi if not in dry run
+        :param phi: phi value to set
+        :param psi: psi value to set
+        """
         print("Sample: Phi={}, Psi={}".format(phi, psi))
         if not self.dry_run:
             g.cset("PHI", phi)
             g.cset("PSI", psi)
 
-    def _wait_for_move(self):
+    def wait_for_move(self):
+        """
+        Wait for a move if not in dry run
+        """
         if not self.dry_run:
             g.waitfor_move()
 
-    def _set_smangle_if_not_none(self, smangle):
+    def set_smangle_if_not_none(self, smangle):
+        """
+        Set the super mirror angle and put it in the beam if not None and not dry run
+        :param smangle: super mirror angle; None for do not set and leave it where it is
+        """
         if smangle is not None:
             print("SM angle: {}".format(smangle))
             if not self.dry_run:
                 g.cset("SMANGLE", smangle)
                 g.cset("SMINBEAM", "IN")
+
+    def pause(self):
+        """
+        Pause when not in dry run
+        """
+        if not self.dry_run:
+            g.pause()
+
+    def abort(self):
+        """
+        Abort when not in dry run
+        """
+        if not self.dry_run:
+            g.abort()
+
+    def end(self):
+        """
+        End when not in dry run
+        """
+        if not self.dry_run:
+            g.end()
+
+    def resume(self):
+        """
+        Resume if not in dry run
+        """
+        if not self.dry_run:
+            g.resume()
+
+    def wait_for_seconds(self, seconds):
+        """
+        Wait for a number of seconds if not in dry run
+        :param seconds: seconds to wait for
+        """
+        if not self.dry_run:
+            g.waitfor_time(seconds)
+        else:
+            print("Wait for {} seconds".format(seconds))
+
+    def count_for(self, count_uamps, count_seconds, count_frames):
+        """
+        Count for one of uamps, seconds, frames if not None in that order
+        :param count_uamps: number of uamps to count for; None count in a different way
+        :param count_seconds: number of seconds to count for; None count in a different way
+        :param count_frames: number of frames to count for; None count in a different way
+        """
+        if count_uamps is not None:
+            print("Wait for {} uA".format(count_uamps))
+            if not self.dry_run:
+                g.begin()
+                g.waitfor_uamps(count_uamps)
+                g.end()
+
+        elif count_seconds is not None:
+            print("Measure for {} s".format(count_seconds))
+            if not self.dry_run:
+                g.begin()
+                g.waitfor_time(seconds=count_seconds)
+                g.end()
+
+        elif count_frames is not None:
+            print("Wait for {} frames count (i.e. count this number of frames from the current frame)".format(
+                count_frames))
+            if not self.dry_run:
+                final_frame = count_frames + g.get_frames()
+                g.begin()
+                g.waitfor_frames(final_frame)
+                g.end()
