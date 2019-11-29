@@ -1,3 +1,9 @@
+2019-11-29    <adam.washington@stfc.ac.uk>
+
+	* instrument/loq/scans.py (LOQ): Set LOQ to transmission mode before scans
+
+	* instrument/zoom/scans.py (zoom_monitor): Set Zoom to transmission mode before scans.
+
 2019-11-15    <adam.washington@stfc.ac.uk>
 
 	* general/scans/defaults.py (Defaults.get_fig): Add force option
