@@ -135,7 +135,7 @@ def begin_precmd(quiet):
     """
     if not quiet:
         run_title = get_input("Run title: ")
-        g.set_title(run_title)
+        g.change_title(run_title)
         set_label()
     sleep(1)
 
@@ -204,7 +204,7 @@ def end_precmd(quiet):
         g.get_title()
         run_title = get_input("Is \'{}\' the correct run title (y/n)?")
         if run_title.lower() == "n":
-            g.set_title(get_input("Run title: "))
+            g.change_title(get_input("Run title: "))
         while True:
             print("Run information:\n")
             show_label()
