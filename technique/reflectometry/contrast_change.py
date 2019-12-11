@@ -1,3 +1,6 @@
+"""
+Perform contrast change using a HPLC Pump
+"""
 from math import fabs
 
 from genie_python import genie as g
@@ -9,11 +12,11 @@ def contrast_change(valve_position, concentrations, flow, volume=None, seconds=N
     """
     Perform a contrast change.
     Args:
-        valve_position: valve position to set for the Knaur valve
+        valve_position: valve position to set for the Knauer valve
         concentrations: List of concentrations from A to D, e.g. [10, 20, 30, 40]
         flow: flow rate (as per device usually mL/min)
         volume: volume to pump; if None then pump for a time instead
-        seconds: number of seconds to pump; if noth volume and seconds set then volume is used
+        seconds: number of seconds to pump; if both volume and seconds set then volume is used
         wait: True wait for completion; False don't wait
         dry_run: True don't do anything just print what it will do; False otherwise
     """

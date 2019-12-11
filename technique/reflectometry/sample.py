@@ -11,7 +11,7 @@ class SampleGenerator:
     def __init__(self, translation, height2_offset, phi_offset, psi_offset, height_offset, resolution, footprint,
                  title="", subtitle=""):
         """
-        Initisaliser.
+        Initialiser.
         Args:
             translation: The translation for the sample
             height2_offset: Height of the second stage with no mirror relative to the beam for this sample

@@ -144,7 +144,8 @@ def transmission(sample, title, s1vg, s2vg, s3vg=None, s4vg=None,
 @contextmanager
 def reset_hgaps_and_sample_height(movement, sample, constants):
     """
-    After the context is over reset the gaps back to the value before. If keyboard interupt give options for what to do.
+    After the context is over reset the gaps back to the value before and set the height to the default sample height.
+    If keyboard interrupt give options for what to do.
     Args:
         movement(_Movement): object that does movement required (or pronts message for a dry run)
         sample: sample to get the sample offset from
@@ -306,7 +307,7 @@ class _Movement(object):
 
     def set_translation(self, translation):
         """
-        Set the smaple translation if not in dry run and wait for move
+        Set the sample translation if not in dry run and wait for move
         :param translation: new translation
         """
         print("Translation to {}".format(translation))
@@ -355,10 +356,10 @@ class _Movement(object):
 
     def calculate_slit_gaps(self, theta, footprint, resolution, constants):
         """
-        Calulcate the slit gaps
+        Calculate the slit gaps
         :param theta: theta
         :param footprint: footprint of the sample
-        :param resolution: resoultion required
+        :param resolution: resolution required
         :param constants: instrument constants
         :return: slit 1 and slit 2 vertical gaps
         """
@@ -370,7 +371,7 @@ class _Movement(object):
 
     def set_h_gaps(self, s1hg, s2hg, s3hg, s4hg):
         """
-        Set the horiztonal slit gaps if not None and if not is a dry run
+        Set the horizontal slit gaps if not None and if not is a dry run
         :param s1hg: slit 1 horizontal gap
         :param s2hg: slit 2 horizontal gap
         :param s3hg: slit 3 horizontal gap

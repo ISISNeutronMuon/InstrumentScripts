@@ -23,10 +23,10 @@ class ReflectometryScan(Defaults):
     # The block being scanned
     block = None
 
-    # The spetra number of the monitor
+    # The spectra number of the monitor
     monitor_number = None
 
-    # The spetra number of the detector
+    # The spectra number of the detector
     detector_number = None
 
     @staticmethod
