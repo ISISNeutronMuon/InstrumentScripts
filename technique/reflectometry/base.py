@@ -27,11 +27,11 @@ def run_angle(sample, angle, count_uamps=None, count_seconds=None, count_frames=
         s2vg: slit 2 vertical gap; None to use sample footprint and resolution
         s3vg: slit 3 vertical gap; None use fraction of maximum based on theta
         s4vg: slit 4 vertical gap; None use fraction of maximum based on theta
-        smangle: the super mirror angle if set super mirror in put into the beam;
-            None don't move the super mirror
+        smangle: super mirror angle, place in the beam, if set to 0 remove from the beam; None don't move super mirror
         mode: mode to run in; None don't change modes
         auto_height: if True when taking data run the auto-height routine
         dry_run: True just print what is going to happen; False do the experiment
+
     """
 
     print("** Run angle {} **".format(sample.title))
@@ -76,25 +76,28 @@ def run_angle(sample, angle, count_uamps=None, count_seconds=None, count_frames=
         movement.count_for(count_uamps, count_seconds, count_frames)
 
 
-def transmission(sample, title, s1vg, s2vg, count_seconds=None, count_uamps=None, count_frames=None, s1hg=None,
-                 s2hg=None, s3hg=None, s4hg=None,
+def transmission(sample, title, s1vg, s2vg, s3vg=None, s4vg=None,
+                 count_seconds=None, count_uamps=None, count_frames=None,
+                 s1hg=None, s2hg=None, s3hg=None, s4hg=None,
                  height_offset=None, smangle=None, mode=None, dry_run=False):
     """
     Perform a transmission
     Args:
         sample (techniques.reflectometry.sample.Sample): The sample to measure
         title: Title to set
+        s1vg: slit 1 vertical gap
+        s2vg: slit 2 vertical gap
+        s3vg: slit 3 vertical gap; if None use max for instrument
+        s4vg: slit 4 vertical gap; if None use max for instrument
         count_seconds: time to count for in seconds
         count_uamps: number of micro amps to count for
         count_frames: number of frames to count for
-        s1vg: slit 1 vertical gap
-        s2vg: slit 2 vertical gap
         s1hg: slit 1 horizontal gap; None to leave unchanged
         s2hg: slit 2 horizontal gap; None to leave unchanged
         s3hg: slit 3 horizontal gap; None to leave unchanged
         s4hg: slit 4 horizontal gap; None to leave unchanged
         height_offset: Height offset from normal to set the sample to
-        smangle: super mirror angle; None for don't use a super mirror
+        smangle: super mirror angle, place in the beam, if set to 0 remove from the beam; None don't move super mirror
         mode: mode to run in; None don't change mode
         dry_run: True to print what happens; False to do experiment
     """
@@ -124,8 +127,13 @@ def transmission(sample, title, s1vg, s2vg, count_seconds=None, count_uamps=None
         else:
             movement.set_height2_offset(sample.height2_offset - height_offset, constants)
 
+        if s3vg is None:
+            s3vg = constants.s3max
+        if s4vg is None:
+            s4vg = constants.s4max
+
         movement.set_h_gaps(s1hg, s2hg, s3hg, s4hg)
-        movement.set_slit_gaps(0.0, constants, s1vg, s2vg, constants.s3max, constants.s4max, sample)
+        movement.set_slit_gaps(0.0, constants, s1vg, s2vg, s3vg, s4vg, sample)
         movement.wait_for_move()
 
         movement.update_title(title, "", None, smangle, add_current_gaps=True)
@@ -409,10 +417,11 @@ class _Movement(object):
         :param smangle: super mirror angle; None for do not set and leave it where it is
         """
         if smangle is not None:
-            print("SM angle: {}".format(smangle))
+            is_in_beam = "IN" if smangle > 0.0001 else "OUT"
+            print("SM angle (in beam?): {} ({})".format(smangle, is_in_beam))
             if not self.dry_run:
                 g.cset("SMANGLE", smangle)
-                g.cset("SMINBEAM", "IN")
+                g.cset("SMINBEAM", is_in_beam)
 
     def pause(self):
         """
