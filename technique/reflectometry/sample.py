@@ -70,7 +70,7 @@ class SampleGenerator:
                       height_offset, resolution, footprint)
 
     def __repr__(self):
-        return "Sample: {}".format(self.__dict__)
+        return "Sample generator: {}".format(self.__dict__)
 
 
 class Sample:

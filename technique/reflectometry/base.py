@@ -1,6 +1,7 @@
 """
 Base routine for reflectometry techniques
 """
+import sys
 from collections import OrderedDict
 from contextlib import contextmanager
 from math import tan, radians, sin
@@ -79,7 +80,7 @@ def run_angle(sample, angle, count_uamps=None, count_seconds=None, count_frames=
 def transmission(sample, title, s1vg, s2vg, s3vg=None, s4vg=None,
                  count_seconds=None, count_uamps=None, count_frames=None,
                  s1hg=None, s2hg=None, s3hg=None, s4hg=None,
-                 height_offset=None, smangle=None, mode=None, dry_run=False):
+                 height_offset=5, smangle=None, mode=None, dry_run=False):
     """
     Perform a transmission
     Args:
@@ -96,7 +97,7 @@ def transmission(sample, title, s1vg, s2vg, s3vg=None, s4vg=None,
         s2hg: slit 2 horizontal gap; None to leave unchanged
         s3hg: slit 3 horizontal gap; None to leave unchanged
         s4hg: slit 4 horizontal gap; None to leave unchanged
-        height_offset: Height offset from normal to set the sample to
+        height_offset: Height offset from normal to set the sample to (offset is in negative direction)
         smangle: super mirror angle, place in the beam, if set to 0 remove from the beam; None don't move super mirror
         mode: mode to run in; None don't change mode
         dry_run: True to print what happens; False to do experiment
@@ -112,7 +113,7 @@ def transmission(sample, title, s1vg, s2vg, s3vg=None, s4vg=None,
 
     movement.set_translation(sample.translation)  # Move this first before the heights as this can cause some drift.
 
-    with reset_hgaps(movement):
+    with reset_hgaps_and_sample_height(movement, sample, constants):
         movement.change_to_mode_if_not_none(mode)
 
         movement.set_smangle_if_not_none(smangle)
@@ -120,9 +121,7 @@ def transmission(sample, title, s1vg, s2vg, s3vg=None, s4vg=None,
         movement.set_height2_offset(sample.height2_offset, constants)
         movement.set_theta(0.0)
 
-        if height_offset is None:
-            movement.set_height_offset(sample.height - 5)
-        elif height_offset < 10:  # if the height offset is less than can be achieved by the fine z use this
+        if height_offset < 10:  # if the height offset is less than can be achieved by the fine z use this
             movement.set_height_offset(sample.height - height_offset)
         else:
             movement.set_height2_offset(sample.height2_offset - height_offset, constants)
@@ -139,18 +138,17 @@ def transmission(sample, title, s1vg, s2vg, s3vg=None, s4vg=None,
         movement.update_title(title, "", None, smangle, add_current_gaps=True)
         movement.count_for(count_uamps, count_seconds, count_frames)
 
-        movement.set_height_offset(sample.height)
-        movement.set_height2_offset(sample.height2_offset, constants)
-
-        # Horizontal gaps reset by with reset_gaps
+        # Horizontal gaps and height reset by with reset_gaps_and_sample_height
 
 
 @contextmanager
-def reset_hgaps(movement):
+def reset_hgaps_and_sample_height(movement, sample, constants):
     """
     After the context is over reset the gaps back to the value before. If keyboard interupt give options for what to do.
     Args:
         movement(_Movement): object that does movement required (or pronts message for a dry run)
+        sample: sample to get the sample offset from
+        constants: instrument constants
 
     """
     horizontal_gaps = movement.get_gaps(vertical=False)
@@ -158,6 +156,9 @@ def reset_hgaps(movement):
     def _reset_gaps():
         print("Reset horizontal gaps to {}".format(horizontal_gaps.values))
         movement.set_h_gaps(**horizontal_gaps)
+
+        movement.set_height_offset(sample.height)
+        movement.set_height2_offset(sample.height2_offset, constants)
         movement.wait_for_move()
 
     try:
@@ -252,6 +253,7 @@ class _Movement(object):
         for slit_num in [1, 2, 3, 4]:
             gap_pv = "S{}{}G".format(slit_num, v_or_h)
             gaps[gap_pv.lower()] = g.cget(gap_pv)["value"]
+
         return gaps
 
     def update_title(self, title, subtitle, theta, smangle, add_current_gaps):
@@ -265,14 +267,15 @@ class _Movement(object):
         """
         new_title = "{} {}".format(title, subtitle)
         if theta is not None:
-            new_title = "{} th={}".format(new_title, theta)
+            new_title = "{} th={:.4g}".format(new_title, theta)
         if smangle is not None:
-            new_title = "{} SM={}".format(new_title, smangle)
+            new_title = "{} SM={:.4g}".format(new_title, smangle)
 
         if add_current_gaps:
-            gaps = self.get_gaps(True).values()
-            gaps.extend(self.get_gaps(False).values())
-            new_title = "{} VGs ({} {} {} {}) HGs ({} {} {} {})".format(new_title, *gaps)
+            gaps = self.get_gaps(vertical=True).values()
+            gaps.extend(self.get_gaps(vertical=False).values())
+            new_title = "{} VGs ({:.3g} {:.3g} {:.3g} {:.3g}) HGs ({:.3g} {:.3g} {:.3g} {:.3g})".format(
+                new_title, *gaps)
 
         if self.dry_run:
             print("New Title: {}".format(new_title))
@@ -342,6 +345,8 @@ class _Movement(object):
             s4 = s4vg
 
         print("Slit gaps 1-4 set to: {}, {}, {}, {}".format(s1, s2, s3, s4))
+        if s1 < 0.0 or s2 < 0.0 or s3 < 0.0 or s4 < 0.0:
+            sys.stderr.write("Vertical slit gaps are being set to less than 0!\n")
         if not self.dry_run:
             g.cset("S1VG", s1)
             g.cset("S2VG", s2)
@@ -373,6 +378,9 @@ class _Movement(object):
         :return:
         """
         print("Setting hgaps to {} (None's are not changed)".format([s1hg, s2hg, s3hg, s4hg]))
+        if s1hg < 0.0 or s2hg < 0.0 or s3hg < 0.0 or s4hg < 0.0:
+            sys.stderr.write("Horizontal slit gaps are being set to less than 0!\n")
+
         if not self.dry_run:
             if s1hg is not None:
                 g.cset("S1HG", s1hg)
