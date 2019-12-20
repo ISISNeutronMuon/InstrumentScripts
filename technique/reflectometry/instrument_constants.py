@@ -31,49 +31,46 @@ class InstrumentConstant(object):
         self.incoming_beam_angle = incoming_beam_angle
 
 
-INSTRUMENT_CONSTANTS = {
-    "INTER": InstrumentConstant(
-                s1s2=1940.5,
-                s2sa=364.0,
-                max_theta=2.3,  # usual maximum angle
-                s4max=10.0,  # max s4_vg at maxTheta
-                sm_sa=1375.0,
-                incoming_beam_angle=2.3),
-    "SURF": InstrumentConstant(
-                s1s2=1578.5,  # 1448.0,
-                s2sa=257.3,  # 247, #389.0,
-                max_theta=1.8,  # usual maximum angle
-                s4max=10.0,  # max s4vg at maxTheta
-                sm_sa=1096,  # 1088.26,
-                has_height2=False,
-                incoming_beam_angle=1.5),
-    "CRISP": InstrumentConstant(
-                s1s2=2596.0,
-                s2sa=343.0,
-                max_theta=2,  # usual maximum angle
-                s4max=20.0,  # max s4vg at maxTheta
-                sm_sa=2311,
-                has_height2=False,
-                incoming_beam_angle=1.5),
-    "DEFAULT": InstrumentConstant(
-                s1s2=1940.5,
-                s2sa=364.0,
-                max_theta=2.3,  # usual maximum angle
-                s4max=10.0,  # max s4_vg at maxTheta
-                sm_sa=1385.0,
-                has_height2=False,
-                incoming_beam_angle=1.5),
-}
-
-
 def get_instrument_constants():
     """
-    Returns: constants for the current instrument
+    Returns: constants for the current instrument from PVs defined in the refl server
     """
-    instrument = g.get_instrument()
     try:
-        constants = INSTRUMENT_CONSTANTS[instrument]
-    except KeyError:
-        print("Instrument, '', not found in constants list using default")
-        constants = INSTRUMENT_CONSTANTS["DEFAULT"]
-    return constants
+        s1_z = get_reflectometry_value("S1_Z")
+        s2_z = get_reflectometry_value("S2_Z")
+        sm_z = get_reflectometry_value("SM_Z")
+        sample_z = get_reflectometry_value("SAMPLE_Z")
+        s3_z = get_reflectometry_value("S3_Z")
+        s4_z = get_reflectometry_value("S4_Z")
+        pd_z = get_reflectometry_value("PD_Z")
+        s3_max = get_reflectometry_value("S3_MAX")
+        s4_max = get_reflectometry_value("S4_MAX")
+        max_theta = get_reflectometry_value("MAX_THETA")
+        natural_angle = get_reflectometry_value("NATURAL_ANGLE")
+        has_height2 = get_reflectometry_value("HAS_HEIGHT2") == "YES"
+
+        return InstrumentConstant(
+            s1s2=s2_z - s1_z,
+            s2sa=sample_z - s2_z,
+            max_theta=max_theta,  # usual maximum angle
+            s4max=s4_max,  # max s4_vg at maxTheta
+            s3max=s3_max,  # max s4_vg at maxTheta
+            sm_sa=sample_z - sm_z,
+            incoming_beam_angle=natural_angle,
+            has_height2=has_height2)
+    except Exception as e:
+        raise ValueError("No instrument value pvs to calculated requested result: {}".format(e))
+
+
+def get_reflectometry_value(value_name):
+    """
+    :param value_name: name of the value
+    :return: value for the value_name stored in the pv on the REFL server
+    :raises IOError: if PV does not exist
+    """
+    pv_name = "REFL:VALUE:{}".format(value_name)
+    value = g.get_pv(pv_name, is_local=True)
+    if value is None:
+        raise IOError("PV {} does not exist".format(pv_name))
+
+    return value
