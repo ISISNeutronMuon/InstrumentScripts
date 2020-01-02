@@ -41,7 +41,8 @@ class TestRunControl(unittest.TestCase):
     @patch('technique.muon.run_control.get_input', return_value="name")
     def test_WHEN_set_name_sample_par_to_non_empty_THEN_sample_par_changed(self, _, __):
         # Act
-        run_control.set_name_sample_par({"name": "oldname"})
+        old_sample_pars = {"name": "oldname"}
+        run_control.set_name_sample_par(old_sample_pars)
 
         # Assert
         self.assertTrue(g.change_sample_par.called, "Should have called to set sample param")
@@ -50,7 +51,8 @@ class TestRunControl(unittest.TestCase):
     @patch('technique.muon.run_control.get_input', return_value="")
     def test_WHEN_set_name_sample_par_to_empty_THEN_sample_par_changed(self, _, __):
         # Act
-        run_control.set_name_sample_par({"name": "oldname"})
+        old_sample_pars = {"name": "oldname"}
+        run_control.set_name_sample_par(old_sample_pars)
 
         # Assert
         self.assertFalse(g.change_sample_par.called, "Should not have called to set sample param")
@@ -59,7 +61,8 @@ class TestRunControl(unittest.TestCase):
     @patch('technique.muon.run_control.get_input', return_value="orient")
     def test_WHEN_set_orient_sample_par_to_non_empty_THEN_sample_par_changed(self, _, __):
         # Act
-        run_control.set_orient_sample_par({"geometry": "oldorient"})
+        old_sample_pars = {"geometry": "oldorient"}
+        run_control.set_orient_sample_par(old_sample_pars)
 
         # Assert
         self.assertTrue(g.change_sample_par.called, "Should have called to set sample param")
@@ -68,7 +71,8 @@ class TestRunControl(unittest.TestCase):
     @patch('technique.muon.run_control.get_input', return_value="")
     def test_WHEN_set_orient_sample_par_to_empty_THEN_sample_par_changed(self, _, __):
         # Act
-        run_control.set_orient_sample_par({"geometry": "oldorient"})
+        old_sample_pars = {"geometry": "oldorient"}
+        run_control.set_orient_sample_par(old_sample_pars)
 
         # Assert
         self.assertFalse(g.change_sample_par.called, "Should not have called to set sample param")
@@ -77,7 +81,8 @@ class TestRunControl(unittest.TestCase):
     @patch('technique.muon.run_control.get_input', return_value="temp")
     def test_WHEN_set_temp_sample_par_to_non_empty_THEN_sample_par_changed(self, _, __):
         # Act
-        run_control.set_temp_sample_par({"temp": "oldtemp"})
+        old_sample_pars = {"temp": "oldtemp"}
+        run_control.set_temp_sample_par(old_sample_pars)
 
         # Assert
         self.assertTrue(g.change_sample_par.called, "Should have called to set sample param")
@@ -86,7 +91,8 @@ class TestRunControl(unittest.TestCase):
     @patch('technique.muon.run_control.get_input', return_value="")
     def test_WHEN_set_temp_sample_par_to_empty_THEN_sample_par_changed(self, _, __):
         # Act
-        run_control.set_temp_sample_par({"temp": "oldTemp"})
+        old_samples_pars = {"temp": "oldTemp"}
+        run_control.set_temp_sample_par(old_samples_pars)
 
         # Assert
         self.assertFalse(g.change_sample_par.called, "Should not have called to set sample param")
@@ -95,7 +101,8 @@ class TestRunControl(unittest.TestCase):
     @patch('technique.muon.run_control.get_input', return_value="field")
     def test_WHEN_set_field_sample_par_to_non_empty_THEN_sample_par_changed(self, _, __):
         # Act
-        run_control.set_temp_sample_par({"field": "oldfield"})
+        old_sample_pars = {"field": "oldfield"}
+        run_control.set_field_sample_par(old_sample_pars)
 
         # Assert
         self.assertTrue(g.change_sample_par.called, "Should have called to set sample param")
@@ -104,7 +111,8 @@ class TestRunControl(unittest.TestCase):
     @patch('technique.muon.run_control.get_input', return_value="")
     def test_WHEN_set_field_sample_par_to_empty_THEN_sample_par_changed(self, _, __):
         # Act
-        run_control.set_temp_sample_par({"field": "oldfield"})
+        old_sample_pars = {"field": "oldfield"}
+        run_control.set_field_sample_par(old_sample_pars)
 
         # Assert
         self.assertFalse(g.change_sample_par.called, "Should not have called to set sample param")
@@ -113,7 +121,8 @@ class TestRunControl(unittest.TestCase):
     @patch('technique.muon.run_control.get_input', return_value="geo")
     def test_WHEN_set_geo_beamline_par_to_non_empty_THEN_beamline_par_changed(self, _, __):
         # Act
-        run_control.set_geometry_beamline_par({"geo": "oldGeo"})
+        old_beamline_pars = {"geo": "oldGeo"}
+        run_control.set_geometry_beamline_par(old_beamline_pars)
 
         # Assert
         self.assertTrue(g.change_beamline_par.called, "Should have called to set beamline param")
@@ -122,7 +131,8 @@ class TestRunControl(unittest.TestCase):
     @patch('technique.muon.run_control.get_input', return_value="")
     def test_WHEN_set_geo_beamline_par_to_empty_THEN_beamline_par_changed(self, _, __):
         # Act
-        run_control.set_temp_sample_par({"field": "oldGeo"})
+        old_beamline_pars = {}
+        run_control.set_geometry_beamline_par(old_beamline_pars)
 
         # Assert
         self.assertFalse(g.change_beamline_par.called, "Should not have called to set beamline param")
@@ -167,7 +177,8 @@ class TestRunControl(unittest.TestCase):
     @patch('technique.muon.run_control.get_input', return_value="new comment")
     def test_WHEN_set_comments_sample_par_to_non_empty_THEN_sample_par_changed(self, _, __):
         # Act
-        run_control.set_temp_sample_par({"comments": "oldcomments"})
+        old_sample_pars = {}
+        run_control.set_temp_sample_par(old_sample_pars)
 
         # Assert
         self.assertTrue(g.change_sample_par.called, "Should have called to set sample param")
@@ -176,7 +187,8 @@ class TestRunControl(unittest.TestCase):
     @patch('technique.muon.run_control.get_input', return_value="")
     def test_WHEN_set_comments_sample_par_to_empty_THEN_sample_par_changed(self, _, __):
         # Act
-        run_control.set_temp_sample_par({"comments": "oldcomments"})
+        old_sample_pars = {}
+        run_control.set_temp_sample_par(old_sample_pars)
 
         # Assert
         self.assertFalse(g.change_sample_par.called, "Should not have called to set sample param")
