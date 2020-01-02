@@ -293,5 +293,4 @@ def end_precmd(quiet):
             if label_correct.lower() == "y":
                 break
             else:
-                print("SETTING LABEL")
                 set_label()
