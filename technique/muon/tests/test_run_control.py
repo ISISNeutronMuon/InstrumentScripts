@@ -199,8 +199,8 @@ class TestRunControl(unittest.TestCase):
         # Assert
         self.assertFalse(g.change_title.called, "Should have called to set title")
 
-    def end_pre_cmd_get_input(self, input_promt):
-        if input_promt == "Is the run information correct (y/n)?":
+    def end_pre_cmd_get_input(self, input_prompt):
+        if input_prompt == "Is the run information correct (y/n)?":
             self.get_input_call_count += 1
             if self.get_input_call_count > 2:
                 return "y"

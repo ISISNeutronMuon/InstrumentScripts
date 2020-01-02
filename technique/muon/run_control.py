@@ -1,12 +1,11 @@
 from __future__ import print_function
 from genie_python import genie as g
 from six.moves import input
-from time import sleep
 
 
 def get_input(prompt):
     """
-    Get input from the user (allows us to mock it for testing)
+    Get input from the user (allows us to mock more complex functions for testing than patching input).
 
     Parameters
     ----------
@@ -19,6 +18,7 @@ def get_input(prompt):
       The user input
     """
     return input(prompt)
+
 
 # The keys for parameters in the sample parameters dictionary
 name_par = "name"
@@ -115,7 +115,9 @@ def set_geometry_beamline_par(beamline_pars):
         old_geometry = beamline_pars[geometry_par]
     else:
         old_geometry = ""
-    new_geometry = get_input("Geometry (L or T) {}?".format(old_geometry))
+    new_geometry = None
+    while new_geometry not in {"", "L", "T"}:
+        new_geometry = get_input("Geometry (L or T) {}?".format(old_geometry))
     if new_geometry != "":
         g.change_beamline_par(geometry_par, new_geometry)
 
@@ -214,7 +216,6 @@ def begin_precmd(quiet):
         run_title = get_input("Run title: ")
         g.change_title(run_title)
         set_label()
-    sleep(1)
 
 
 def begin_postcmd(run_num, quiet):
@@ -294,4 +295,3 @@ def end_precmd(quiet):
             else:
                 print("SETTING LABEL")
                 set_label()
-    sleep(1)
