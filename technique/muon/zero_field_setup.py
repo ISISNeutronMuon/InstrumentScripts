@@ -15,11 +15,6 @@ PV_SETPOINT_Z = "TE:NDLT1205:ZFCNTRL_01:FIELD:Z:SP"
 
 POWER_SUPPLY_MAX = 100.00
 
-class time():
-    #pylint: disable=E0102
-    @staticmethod
-    def sleep(something):
-        pass
 
 class ZeroFieldSetupProcedure():
     """
