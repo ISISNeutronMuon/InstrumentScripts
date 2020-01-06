@@ -165,6 +165,17 @@ def set_comments_sample_par(sample_pars):
         g.change_sample_par(comment_par, new_comments)
 
 
+def construct_title():
+    """
+    Construct a run title from the run information: sample name, temperature label and field label.
+
+    Returns:
+        str: run title
+    """
+    sample_pars = g.get_sample_pars()
+    return "{}_{}_{}".format(sample_pars[name_par], sample_pars[temp_par], sample_pars[field_par])
+
+
 def set_label(sample=True, orient=True, temp=True, field=True, geometry=True, rb_num=True, exp_team=True, comment=True):
     """
     Set the run information.
@@ -206,6 +217,9 @@ def set_label(sample=True, orient=True, temp=True, field=True, geometry=True, rb
         set_users()
     if comment:
         set_comments_sample_par(sample_pars)
+    new_title = construct_title()
+    print("Run title = {}".format(new_title))
+    g.change_title(new_title)
 
 
 def begin_precmd(quiet):
@@ -254,6 +268,7 @@ def show_label():
         print("Comment = {}".format(sample_pars[comment_par]))
     else:
         print("Comment not set in sample parameters")
+    print("Run title = {}".format(g.get_title()))
 
 
 def end_precmd():
