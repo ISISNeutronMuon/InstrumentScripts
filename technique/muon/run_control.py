@@ -21,13 +21,13 @@ def get_input(prompt):
 
 
 # The keys for parameters in the sample parameters dictionary
-name_par = "name"
-orient_par = "geometry"
-temp_par = "temp_label"
-field_par = "field_label"
-comment_par = "comments"
+name_par = "NAME"
+orient_par = "GEOMETRY"
+temp_par = "TEMP_LABEL"
+field_par = "FIELD_LABEL"
+comment_par = "COMMENTS"
 # The key for the geometry parameter in the beamline parameters dictionary
-geometry_par = "geometry"
+geometry_par = "GEOMETRY"
 
 
 def set_name_sample_par(sample_pars):
@@ -127,7 +127,12 @@ def set_rb_num():
     Ask the user if the rb number is correct and allow them to change it if not.
     """
     old_rb_num = g.get_rb()
-    new_rb_num = get_input("RBNo {}?".format(old_rb_num))
+    while True:
+        new_rb_num = get_input("RBNo {}?".format(old_rb_num))
+        if new_rb_num == "" or new_rb_num.isdigit():
+            break
+        else:
+            print("RB number must be a number or blank to skip setting")
     if new_rb_num != "":
         g.change_rb(new_rb_num)
 
@@ -205,7 +210,7 @@ def set_label(sample=True, orient=True, temp=True, field=True, geometry=True, rb
 
 def begin_precmd(quiet):
     """
-    Set the run title and run information.
+    Set the run information.
 
     Parameters
     ----------
@@ -213,29 +218,7 @@ def begin_precmd(quiet):
       If true suppress run title question output
     """
     if not quiet:
-        run_title = get_input("Run title: ")
-        g.change_title(run_title)
         set_label()
-
-
-def begin_postcmd(run_num, quiet):
-    """
-    Return the run number at the end of beginning the run.
-
-    Parameters
-    ----------
-    run_num: str
-      The current run number
-    quiet:
-      Suppress the output to the screen (currently there is not output,
-      but quiet is passed by begin so we have to handle it)
-
-    Returns
-    -------
-    str
-      The run number
-    """
-    return run_num
 
 
 def show_label():
@@ -273,24 +256,15 @@ def show_label():
         print("Comment not set in sample parameters")
 
 
-def end_precmd(quiet):
+def end_precmd():
     """
-    Just before ending the run check that the run title and run information is correct.
-
-    Parameters
-    ----------
-    quiet: bool
-      Do not ask if the run title is correct
+    Just before ending the run check that the run information is correct.
     """
-    if not quiet:
-        run_title = get_input("Is \'{}\' the correct run title (y/n)?".format(g.get_title()))
-        if run_title.lower() == "n":
-            g.change_title(get_input("Run title: "))
-        while True:
-            print("Run information:\n")
-            show_label()
-            label_correct = get_input("Is the run information correct (y/n)?")
-            if label_correct.lower() == "y":
-                break
-            else:
-                set_label()
+    while True:
+        print("Run information:\n")
+        show_label()
+        label_correct = get_input("Is the run information correct (y/n)?")
+        if label_correct.lower() == "y":
+            break
+        else:
+            set_label()
