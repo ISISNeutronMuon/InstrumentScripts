@@ -5,7 +5,7 @@ os.environ["GENIE_SIMULATE"] = "1"
 # Imports come after to prevent import of genie python not in simulation
 import unittest
 import six.moves
-from technique.muon import run_control
+from technique.muon import muon_begin_end
 from genie_python import genie as g
 if six.PY3:
     from unittest.mock import patch, MagicMock
@@ -21,17 +21,17 @@ class TestRunControl(unittest.TestCase):
     @patch.object(g, 'change_title')
     def test_WHEN_begin_pre_cmd_quiet_THEN_do_not_change_title(self, _):
         # Act
-        run_control.begin_precmd(quiet=True)
+        muon_begin_end.begin_precmd(quiet=True)
 
         # Assert
         self.assertFalse(g.change_title.called, "Should not have called g.change_title(title)")
 
     @patch.object(g, 'change_title')
-    @patch.object(run_control, 'set_label')
+    @patch.object(muon_begin_end, 'set_label')
     @patch('technique.muon.run_control.get_input', return_value="my_title")
     def test_WHEN_begin_pre_cmd_not_quiet_THEN_title_changed(self, _, set_label,  __):
         # Act
-        run_control.begin_precmd(quiet=False)
+        muon_begin_end.begin_precmd(quiet=False)
 
         # Assert
         self.assertTrue(g.change_title.called, "Should have called g.change_title(my_title)")
@@ -42,7 +42,7 @@ class TestRunControl(unittest.TestCase):
     def test_WHEN_set_name_sample_par_to_non_empty_THEN_sample_par_changed(self, _, __):
         # Act
         old_sample_pars = {"name": "oldname"}
-        run_control.set_name_sample_par(old_sample_pars)
+        muon_begin_end.set_name_sample_par(old_sample_pars)
 
         # Assert
         self.assertTrue(g.change_sample_par.called, "Should have called to set sample param")
@@ -52,7 +52,7 @@ class TestRunControl(unittest.TestCase):
     def test_WHEN_set_name_sample_par_to_empty_THEN_sample_par_changed(self, _, __):
         # Act
         old_sample_pars = {"name": "oldname"}
-        run_control.set_name_sample_par(old_sample_pars)
+        muon_begin_end.set_name_sample_par(old_sample_pars)
 
         # Assert
         self.assertFalse(g.change_sample_par.called, "Should not have called to set sample param")
@@ -62,7 +62,7 @@ class TestRunControl(unittest.TestCase):
     def test_WHEN_set_orient_sample_par_to_non_empty_THEN_sample_par_changed(self, _, __):
         # Act
         old_sample_pars = {"geometry": "oldorient"}
-        run_control.set_orient_sample_par(old_sample_pars)
+        muon_begin_end.set_orient_sample_par(old_sample_pars)
 
         # Assert
         self.assertTrue(g.change_sample_par.called, "Should have called to set sample param")
@@ -72,7 +72,7 @@ class TestRunControl(unittest.TestCase):
     def test_WHEN_set_orient_sample_par_to_empty_THEN_sample_par_changed(self, _, __):
         # Act
         old_sample_pars = {"geometry": "oldorient"}
-        run_control.set_orient_sample_par(old_sample_pars)
+        muon_begin_end.set_orient_sample_par(old_sample_pars)
 
         # Assert
         self.assertFalse(g.change_sample_par.called, "Should not have called to set sample param")
@@ -82,7 +82,7 @@ class TestRunControl(unittest.TestCase):
     def test_WHEN_set_temp_sample_par_to_non_empty_THEN_sample_par_changed(self, _, __):
         # Act
         old_sample_pars = {"temp": "oldtemp"}
-        run_control.set_temp_sample_par(old_sample_pars)
+        muon_begin_end.set_temp_sample_par(old_sample_pars)
 
         # Assert
         self.assertTrue(g.change_sample_par.called, "Should have called to set sample param")
@@ -92,7 +92,7 @@ class TestRunControl(unittest.TestCase):
     def test_WHEN_set_temp_sample_par_to_empty_THEN_sample_par_changed(self, _, __):
         # Act
         old_samples_pars = {"temp": "oldTemp"}
-        run_control.set_temp_sample_par(old_samples_pars)
+        muon_begin_end.set_temp_sample_par(old_samples_pars)
 
         # Assert
         self.assertFalse(g.change_sample_par.called, "Should not have called to set sample param")
@@ -102,7 +102,7 @@ class TestRunControl(unittest.TestCase):
     def test_WHEN_set_field_sample_par_to_non_empty_THEN_sample_par_changed(self, _, __):
         # Act
         old_sample_pars = {"field": "oldfield"}
-        run_control.set_field_sample_par(old_sample_pars)
+        muon_begin_end.set_field_sample_par(old_sample_pars)
 
         # Assert
         self.assertTrue(g.change_sample_par.called, "Should have called to set sample param")
@@ -112,7 +112,7 @@ class TestRunControl(unittest.TestCase):
     def test_WHEN_set_field_sample_par_to_empty_THEN_sample_par_changed(self, _, __):
         # Act
         old_sample_pars = {"field": "oldfield"}
-        run_control.set_field_sample_par(old_sample_pars)
+        muon_begin_end.set_field_sample_par(old_sample_pars)
 
         # Assert
         self.assertFalse(g.change_sample_par.called, "Should not have called to set sample param")
@@ -122,7 +122,7 @@ class TestRunControl(unittest.TestCase):
     def test_WHEN_set_geo_beamline_par_to_non_empty_THEN_beamline_par_changed(self, _, __):
         # Act
         old_beamline_pars = {"geo": "oldGeo"}
-        run_control.set_geometry_beamline_par(old_beamline_pars)
+        muon_begin_end.set_geometry_beamline_par(old_beamline_pars)
 
         # Assert
         self.assertTrue(g.change_beamline_par.called, "Should have called to set beamline param")
@@ -132,7 +132,7 @@ class TestRunControl(unittest.TestCase):
     def test_WHEN_set_geo_beamline_par_to_empty_THEN_beamline_par_changed(self, _, __):
         # Act
         old_beamline_pars = {}
-        run_control.set_geometry_beamline_par(old_beamline_pars)
+        muon_begin_end.set_geometry_beamline_par(old_beamline_pars)
 
         # Assert
         self.assertFalse(g.change_beamline_par.called, "Should not have called to set beamline param")
@@ -141,7 +141,7 @@ class TestRunControl(unittest.TestCase):
     @patch('technique.muon.run_control.get_input', return_value="rb_num")
     def test_WHEN_set_rb_num_to_non_empty_THEN_rb_num_changed(self, _, __):
         # Act
-        run_control.set_rb_num()
+        muon_begin_end.set_rb_num()
 
         # Assert
         self.assertTrue(g.change_rb.called, "Should have called to set rb num")
@@ -150,7 +150,7 @@ class TestRunControl(unittest.TestCase):
     @patch('technique.muon.run_control.get_input', return_value="")
     def test_WHEN_set_rb_num_to_non_empty_THEN_rb_num_changed(self, _, __):
         # Act
-        run_control.set_rb_num()
+        muon_begin_end.set_rb_num()
 
         # Assert
         self.assertFalse(g.change_rb.called, "Should not have called to set rb num")
@@ -159,7 +159,7 @@ class TestRunControl(unittest.TestCase):
     @patch('technique.muon.run_control.get_input', return_value="new users")
     def test_WHEN_set_users_to_non_empty_THEN_users_changed(self, _, __):
         # Act
-        run_control.set_users()
+        muon_begin_end.set_users()
 
         # Assert
         self.assertTrue(g.change_users.called, "Should have called to set new users")
@@ -168,7 +168,7 @@ class TestRunControl(unittest.TestCase):
     @patch('technique.muon.run_control.get_input', return_value="")
     def test_WHEN_set_geo_beamline_par_to_non_empty_THEN_beamline_par_changed(self, _, __):
         # Act
-        run_control.set_users()
+        muon_begin_end.set_users()
 
         # Assert
         self.assertFalse(g.change_users.called, "Should not have called to set new users")
@@ -178,7 +178,7 @@ class TestRunControl(unittest.TestCase):
     def test_WHEN_set_comments_sample_par_to_non_empty_THEN_sample_par_changed(self, _, __):
         # Act
         old_sample_pars = {}
-        run_control.set_temp_sample_par(old_sample_pars)
+        muon_begin_end.set_temp_sample_par(old_sample_pars)
 
         # Assert
         self.assertTrue(g.change_sample_par.called, "Should have called to set sample param")
@@ -188,7 +188,7 @@ class TestRunControl(unittest.TestCase):
     def test_WHEN_set_comments_sample_par_to_empty_THEN_sample_par_changed(self, _, __):
         # Act
         old_sample_pars = {}
-        run_control.set_temp_sample_par(old_sample_pars)
+        muon_begin_end.set_temp_sample_par(old_sample_pars)
 
         # Assert
         self.assertFalse(g.change_sample_par.called, "Should not have called to set sample param")
@@ -197,7 +197,7 @@ class TestRunControl(unittest.TestCase):
     @patch('technique.muon.run_control.get_input', return_value="n")
     def test_WHEN_end_pre_cmd_not_quiet_label_correct_THEN_input_called_once(self, _, __):
         # Act
-        run_control.end_precmd(quiet=False)
+        muon_begin_end.end_precmd(quiet=False)
 
         # Assert
         self.assertTrue(g.change_title.called, "Should have called to set title")
@@ -206,7 +206,7 @@ class TestRunControl(unittest.TestCase):
     @patch('technique.muon.run_control.get_input', return_value="y")
     def test_WHEN_end_pre_cmd_not_quiet_label_correct_THEN_input_called_once(self, _, __):
         # Act
-        run_control.end_precmd(quiet=False)
+        muon_begin_end.end_precmd(quiet=False)
 
         # Assert
         self.assertFalse(g.change_title.called, "Should have called to set title")
@@ -218,13 +218,13 @@ class TestRunControl(unittest.TestCase):
                 return "y"
         return "n"
 
-    @patch.object(run_control, "set_label")
+    @patch.object(muon_begin_end, "set_label")
     def test_WHEN_end_pre_cmd_run_information_incorrect_twice_THEN_set_label_called_twice(self, set_label):
         # Arrange
-        run_control.get_input = MagicMock(side_effect=self.end_pre_cmd_get_input)
+        muon_begin_end.get_input = MagicMock(side_effect=self.end_pre_cmd_get_input)
 
         # Act
-        run_control.end_precmd(quiet=False)
+        muon_begin_end.end_precmd(quiet=False)
 
         # Assert
         self.assertEquals(set_label.call_count, 2, "Run information rejected twice so should have asked "

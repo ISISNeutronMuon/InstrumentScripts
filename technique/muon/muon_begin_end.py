@@ -39,10 +39,7 @@ def set_name_sample_par(sample_pars):
     sample_pars: dict
         The sample parameters that is to contain the name parameter.
     """
-    if name_par in sample_pars:
-        old_sample_name = sample_pars[name_par]
-    else:
-        old_sample_name = ""
+    old_sample_name = sample_pars.get(name_par, "")
     new_sample = get_input("Sample {}?".format(old_sample_name))
     if new_sample != "":
         g.change_sample_par(name_par, new_sample)
@@ -57,10 +54,7 @@ def set_orient_sample_par(sample_pars):
     sample_pars: dict
         The sample parameters that is to contain the orientation parameter.
     """
-    if orient_par in sample_pars:
-        old_orientation = sample_pars[orient_par]
-    else:
-        old_orientation = ""
+    old_orientation = sample_pars.get(orient_par, "")
     new_orient = get_input("Orientation {}?".format(old_orientation))
     if new_orient != "":
         g.change_sample_par(orient_par, new_orient)
@@ -75,10 +69,7 @@ def set_temp_sample_par(sample_pars):
     sample_pars: dict
         The sample parameters that is to contain the temp parameter.
     """
-    if temp_par in sample_pars:
-        old_temp = sample_pars[temp_par]
-    else:
-        old_temp = ""
+    old_temp = sample_pars.get(temp_par, "")
     new_temp = get_input("Temperature {}?".format(old_temp))
     if new_temp != "":
         g.change_sample_par(temp_par, new_temp)
@@ -93,10 +84,7 @@ def set_field_sample_par(sample_pars):
     sample_pars: dict
         The sample parameters that is to contain the field parameter.
     """
-    if field_par in sample_pars:
-        old_field = sample_pars[field_par]
-    else:
-        old_field = ""
+    old_field = sample_pars.get(field_par)
     new_field = get_input("Field {}?".format(old_field))
     if new_field != "":
         g.change_sample_par(field_par, new_field)
@@ -111,10 +99,7 @@ def set_geometry_beamline_par(beamline_pars):
     beamline_pars: dict
         The sample parameters that is to contain the geometry parameter.
     """
-    if geometry_par in beamline_pars:
-        old_geometry = beamline_pars[geometry_par]
-    else:
-        old_geometry = ""
+    old_geometry = beamline_pars.get(geometry_par, "")
     new_geometry = None
     while new_geometry not in {"", "L", "T"}:
         new_geometry = get_input("Geometry (L or T) {}?".format(old_geometry))
