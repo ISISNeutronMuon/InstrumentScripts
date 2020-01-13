@@ -6,22 +6,25 @@ from scipy import stats
 from builtins import range
 from builtins import input
 
-PV_AUTO_FEEDBACK_MODE = "TE:NDLT1205:ZFCNTRL_01:AUTOFEEDBACK"
-PV_MAGNETIC_FIELD_STRENGTH = "TE:NDLT1205:ZFMAGFLD_01:FIELDSTRENGTH"
-
-PV_SETPOINT_X = "TE:NDLT1205:ZFCNTRL_01:FIELD:X:SP"
-PV_SETPOINT_Y = "TE:NDLT1205:ZFCNTRL_01:FIELD:Y:SP"
-PV_SETPOINT_Z = "TE:NDLT1205:ZFCNTRL_01:FIELD:Z:SP"
-
-POWER_SUPPLY_MAX = 100.00
+PV_AUTO_FEEDBACK_MODE = "ZFCNTRL_01:AUTOFEEDBACK"
+PV_READ_MAGNETIC_FIELD_STRENGTH = "ZFMAGFLD_01:FIELDSTRENGTH"
+PV_FIELD_SETPOINT = "ZFCNTRL_01:FIELD:{}:SP"
+PV_CORRECTED_FIELD = "ZFCNTRL_01:FIELD:{}"
+PV_RAW_MEASUREMENT = "ZFCNTRL_01:FIELD:{}:MEAS"
+PV_OFFSET = "ZFMAGFLD_01:{}:OFFSET"
+PV_POWER_SUPPLY_UPPER_LIMIT = "ZFCNTRL_01:OUTPUT:{}:CURR:SP.DRVH"
+PV_POWER_SUPPLY_LOWER_LIMIT = "ZFCNTRL_01:OUTPUT:{}:CURR:SP.DRVL"
+PV_POWER_SUPPLY_SET_POINT = "ZFCNTRL_01:OUTPUT:{}:CURR:SP"
+AUTO_FEEDBACK_MODE = 1
+MANUAL_MODE = 0
 
 
 class ZeroFieldSetupProcedure():
+    # pylint: disable=W0232
     """
     Class for setting up zero field procedure. Contains all the required function which can be run sequentially to
     to complete the set up
     """
-    # pylint: disable=W0232
 
     def read_values(self):
         """
@@ -39,9 +42,9 @@ class ZeroFieldSetupProcedure():
         Reads magnitude value from the OPI
         :return: magnitude of magnetic field
         """
-        return g.get_pv(PV_MAGNETIC_FIELD_STRENGTH)
+        return g.get_pv(PV_READ_MAGNETIC_FIELD_STRENGTH)
 
-    def set_setpoints_to_zero(self, value_x, value_y, value_z):
+    def set_fields_setpoint_to_zero(self):
         """
         Set all set points to 0
         :param value_x: target value for x axis
@@ -49,9 +52,9 @@ class ZeroFieldSetupProcedure():
         :param value_z: target value for z axis
         :return: None
         """
-        g.set_pv(PV_SETPOINT_X, value_x)
-        g.set_pv(PV_SETPOINT_Y, value_y)
-        g.set_pv(PV_SETPOINT_Z, value_z)
+        g.set_pv(PV_FIELD_SETPOINT.format("X"), 0, is_local=True)
+        g.set_pv(PV_FIELD_SETPOINT.format("Y"), 0, is_local=True)
+        g.set_pv(PV_FIELD_SETPOINT.format("Z"), 0, is_local=True)
 
     def get_correlated_current_and_fields(self, plot=False):
         """
@@ -60,7 +63,22 @@ class ZeroFieldSetupProcedure():
         :param plot: data to be plotted or not
         :return: correlated current and fields for each axis
         """
-        iteration_number = 21
+        ps_lower_limit_x = g.get_pv(PV_POWER_SUPPLY_LOWER_LIMIT.format("X"))
+        ps_lower_limit_y = g.get_pv(PV_POWER_SUPPLY_LOWER_LIMIT.format("Y"))
+        ps_lower_limit_z = g.get_pv(PV_POWER_SUPPLY_LOWER_LIMIT.format("Z"))
+
+        ps_max_x = abs(g.get_pv(PV_POWER_SUPPLY_UPPER_LIMIT.format("X"), is_local=True) - \
+                   ps_lower_limit_x)
+
+        ps_max_y = abs(g.get_pv(PV_POWER_SUPPLY_UPPER_LIMIT.format("Y"), is_local=True) - \
+                   ps_lower_limit_y)
+
+        ps_max_z = abs(g.get_pv(PV_POWER_SUPPLY_UPPER_LIMIT.format("Z"), is_local=True) - \
+                   ps_lower_limit_z)
+
+        scale_x = ps_max_x / 20
+        scale_y = ps_max_y / 20
+        scale_z = ps_max_z / 20
 
         current_x = []
         current_y = []
@@ -70,12 +88,15 @@ class ZeroFieldSetupProcedure():
         fields_y = []
         fields_z = []
 
-        # after every 5% increase in current, wait for 2 second and read the field
-        # in all three dimensions
-        for x in range(iteration_number):
-            current_x.append(((x - 10) / 10.0) * POWER_SUPPLY_MAX)
-            current_y.append(((x - 10) / 10.0) * POWER_SUPPLY_MAX)
-            current_z.append(((x - 10) / 10.0) * POWER_SUPPLY_MAX)
+        # 21 evenly spaced steps
+        for x in range(21):
+            current_x.append(ps_lower_limit_x + (x * scale_x))
+            current_y.append(ps_lower_limit_y + (x * scale_y))
+            current_z.append(ps_lower_limit_z + (x * scale_z))
+
+            g.set_pv(PV_POWER_SUPPLY_SET_POINT.format("X"), ps_lower_limit_x + (x * scale_x))
+            g.set_pv(PV_POWER_SUPPLY_SET_POINT.format("Y"), ps_lower_limit_y + (x * scale_y))
+            g.set_pv(PV_POWER_SUPPLY_SET_POINT.format("Z"), ps_lower_limit_z + (x * scale_z))
 
             time.sleep(2)
 
@@ -84,16 +105,21 @@ class ZeroFieldSetupProcedure():
             fields_z.append(self.get_single_corrected_field_value("Z"))
 
         if plot is True:
-            plt.plot(current_x, fields_x, color="red", label="field X", marker="o")
-            plt.plot(current_y, fields_y, color="green", label="field Y", marker="o")
-            plt.plot(current_z, fields_z, color="blue", label="field Z", marker="o")
-            plt.xticks([x for x in range(-100, 110, 10)])
-            plt.xlabel("Current (A)")
-            plt.ylabel("Field (mG)")
-            plt.legend(loc="upper left")
-            plt.show()
+            self.plot_field_against_current(current_x, fields_x, "field X")
+            self.plot_field_against_current(current_y, fields_y, "field Y")
+            self.plot_field_against_current(current_z, fields_z, "field Z")
 
         return current_x, current_y, current_z, fields_x, fields_y, fields_z
+
+    def plot_field_against_current(self, current, field, label):
+        plt.figure()
+        plt.scatter(current, field)
+        plt.plot(current, field, label=label)
+        plt.xticks(current)
+        plt.xlabel("Current (A)")
+        plt.ylabel("Field (mG)")
+        plt.legend(loc="upper left")
+        plt.show()
 
     def calculate_coefficient_and_r_squared(self, x, y):
         """
@@ -107,21 +133,19 @@ class ZeroFieldSetupProcedure():
         coefficient, intercept, r_value, p_value, std_err = stats.linregress(x, y)
         return coefficient, (r_value ** 2)
 
-    def calculate_noise(self, plot=False):
+    def calculate_noise(self, mode, plot=False):
         """
         Calculates the noise in each axis over 20 seconds
         :param plot: data to be plotted or not
         :return: RMS noise value
         """
-        auto_feedback_mode = 1
-        manual = 0
-        number_of_readings = 20
-
-        mode = g.get_pv("TE:NDLT1205:ZFCNTRL_01:AUTOFEEDBACK")
-        if mode == auto_feedback_mode:
+        if (mode == AUTO_FEEDBACK_MODE):
             time.sleep(6)
-        elif mode == manual:
+        else:
+            # manual mode
             time.sleep(3)
+
+        number_of_readings = 20
 
         fields_x = []
         fields_y = []
@@ -142,12 +166,12 @@ class ZeroFieldSetupProcedure():
         rms = np.sqrt((var_x + var_y + var_z))
 
         if plot is True:
-            time_in_seconds = [x for x in range(20)]
-            plt.figure()
-            plt.plot(time_in_seconds, fields_x, color="red", label="field X", marker="o")
-            plt.plot(time_in_seconds, fields_y, color="green", label="field Y", marker="o")
-            plt.plot(time_in_seconds, fields_z, color="blue", label="field Z", marker="o")
-            plt.xticks(time_in_seconds)
+            fig = plt.figure()
+            plt.plot([x for x in range(number_of_readings)], fields_x, color="red", label="field X", marker="o")
+            plt.plot([x for x in range(number_of_readings)], fields_y, color="green", label="field Y", marker="o")
+            plt.plot([x for x in range(number_of_readings)], fields_z, color="blue", label="field Z", marker="o")
+            plt.xticks([x for x in range(number_of_readings)])
+            fig.suptitle("AUTO FEEDBACK" if mode == AUTO_FEEDBACK_MODE else "MANUAL")
             plt.xlabel("Time (sec)")
             plt.ylabel("Field (mG)")
             plt.legend(loc="upper left")
@@ -155,21 +179,33 @@ class ZeroFieldSetupProcedure():
 
         return rms
 
-    def close_plot(self):
-        """
-        close all plot
-        :return: none
-        """
-        plt.close("all")
+    def check_stray_field(self, val):
+        if (val < 4000):
+            return val
 
-    def check_if_stray_field_exist(self):
+    def check_magnet_in_range(self):
         """
         Check if there is huge stray field
         :return: True if there is huge stray field
         """
-        measured_x, measured_y, measured_z = self.read_values()
-        if (abs(measured_x) < 4000 and abs(measured_y)
-                < 4000 and abs(measured_z) < 4000):
+        magnet_in_range = True
+        for direction in ["X", "Y", "Z"]:
+            corrected_field_value = self.get_single_corrected_field_value(direction)
+            if corrected_field_value > 4000:
+                print("Stray field of {} in {} axis".format(corrected_field_value, direction))
+                magnet_in_range = False
+
+        return magnet_in_range
+
+    def ask_user_to_continue(self):
+        """
+        Ask user if they want to continue further
+        :return: True if user want to continue or False if they do not want to continue
+        """
+        reply = ""
+        while reply.lower() != "y" and reply.lower() != "n":
+            reply = input("Would you like to continue? Y/N\n")
+        if reply == "n":
             return False
         return True
 
@@ -180,25 +216,7 @@ class ZeroFieldSetupProcedure():
         :return: corrected field value from the given direction
         """
         return g.get_pv(
-            "TE:NDLT1205:ZFMAGFLD_01:{}:CORRECTEDFIELD".format(field_direction))
-
-    def ask_user_to_continue(self):
-        """
-        Ask user if they want to continue further
-        :return:
-        """
-        reply = ""
-        while reply != "Y" and reply != "N":
-            reply = input("Would you like to continue? Y/N\n")
-        if reply == "N":
-            return "N"
-
-    def get_instrument_name(self):
-        """
-        get instrument name
-        :return: instrument name
-        """
-        return g.get_instrument()
+            PV_CORRECTED_FIELD.format(field_direction), is_local=True)
 
 
 def update_offset():
@@ -206,73 +224,46 @@ def update_offset():
     updates the offset so that the corrected field reading is 0 for each axis
     :return: None
     """
-    x_raw_measurement = g.get_pv("TE:NDLT1205:ZFMAGFLD_01:DAQ:X:_RAW")
-    y_raw_measurement = g.get_pv("TE:NDLT1205:ZFMAGFLD_01:DAQ:Y:_RAW")
-    z_raw_measurement = g.get_pv("TE:NDLT1205:ZFMAGFLD_01:DAQ:Z:_RAW")
 
-    x_new_offset = x_raw_measurement - 0
-    y_new_offset = y_raw_measurement - 0
-    z_new_offset = z_raw_measurement - 0
-
-    g.set_pv("TE:NDLT1205:ZFMAGFLD_01:X:OFFSET", x_new_offset)
-    g.set_pv("TE:NDLT1205:ZFMAGFLD_01:Y:OFFSET", y_new_offset)
-    g.set_pv("TE:NDLT1205:ZFMAGFLD_01:Z:OFFSET", z_new_offset)
+    for direction in ["X", "Y", "Z"]:
+        raw_measurement = g.get_pv(PV_RAW_MEASUREMENT.format(direction), is_local=True)
+        new_offset = raw_measurement - 0
+        g.set_pv(PV_OFFSET.format(direction), new_offset, is_local=True)
 
 
-def run_all():
+def run_zero_field_set_up():
     """
     Run all the functions in order for set up
     :return:
     """
-    while True:
-        print("***********************")
-        procedure = ZeroFieldSetupProcedure()
-        procedure.set_setpoints_to_zero(0, 0, 0)
-        # 2 second timer
-        if procedure.check_if_stray_field_exist():
-            print("Warning! Magnet Not in Range")
-            # pylint: disable=E0602
+    print("***********************")
+    procedure = ZeroFieldSetupProcedure()
+    procedure.set_fields_setpoint_to_zero()
+    # 2 second timer
+    time.sleep(2)
+    if procedure.check_magnet_in_range() is False:
+        return
 
-        current_x, current_y, current_z, fields_x, fields_y, fields_z = procedure.get_correlated_current_and_fields(
-            plot=True)
+    current = 0
+    field = 1
+    axis = 2
 
-        calibration_coefficient_x, coefficient_of_determination_x = procedure.calculate_coefficient_and_r_squared(
-            current_x, fields_x)
-        calibration_coefficient_y, coefficient_of_determination_y = procedure.calculate_coefficient_and_r_squared(
-            current_y, fields_y)
-        calibration_coefficient_z, coefficient_of_determination_z = procedure.calculate_coefficient_and_r_squared(
-            current_z, fields_z)
+    current_x, current_y, current_z, fields_x, fields_y, fields_z = procedure.get_correlated_current_and_fields(
+        plot=True)
 
-        print(
-            "Calibration coefficient for X axis is {unknown}".format(
-                unknown=calibration_coefficient_z))
-        print("The coefficient of determination is {unknown}\n".format(
-            unknown=coefficient_of_determination_x))
+    for x in [[current_x, fields_x, "X"], [current_y, fields_y, "Y"], [current_z, fields_z, "Z"]]:
+        calibration_coefficient, coefficient_of_determination = procedure.calculate_coefficient_and_r_squared(
+            x[current], x[field])
+        print("Calibration coefficient for {} axis is {}".format(x[axis], calibration_coefficient))
+        print("The coefficient of determination is {}\n".format(coefficient_of_determination))
 
-        print(
-            "Calibration coefficient for Y axis is {unknown}".format(
-                unknown=calibration_coefficient_y))
-        print("The coefficient of determination is {unknown}\n".format(
-            unknown=coefficient_of_determination_y))
+    if procedure.ask_user_to_continue() == "N":
+        return
 
-        print(
-            "Calibration coefficient for Z axis is {unknown}".format(
-                unknown=calibration_coefficient_z))
-        print("The coefficient of determination is {unknown}\n".format(
-            unknown=coefficient_of_determination_z))
+    procedure.set_fields_setpoint_to_zero()
+    print("RMS noise for auto-feedback mode is: {}".format(procedure.calculate_noise(AUTO_FEEDBACK_MODE, plot=True)))
 
-        if procedure.ask_user_to_continue() == "N":
-            break
+    procedure.set_fields_setpoint_to_zero()
+    print("RMS noise for manual mode is: {}".format(procedure.calculate_noise(MANUAL_MODE, plot=True)))
 
-        RMS = procedure.calculate_noise(plot=True)
-        print("RMS noise: {unknown}".format(unknown=RMS))
-
-        if procedure.ask_user_to_continue() == "N":
-            break
-
-        update_offset()
-        procedure.close_plot()
-        break
-
-    procedure.close_plot()
-    print("Script Stopped")
+    return
