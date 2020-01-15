@@ -53,7 +53,7 @@ class TestZeroFieldSetup(unittest.TestCase):
                                -80.0, -60.0, -40.0, -20.0, 0.0, 20.0, 40.0, 60.0, 80.0, 100.0]
         expected_currents_y = [-100.0, -94.0, -88.0, -82.0, -76.0, -70.0, -64.0, -58.0, -52.0, -46.0, -40.0, -34.0,
                                -28.0, -22.0, -16.0, -10.0, -4.0, 2.0, 8.0, 14.0, 20.0]
-        expected_currents_z = [((x - 10) / 10) * 100 for x in range(21)]
+        expected_currents_z = [-100.0, -90.0, -80.0, -70.0, -60.0, -50.0, -40.0, -30.0, -20.0, -10.0, 0.0, 10.0, 20.0, 30.0, 40.0, 50.0, 60.0, 70.0, 80.0, 90.0, 100.0]
         get_single_field_value_mock.return_value = 5
         get_pv_mock.side_effect = [-300.00, -100.00, -100.00, 100, 20, 100]
 
@@ -64,7 +64,7 @@ class TestZeroFieldSetup(unittest.TestCase):
         expected_values += val
         expected_values = tuple(expected_values)
 
-        self.assertEquals(expected_values, actual_values)
+        self.assertEqual(expected_values, actual_values)
 
 
     @patch("technique.muon.zero_field_setup.ZeroFieldSetupProcedure.get_single_corrected_field_value")

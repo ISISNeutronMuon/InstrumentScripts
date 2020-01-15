@@ -15,6 +15,7 @@ PV_OFFSET = "ZFMAGFLD_01:{}:OFFSET"
 PV_POWER_SUPPLY_UPPER_LIMIT = "ZFCNTRL_01:OUTPUT:{}:CURR:SP.DRVH"
 PV_POWER_SUPPLY_LOWER_LIMIT = "ZFCNTRL_01:OUTPUT:{}:CURR:SP.DRVL"
 PV_POWER_SUPPLY_SET_POINT = "ZFCNTRL_01:OUTPUT:{}:CURR:SP"
+PV_POWER_SUPPLY_CURR = "ZFCNTRL_01:OUTPUT:{}:CURR"
 AUTO_FEEDBACK_MODE = 1
 MANUAL_MODE = 0
 
@@ -63,9 +64,9 @@ class ZeroFieldSetupProcedure():
         :param plot: data to be plotted or not
         :return: correlated current and fields for each axis
         """
-        ps_lower_limit_x = g.get_pv(PV_POWER_SUPPLY_LOWER_LIMIT.format("X"))
-        ps_lower_limit_y = g.get_pv(PV_POWER_SUPPLY_LOWER_LIMIT.format("Y"))
-        ps_lower_limit_z = g.get_pv(PV_POWER_SUPPLY_LOWER_LIMIT.format("Z"))
+        ps_lower_limit_x = g.get_pv(PV_POWER_SUPPLY_LOWER_LIMIT.format("X"), is_local=True)
+        ps_lower_limit_y = g.get_pv(PV_POWER_SUPPLY_LOWER_LIMIT.format("Y"), is_local=True)
+        ps_lower_limit_z = g.get_pv(PV_POWER_SUPPLY_LOWER_LIMIT.format("Z"), is_local=True)
 
         ps_max_x = abs(g.get_pv(PV_POWER_SUPPLY_UPPER_LIMIT.format("X"), is_local=True) - \
                    ps_lower_limit_x)
@@ -94,9 +95,9 @@ class ZeroFieldSetupProcedure():
             current_y.append(ps_lower_limit_y + (x * scale_y))
             current_z.append(ps_lower_limit_z + (x * scale_z))
 
-            g.set_pv(PV_POWER_SUPPLY_SET_POINT.format("X"), ps_lower_limit_x + (x * scale_x))
-            g.set_pv(PV_POWER_SUPPLY_SET_POINT.format("Y"), ps_lower_limit_y + (x * scale_y))
-            g.set_pv(PV_POWER_SUPPLY_SET_POINT.format("Z"), ps_lower_limit_z + (x * scale_z))
+            g.set_pv(PV_POWER_SUPPLY_SET_POINT.format("X"), ps_lower_limit_x + (x * scale_x), is_local=True)
+            g.set_pv(PV_POWER_SUPPLY_SET_POINT.format("Y"), ps_lower_limit_y + (x * scale_y), is_local=True)
+            g.set_pv(PV_POWER_SUPPLY_SET_POINT.format("Z"), ps_lower_limit_z + (x * scale_z), is_local=True)
 
             time.sleep(2)
 
@@ -104,12 +105,19 @@ class ZeroFieldSetupProcedure():
             fields_y.append(self.get_single_corrected_field_value("Y"))
             fields_z.append(self.get_single_corrected_field_value("Z"))
 
+        self.set_power_supply_in_middle(ps_max_x/2, ps_max_y/2, ps_max_z/2)
+
         if plot is True:
             self.plot_field_against_current(current_x, fields_x, "field X")
             self.plot_field_against_current(current_y, fields_y, "field Y")
             self.plot_field_against_current(current_z, fields_z, "field Z")
 
         return current_x, current_y, current_z, fields_x, fields_y, fields_z
+
+    def set_power_supply_in_middle(self, value_x, value_y, value_z):
+        g.set_pv(PV_POWER_SUPPLY_CURR.format("X"), value_x, is_local=True)
+        g.set_pv(PV_POWER_SUPPLY_CURR.format("Y"), value_y, is_local=True)
+        g.set_pv(PV_POWER_SUPPLY_CURR.format("Z"), value_z, is_local=True)
 
     def plot_field_against_current(self, current, field, label):
         plt.figure()
