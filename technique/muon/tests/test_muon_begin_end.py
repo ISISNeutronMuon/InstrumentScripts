@@ -244,6 +244,5 @@ class TestRunControl(unittest.TestCase):
         muon_begin_end.end_precmd()
 
         # Assert
-        self.assertEquals(set_label.call_count, 2, "Run information rejected twice so should have asked "
+        self.assertEqual(set_label.call_count, 2, "Run information rejected twice so should have asked "
                                                    "user to set the labels 2 times")
-
