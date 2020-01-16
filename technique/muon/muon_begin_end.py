@@ -207,7 +207,7 @@ def set_label(sample=True, orient=True, temp=True, field=True, geometry=True, rb
     g.change_title(new_title)
 
 
-def begin_precmd(quiet):
+def begin_precmd(**pars):
     """
     Set the run information.
 
@@ -216,8 +216,9 @@ def begin_precmd(quiet):
     quiet: bool
       If true suppress run title question output
     """
-    if not quiet:
-        set_label()
+    if 'quiet' in pars:
+        if not pars['quiet']:
+            set_label()
 
 
 def show_label():
@@ -256,7 +257,7 @@ def show_label():
     print("Run title = {}".format(g.get_title()))
 
 
-def end_precmd():
+def end_precmd(**pars):
     """
     Just before ending the run check that the run information is correct.
     """
