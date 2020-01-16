@@ -84,7 +84,7 @@ def set_field_sample_par(sample_pars):
     sample_pars: dict
         The sample parameters that is to contain the field parameter.
     """
-    old_field = sample_pars.get(field_par)
+    old_field = sample_pars.get(field_par, "")
     new_field = get_input("Field {}?".format(old_field))
     if new_field != "":
         g.change_sample_par(field_par, new_field)
@@ -141,10 +141,7 @@ def set_comments_sample_par(sample_pars):
     sample_pars: dict
         The sample parameters that is to contain the comments parameter.
     """
-    if comment_par in sample_pars:
-        old_comments = sample_pars[comment_par]
-    else:
-        old_comments = ""
+    old_comments = sample_pars.get(comment_par, "")
     new_comments = get_input("Comment {}?".format(old_comments))
     if new_comments != "":
         g.change_sample_par(comment_par, new_comments)
