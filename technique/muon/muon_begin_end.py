@@ -40,7 +40,7 @@ def set_name_sample_par(sample_pars):
         The sample parameters that is to contain the name parameter.
     """
     old_sample_name = sample_pars.get(name_par, "")
-    new_sample = get_input("Sample {}?".format(old_sample_name))
+    new_sample = get_input("Sample [{}]?".format(old_sample_name))
     if new_sample != "":
         g.change_sample_par(name_par, new_sample)
 
@@ -55,7 +55,7 @@ def set_orient_sample_par(sample_pars):
         The sample parameters that is to contain the orientation parameter.
     """
     old_orientation = sample_pars.get(orient_par, "")
-    new_orient = get_input("Orientation {}?".format(old_orientation))
+    new_orient = get_input("Orientation [{}]?".format(old_orientation))
     if new_orient != "":
         g.change_sample_par(orient_par, new_orient)
 
@@ -70,7 +70,7 @@ def set_temp_sample_par(sample_pars):
         The sample parameters that is to contain the temp parameter.
     """
     old_temp = sample_pars.get(temp_par, "")
-    new_temp = get_input("Temperature {}?".format(old_temp))
+    new_temp = get_input("Temperature [{}]?".format(old_temp))
     if new_temp != "":
         g.change_sample_par(temp_par, new_temp)
 
@@ -85,7 +85,7 @@ def set_field_sample_par(sample_pars):
         The sample parameters that is to contain the field parameter.
     """
     old_field = sample_pars.get(field_par, "")
-    new_field = get_input("Field {}?".format(old_field))
+    new_field = get_input("Field [{}]?".format(old_field))
     if new_field != "":
         g.change_sample_par(field_par, new_field)
 
@@ -102,7 +102,7 @@ def set_geometry_beamline_par(beamline_pars):
     old_geometry = beamline_pars.get(geometry_par, "")
     new_geometry = None
     while new_geometry not in {"", "L", "T"}:
-        new_geometry = get_input("Geometry (L or T) {}?".format(old_geometry))
+        new_geometry = get_input("Geometry (L or T) [{}]?".format(old_geometry))
     if new_geometry != "":
         g.change_beamline_par(geometry_par, new_geometry)
 
@@ -113,7 +113,7 @@ def set_rb_num():
     """
     old_rb_num = g.get_rb()
     while True:
-        new_rb_num = get_input("RBNo {}?".format(old_rb_num))
+        new_rb_num = get_input("RBNo [{}]?".format(old_rb_num))
         if new_rb_num == "" or new_rb_num.isdigit():
             break
         else:
@@ -127,7 +127,7 @@ def set_users():
     Ask the user if the users are correct and allow them to change it if not.
     """
     old_exp_team = g.get_users()
-    new_exp_team = get_input("Experimental Team {}?".format(old_exp_team))
+    new_exp_team = get_input("Experimental Team [{}]?".format(old_exp_team))
     if new_exp_team != "":
         g.change_users(new_exp_team)
 
@@ -142,7 +142,7 @@ def set_comments_sample_par(sample_pars):
         The sample parameters that is to contain the comments parameter.
     """
     old_comments = sample_pars.get(comment_par, "")
-    new_comments = get_input("Comment {}?".format(old_comments))
+    new_comments = get_input("Comment [{}]?".format(old_comments))
     if new_comments != "":
         g.change_sample_par(comment_par, new_comments)
 
