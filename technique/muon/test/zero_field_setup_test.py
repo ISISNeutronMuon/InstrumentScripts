@@ -6,6 +6,7 @@ import numpy as np
 AUTO_FEEDBACK_MODE = 1
 MANUAL_MODE = 0
 
+
 class TestZeroFieldSetup(unittest.TestCase):
     def setUp(self):
         self.procedure = zero_field_setup.ZeroFieldSetupProcedure()
@@ -21,7 +22,6 @@ class TestZeroFieldSetup(unittest.TestCase):
         value_RMS = self.procedure.calculate_noise(AUTO_FEEDBACK_MODE)
 
         self.assertEquals(0, value_RMS)
-
 
     @patch("technique.muon.zero_field_setup.ZeroFieldSetupProcedure.get_single_corrected_field_value")
     @patch("time.sleep", return_value = None)
@@ -43,19 +43,20 @@ class TestZeroFieldSetup(unittest.TestCase):
 
     @patch("genie_python.genie.get_pv")
     @patch("technique.muon.zero_field_setup.ZeroFieldSetupProcedure.get_single_corrected_field_value")
-    @patch("time.sleep", return_value = None)
+    @patch("time.sleep", return_value=None)
     @patch("genie_python.genie.set_pv")
-    def test_GIVEN_current_and_field_values_THEN_read_current_and_field_values_correctly\
-                    (self, set_pv_mock, _, get_single_field_value_mock, get_pv_mock):
+    def test_GIVEN_current_and_field_values_THEN_read_current_and_field_values_correctly(
+            self, set_pv_mock, _, get_single_field_value_mock, get_pv_mock):
 
         expected_fields = [5] * 21
         expected_currents_x = [-300.0, -280.0, -260.0, -240.0, -220.0, -200.0, -180.0, -160.0, -140.0, -120.0, -100.0,
                                -80.0, -60.0, -40.0, -20.0, 0.0, 20.0, 40.0, 60.0, 80.0, 100.0]
         expected_currents_y = [-100.0, -94.0, -88.0, -82.0, -76.0, -70.0, -64.0, -58.0, -52.0, -46.0, -40.0, -34.0,
                                -28.0, -22.0, -16.0, -10.0, -4.0, 2.0, 8.0, 14.0, 20.0]
-        expected_currents_z = [-100.0, -90.0, -80.0, -70.0, -60.0, -50.0, -40.0, -30.0, -20.0, -10.0, 0.0, 10.0, 20.0, 30.0, 40.0, 50.0, 60.0, 70.0, 80.0, 90.0, 100.0]
+        expected_currents_z = [-100.0, -90.0, -80.0, -70.0, -60.0, -50.0, -40.0, -30.0, -20.0, -10.0, 0.0, 10.0, 20.0,
+                               30.0, 40.0, 50.0, 60.0, 70.0, 80.0, 90.0, 100.0]
         get_single_field_value_mock.return_value = 5
-        get_pv_mock.side_effect = [-300.00, -100.00, -100.00, 100, 20, 100]
+        get_pv_mock.side_effect = [-300.00, -100.00, -100.00, 100, 20, 100, 100, 100, 100, 100, 100, 100]
 
         actual_values = self.procedure.get_correlated_current_and_fields()
 
@@ -65,7 +66,6 @@ class TestZeroFieldSetup(unittest.TestCase):
         expected_values = tuple(expected_values)
 
         self.assertEqual(expected_values, actual_values)
-
 
     @patch("technique.muon.zero_field_setup.ZeroFieldSetupProcedure.get_single_corrected_field_value")
     def test_GIVEN_high_output_field_THEN_magnet_not_in_range(self, get_single_field_value_mock):
