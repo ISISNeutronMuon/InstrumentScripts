@@ -158,7 +158,7 @@ class ZeroFieldSetupProcedure():
         """
         g.set_pv(PV_AUTO_FEEDBACK_MODE, mode, is_local=True)
         if (mode == AUTO_FEEDBACK_MODE):
-            time.sleep(6)
+            time.sleep(20)
         else:
             # manual mode
             time.sleep(3)
