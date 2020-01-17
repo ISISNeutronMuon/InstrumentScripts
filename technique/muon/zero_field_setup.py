@@ -81,39 +81,33 @@ class ZeroFieldSetupProcedure():
         scale_y = ps_max_y / 20
         scale_z = ps_max_z / 20
 
-        current_x = []
-        current_y = []
-        current_z = []
+        currents = {'X': [], 'Y': [], 'Z': []}
 
-        fields_x = []
-        fields_y = []
-        fields_z = []
+        fields = {'X': [], 'Y': [], 'Z': []}
 
         print("Setting current and reading fields ...")
         # 21 evenly spaced steps
-        for x in range(21):
-            current_x.append(ps_lower_limit_x + (x * scale_x))
-            current_y.append(ps_lower_limit_y + (x * scale_y))
-            current_z.append(ps_lower_limit_z + (x * scale_z))
-			
-            print("Setting power supply set point to {} ...".format(ps_lower_limit_x + (x * scale_x)))
-            g.set_pv(PV_POWER_SUPPLY_SET_POINT.format("X"), ps_lower_limit_x + (x * scale_x), is_local=True)
-            g.set_pv(PV_POWER_SUPPLY_SET_POINT.format("Y"), ps_lower_limit_y + (x * scale_y), is_local=True)
-            g.set_pv(PV_POWER_SUPPLY_SET_POINT.format("Z"), ps_lower_limit_z + (x * scale_z), is_local=True)
-            time.sleep(2)
+        for power_supply, scale, lower_limit in [("X", scale_x, ps_lower_limit_x),
+                             ("Y", scale_y, ps_lower_limit_y),
+                             ("Z", scale_z, ps_lower_limit_z)]:
+            for x in range(21):
+                currents[power_supply].append(lower_limit + (x * scale))
 
-            fields_x.append(self.get_single_corrected_field_value("X"))
-            fields_y.append(self.get_single_corrected_field_value("Y"))
-            fields_z.append(self.get_single_corrected_field_value("Z"))
+                print("Setting power supply {} set point to {} ...".format(power_supply, lower_limit + (x * scale)))
+                g.set_pv(PV_POWER_SUPPLY_SET_POINT.format(power_supply), lower_limit + (x * scale),
+                         is_local=True)
+                time.sleep(2)
+
+                fields[power_supply].append(self.get_single_corrected_field_value(power_supply))
 
         self.put_power_supply_in_middle()
 
         if plot is True:
-            self.plot_field_against_current(current_x, fields_x, "Field X")
-            self.plot_field_against_current(current_y, fields_y, "Field Y")
-            self.plot_field_against_current(current_z, fields_z, "Field Z")
+            self.plot_field_against_current(currents['X'], fields['X'], "Field X")
+            self.plot_field_against_current(currents['Y'], fields['Y'], "Field Y")
+            self.plot_field_against_current(currents['Z'], fields['Z'], "Field Z")
 
-        return current_x, current_y, current_z, fields_x, fields_y, fields_z
+        return currents['X'], currents['Y'], currents['Z'], fields['X'], fields['Y'], fields['Z']
 
     def put_power_supply_in_middle(self):
         mid_val_x = (g.get_pv(PV_POWER_SUPPLY_UPPER_LIMIT.format("X")) +
@@ -151,6 +145,7 @@ class ZeroFieldSetupProcedure():
         :return: calibration coefficient and coefficient of determination
         """
         x = np.array(x)
+        x = np.array(x)
         y = np.array(y)
         coefficient, intercept, r_value, p_value, std_err = stats.linregress(x, y)
         return coefficient, (r_value ** 2)
@@ -181,10 +176,7 @@ class ZeroFieldSetupProcedure():
             fields_x.append(self.get_single_corrected_field_value("X"))
             fields_y.append(self.get_single_corrected_field_value("Y"))
             fields_z.append(self.get_single_corrected_field_value("Z"))
-            sys.stdout.write("*")
-            sys.stdout.flush()
             time.sleep(1)
-        print("\n")
 
         # calculating variance of each field
         var_x = np.var(fields_x)
