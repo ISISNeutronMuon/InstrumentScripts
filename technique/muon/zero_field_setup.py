@@ -110,14 +110,14 @@ class ZeroFieldSetupProcedure():
         return currents['X'], currents['Y'], currents['Z'], fields['X'], fields['Y'], fields['Z']
 
     def put_power_supply_in_middle(self):
-        mid_val_x = (g.get_pv(PV_POWER_SUPPLY_UPPER_LIMIT.format("X")) +
-                     g.get_pv(PV_POWER_SUPPLY_LOWER_LIMIT.format("X"))) / 2
+        mid_val_x = (g.get_pv(PV_POWER_SUPPLY_UPPER_LIMIT.format("X"), is_local=True) +
+                     g.get_pv(PV_POWER_SUPPLY_LOWER_LIMIT.format("X"), is_local=True)) / 2
 
-        mid_val_y = (g.get_pv(PV_POWER_SUPPLY_UPPER_LIMIT.format("Y")) +
-                     g.get_pv(PV_POWER_SUPPLY_LOWER_LIMIT.format("Y"))) / 2
+        mid_val_y = (g.get_pv(PV_POWER_SUPPLY_UPPER_LIMIT.format("Y"), is_local=True) +
+                     g.get_pv(PV_POWER_SUPPLY_LOWER_LIMIT.format("Y"), is_local=True)) / 2
 
-        mid_val_z = (g.get_pv(PV_POWER_SUPPLY_UPPER_LIMIT.format("Z")) +
-                     g.get_pv(PV_POWER_SUPPLY_LOWER_LIMIT.format("Z"))) / 2
+        mid_val_z = (g.get_pv(PV_POWER_SUPPLY_UPPER_LIMIT.format("Z"), is_local=True) +
+                     g.get_pv(PV_POWER_SUPPLY_LOWER_LIMIT.format("Z"), is_local=True)) / 2
 
         g.set_pv(PV_POWER_SUPPLY_SET_POINT.format("X"), mid_val_x, is_local=True)
         g.set_pv(PV_POWER_SUPPLY_SET_POINT.format("Y"), mid_val_y, is_local=True)
