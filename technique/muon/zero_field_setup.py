@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 from scipy import stats
 from builtins import range
 from builtins import input
+import sys
 
 PV_AUTO_FEEDBACK_MODE = "ZFCNTRL_01:AUTOFEEDBACK"
 PV_READ_MAGNETIC_FIELD_STRENGTH = "ZFMAGFLD_01:FIELDSTRENGTH"
@@ -15,7 +16,6 @@ PV_OFFSET = "ZFMAGFLD_01:{}:OFFSET"
 PV_POWER_SUPPLY_UPPER_LIMIT = "ZFCNTRL_01:OUTPUT:{}:CURR:SP.DRVH"
 PV_POWER_SUPPLY_LOWER_LIMIT = "ZFCNTRL_01:OUTPUT:{}:CURR:SP.DRVL"
 PV_POWER_SUPPLY_SET_POINT = "ZFCNTRL_01:OUTPUT:{}:CURR:SP"
-PV_POWER_SUPPLY_CURR = "ZFCNTRL_01:OUTPUT:{}:CURR"
 AUTO_FEEDBACK_MODE = 1
 MANUAL_MODE = 0
 
@@ -89,38 +89,52 @@ class ZeroFieldSetupProcedure():
         fields_y = []
         fields_z = []
 
+        print("Setting current and reading fields ...")
         # 21 evenly spaced steps
         for x in range(21):
             current_x.append(ps_lower_limit_x + (x * scale_x))
             current_y.append(ps_lower_limit_y + (x * scale_y))
             current_z.append(ps_lower_limit_z + (x * scale_z))
-
+			
+            print("Setting power supply set point to {} ...".format(ps_lower_limit_x + (x * scale_x)))
             g.set_pv(PV_POWER_SUPPLY_SET_POINT.format("X"), ps_lower_limit_x + (x * scale_x), is_local=True)
             g.set_pv(PV_POWER_SUPPLY_SET_POINT.format("Y"), ps_lower_limit_y + (x * scale_y), is_local=True)
             g.set_pv(PV_POWER_SUPPLY_SET_POINT.format("Z"), ps_lower_limit_z + (x * scale_z), is_local=True)
-
             time.sleep(2)
 
             fields_x.append(self.get_single_corrected_field_value("X"))
             fields_y.append(self.get_single_corrected_field_value("Y"))
             fields_z.append(self.get_single_corrected_field_value("Z"))
 
-        self.set_power_supply_in_middle(ps_max_x/2, ps_max_y/2, ps_max_z/2)
+        self.put_power_supply_in_middle()
 
         if plot is True:
-            self.plot_field_against_current(current_x, fields_x, "field X")
-            self.plot_field_against_current(current_y, fields_y, "field Y")
-            self.plot_field_against_current(current_z, fields_z, "field Z")
+            self.plot_field_against_current(current_x, fields_x, "Field X")
+            self.plot_field_against_current(current_y, fields_y, "Field Y")
+            self.plot_field_against_current(current_z, fields_z, "Field Z")
 
         return current_x, current_y, current_z, fields_x, fields_y, fields_z
 
-    def set_power_supply_in_middle(self, value_x, value_y, value_z):
-        g.set_pv(PV_POWER_SUPPLY_CURR.format("X"), value_x, is_local=True)
-        g.set_pv(PV_POWER_SUPPLY_CURR.format("Y"), value_y, is_local=True)
-        g.set_pv(PV_POWER_SUPPLY_CURR.format("Z"), value_z, is_local=True)
+    def put_power_supply_in_middle(self):
+        mid_val_x = (g.get_pv(PV_POWER_SUPPLY_UPPER_LIMIT.format("X")) +
+                     g.get_pv(PV_POWER_SUPPLY_LOWER_LIMIT.format("X"))) / 2
+
+        mid_val_y = (g.get_pv(PV_POWER_SUPPLY_UPPER_LIMIT.format("Y")) +
+                     g.get_pv(PV_POWER_SUPPLY_LOWER_LIMIT.format("Y"))) / 2
+
+        mid_val_z = (g.get_pv(PV_POWER_SUPPLY_UPPER_LIMIT.format("Z")) +
+                     g.get_pv(PV_POWER_SUPPLY_LOWER_LIMIT.format("Z"))) / 2
+
+        g.set_pv(PV_POWER_SUPPLY_SET_POINT.format("X"), mid_val_x, is_local=True)
+        g.set_pv(PV_POWER_SUPPLY_SET_POINT.format("Y"), mid_val_y, is_local=True)
+        g.set_pv(PV_POWER_SUPPLY_SET_POINT.format("Z"), mid_val_z, is_local=True)
+
 
     def plot_field_against_current(self, current, field, label):
-        plt.figure()
+        fig = plt.figure(figsize=(8,5))
+        fig.set_size_inches(8,8)
+        fig.suptitle("Plot of Current and Field")
+        plt.tick_params(axis="x", pad=10)
         plt.scatter(current, field)
         plt.plot(current, field, label=label)
         plt.xticks(current)
@@ -147,6 +161,7 @@ class ZeroFieldSetupProcedure():
         :param plot: data to be plotted or not
         :return: RMS noise value
         """
+        g.set_pv(PV_AUTO_FEEDBACK_MODE, mode, is_local=True)
         if (mode == AUTO_FEEDBACK_MODE):
             time.sleep(6)
         else:
@@ -159,12 +174,17 @@ class ZeroFieldSetupProcedure():
         fields_y = []
         fields_z = []
 
+        print("Reading fields over 20 second period...\n")
         # 20 readings, one second apart
         for x in range(number_of_readings):
+
             fields_x.append(self.get_single_corrected_field_value("X"))
             fields_y.append(self.get_single_corrected_field_value("Y"))
             fields_z.append(self.get_single_corrected_field_value("Z"))
+            sys.stdout.write("*")
+            sys.stdout.flush()
             time.sleep(1)
+        print("\n")
 
         # calculating variance of each field
         var_x = np.var(fields_x)
@@ -213,7 +233,7 @@ class ZeroFieldSetupProcedure():
         reply = ""
         while reply.lower() != "y" and reply.lower() != "n":
             reply = input("Would you like to continue? Y/N\n")
-        if reply == "n":
+        if reply.lower() == "n":
             return False
         return True
 
@@ -244,9 +264,13 @@ def run_zero_field_set_up():
     Run all the functions in order for set up
     :return:
     """
+    # set to manual initially
+    g.set_pv(PV_AUTO_FEEDBACK_MODE, MANUAL_MODE, is_local=True)
+
     print("***********************")
     procedure = ZeroFieldSetupProcedure()
     procedure.set_fields_setpoint_to_zero()
+    print("Checking if magnet is in range\n")
     # 2 second timer
     time.sleep(2)
     if procedure.check_magnet_in_range() is False:
@@ -262,10 +286,14 @@ def run_zero_field_set_up():
     for x in [[current_x, fields_x, "X"], [current_y, fields_y, "Y"], [current_z, fields_z, "Z"]]:
         calibration_coefficient, coefficient_of_determination = procedure.calculate_coefficient_and_r_squared(
             x[current], x[field])
-        print("Calibration coefficient for {} axis is {}".format(x[axis], calibration_coefficient))
+        print("Calibration coefficient for {} axis is {} mG/A".format(x[axis], calibration_coefficient))
+
+        if (calibration_coefficient != 0):
+            print ("{} A/mG({})".format(1/calibration_coefficient, x[axis]))
+
         print("The coefficient of determination is {}\n".format(coefficient_of_determination))
 
-    if procedure.ask_user_to_continue() == "N":
+    if procedure.ask_user_to_continue() == False:
         return
 
     procedure.set_fields_setpoint_to_zero()
@@ -273,5 +301,4 @@ def run_zero_field_set_up():
 
     procedure.set_fields_setpoint_to_zero()
     print("RMS noise for manual mode is: {}".format(procedure.calculate_noise(MANUAL_MODE, plot=True)))
-
     return
