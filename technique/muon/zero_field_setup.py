@@ -100,7 +100,7 @@ class ZeroFieldSetupProcedure():
 
                 fields[power_supply].append(self.get_single_corrected_field_value(power_supply))
 
-        self.put_power_supply_in_middle()
+            self.put_power_supply_in_middle()
 
         if plot is True:
             self.plot_field_against_current(currents['X'], fields['X'], "Field X")
