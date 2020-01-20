@@ -63,6 +63,8 @@ def run_angle(sample, angle, count_uamps=None, count_seconds=None, count_frames=
 
     if not auto_height:
         movement.set_height_offset(sample.height)
+    else:
+        auto_height()  # TODO should set height based on laser gun measurement
 
     movement.set_slit_gaps(angle, constants, s1vg, s2vg, s3vg, s4vg, sample)
     movement.wait_for_move()
@@ -72,8 +74,6 @@ def run_angle(sample, angle, count_uamps=None, count_seconds=None, count_frames=
     if count_seconds is None and count_uamps is None and count_frames is None:
         print("Setup only no measurement")
     else:
-        if auto_height:
-            auto_height()
         movement.count_for(count_uamps, count_seconds, count_frames)
 
 
@@ -121,10 +121,12 @@ def transmission(sample, title, s1vg, s2vg, s3vg=None, s4vg=None,
         movement.set_height2_offset(sample.height2_offset, constants)
         movement.set_theta(0.0)
 
-        if height_offset < 10:  # if the height offset is less than can be achieved by the fine z use this
-            movement.set_height_offset(sample.height - height_offset)
-        else:
+        # if there is a seconds height stage and the height offset is greater than can be achieved by the fine z use
+        # second stage
+        if constants.has_height2 and height_offset > 10:
             movement.set_height2_offset(sample.height2_offset - height_offset, constants)
+        else:
+            movement.set_height_offset(sample.height - height_offset)
 
         if s3vg is None:
             s3vg = constants.s3max
@@ -278,6 +280,7 @@ class _Movement(object):
                 new_title, *gaps)
 
         if self.dry_run:
+            g.change_title(new_title)
             print("New Title: {}".format(new_title))
         else:
             g.change_title(new_title)
