@@ -246,3 +246,19 @@ class TestRunControl(unittest.TestCase):
         # Assert
         self.assertEqual(set_label.call_count, 2, "Run information rejected twice so should have asked "
                                                    "user to set the labels 2 times")
+
+    @patch('technique.muon.muon_begin_end.get_input', return_value="y")
+    def test_WHEN_end_pre_cmd_called_WITH_quiet_set_to_false_THEN_change_title_called(self, mock_get_input):
+        # Act
+        muon_begin_end.end_precmd(quiet=False)
+
+        # Assert
+        self.assertGreater(mock_get_input.call_count, 0, "Set_label method called")
+
+    @patch('technique.muon.muon_begin_end.get_input', return_value="y")
+    def test_WHEN_end_pre_cmd_called_WITH_quiet_set_to_true_THEN_change_title_not_called(self, mock_get_input):
+        # Act
+        muon_begin_end.end_precmd(quiet=True)
+
+        # Assert
+        self.assertEqual(mock_get_input.call_count, 0, "Set_label method NOT called")

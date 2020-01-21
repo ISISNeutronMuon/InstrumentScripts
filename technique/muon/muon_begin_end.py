@@ -213,9 +213,8 @@ def begin_precmd(**pars):
     quiet: bool
       If true suppress run title question output
     """
-    if 'quiet' in pars:
-        if not pars['quiet']:
-            set_label()
+    if not pars.get('quiet', False):
+        set_label()
 
 
 def show_label():
@@ -257,12 +256,19 @@ def show_label():
 def end_precmd(**pars):
     """
     Just before ending the run check that the run information is correct.
+
+    Parameters
+    ----------
+    quiet: bool
+      If true suppress run title question output
     """
-    while True:
-        print("Run information:\n")
-        show_label()
-        label_correct = get_input("Is the run information correct (y/n)?")
-        if label_correct.lower() == "y":
-            break
-        else:
-            set_label()
+
+    if not pars.get('quiet', False):
+        while True:
+            print("Run information:\n")
+            show_label()
+            label_correct = get_input("Is the run information correct (y/n)?")
+            if label_correct.lower() == "y":
+                break
+            else:
+                set_label()
