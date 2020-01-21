@@ -258,11 +258,14 @@ def end_precmd(**pars):
     """
     Just before ending the run check that the run information is correct.
     """
-    while True:
-        print("Run information:\n")
-        show_label()
-        label_correct = get_input("Is the run information correct (y/n)?")
-        if label_correct.lower() == "y":
-            break
-        else:
-            set_label()
+    
+    if 'quiet' in pars:
+        if not pars['quiet']:
+            while True:
+                print("Run information:\n")
+                show_label()
+                label_correct = get_input("Is the run information correct (y/n)?")
+                if label_correct.lower() == "y":
+                    break
+                else:
+                    set_label()
