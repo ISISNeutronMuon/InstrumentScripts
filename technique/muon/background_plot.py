@@ -14,6 +14,7 @@ from genie_python.genie_cachannel_wrapper import CaChannelWrapper, CaChannelExce
 from requests import head, ConnectionError
 
 # Default Figure name for the plot
+BLOCK_PREFIX = "CS:SB:"
 DEFAULT_FIGURE_NAME = "Background Plot"
 
 
@@ -261,7 +262,7 @@ class BackgroundBlockPlot(BackgroundPlot):
         super(BackgroundBlockPlot, self).__init__(interval, "{} Plot".format(y_axis_label))
         self._run_state_pv = g.prefix_pv_name(DAE_PVS_LOOKUP["runstate"])
         self._run_number_pv = g.prefix_pv_name(DAE_PVS_LOOKUP["runnumber"])
-        self._pv_name = g.adv.get_pv_from_block(block_name)
+        self._pv_name = g.prefix_pv_name("{}{}".format(BLOCK_PREFIX, block_name))
         self.y_axis_label = y_axis_label
         self.current_run_number = None
 
