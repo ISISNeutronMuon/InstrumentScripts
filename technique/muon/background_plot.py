@@ -231,27 +231,33 @@ class BackgroundPlot(object):
 
 class BackgroundBlockPlot(BackgroundPlot):
     """
-    Background plot which plots a block, both value and setpoint. Clears the plot on the start of a new run
+    Background plot which plots a number of blocks. Clears the plot on the start of a new run
 
     Example
     -------
 
     Add the following line to your init
 
-    background_plot=BackgroundBlockPlot("Sample_Temperature", "Temperature").start()
+    >>> background_plot=BackgroundBlockPlot((("Temp_Sample", "value"), ("Temp_SP", "setpoint")), "Temperature").start()
 
-    This will create a background plot for the Sample_Temperature block for both set point and value with temperature
-    as the name of the plot and the y axis. It defaults to an interval of 0.5s
+    This will create a background plot for the Temp_Sample block and Temp_SP block with legend labels value and setpoint
+    . The name of the plot and the y axis will be Temperature. It defaults to an interval of 0.5s
+
+    >>> background_plot=BackgroundBlockPlot((("Temp_Sample", "value"),
+                                             ("Temp_SP", "setpoint"),
+                                             ("Result", "result")), "Temperature", interval=1).start()
+
+    In this example we create a three line plot of Temp_Sample, Temp_SP and Result. The delay between samples is 1s.
     """
 
-    def __init__(self, block_name, y_axis_label, interval=0.5):
+    def __init__(self, block_and_name_list, y_axis_label, interval=0.5):
         """
         Initialisation.
 
         Parameters
         ----------
-        block_name: str
-            Name of block to plot
+        block_and_name_list: list[tuple(str, str)]
+            List of blocks and there names on the legend
 
         y_axis_label: str
             y axis label
@@ -262,7 +268,13 @@ class BackgroundBlockPlot(BackgroundPlot):
         super(BackgroundBlockPlot, self).__init__(interval, "{} Plot".format(y_axis_label))
         self._run_state_pv = g.prefix_pv_name(DAE_PVS_LOOKUP["runstate"])
         self._run_number_pv = g.prefix_pv_name(DAE_PVS_LOOKUP["runnumber"])
-        self._pv_name = g.prefix_pv_name("{}{}".format(BLOCK_PREFIX, block_name))
+        self._pv_names = []
+        self._legend_labels = []
+        for block, name in block_and_name_list:
+            self._legend_labels.append(name)
+            pv_name = g.prefix_pv_name("{}{}".format(BLOCK_PREFIX, block))
+            self._pv_names.append(pv_name)
+
         self.y_axis_label = y_axis_label
         self.current_run_number = None
 
@@ -327,10 +339,9 @@ class BackgroundBlockPlot(BackgroundPlot):
         -------
         time, block value, block setpoint
         """
-        data = self._get_pv_none_on_invalid_alarm(self._pv_name)
-        sp = self._get_pv_none_on_invalid_alarm("{}:SP".format(self._pv_name))
+        data = [self._get_pv_none_on_invalid_alarm(pv_name) for pv_name in self._pv_names]
 
-        return datetime.now(), data, sp
+        return [datetime.now()] + data
 
     def should_clear_plot(self):
         """
@@ -358,6 +369,6 @@ class BackgroundBlockPlot(BackgroundPlot):
 
         Returns
         -------
-        Value and setpoint labels
+        Legend labels
         """
-        return "value", "set point"
+        return self._legend_labels
