@@ -1,7 +1,7 @@
 """
 Create a background plot. Which is a matplotlib figure that runs in the background
 """
-from datetime import datetime
+from datetime import datetime, timedelta
 from threading import Thread
 
 from genie_python.genie_dae import DAE_PVS_LOOKUP
@@ -100,6 +100,7 @@ class BackgroundPlot(object):
         Get back the first point and set up initial data fields
         """
         attempt = 0
+        self.data = None
         while self.data is None:
             first_point = self.get_data_point()
             try:
@@ -178,7 +179,7 @@ class BackgroundPlot(object):
         for data_set, line in zip(self.data, self.lines):
             line.set_data(self.data_x, data_set)
         self.figure.gca().relim()
-        self.figure.gca().set_xlim(left=self.data_x[0], right=self.data_x[-1])
+        self.figure.gca().set_xlim(left=self.data_x[0], right=self.data_x[-1] + timedelta(seconds=0.5))
         self.figure.gca().autoscale_view()
 
         return self.lines
