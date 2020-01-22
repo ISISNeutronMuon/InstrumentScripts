@@ -10,7 +10,7 @@ from matplotlib.animation import FuncAnimation
 from random import randrange
 from functools import partial
 from genie_python import genie as g
-from genie_python.genie_cachannel_wrapper import CaChannelWrapper
+from genie_python.genie_cachannel_wrapper import CaChannelWrapper, CaChannelException, UnableToConnectToPVException
 from requests import head, ConnectionError
 
 # Default Figure name for the plot
@@ -99,16 +99,24 @@ class BackgroundPlot(object):
         """
         Get back the first point and set up initial data fields
         """
-        first_point = self.get_data_point()
-        try:
-            if len(first_point) < 2:
-                raise TypeError
-        except TypeError:
-            raise TypeError("Error in plot: get_data_point() must return a list of at least two entries.")
-        self.data_x = [first_point[0], ]
-        self.data = []
-        for point in first_point[1:]:
-            self.data.append([point, ])
+        attempt = 0
+        while self.data is None:
+            first_point = self.get_data_point()
+            try:
+                if len(first_point) < 2:
+                    raise TypeError
+            except TypeError:
+                raise TypeError("Error in plot: get_data_point() must return a list of at least two entries.")
+            self.data_x = [first_point[0], ]
+            if all([point is None for point in first_point[1:]]):
+                self.data = None
+                if attempt % 10 == 0:
+                    print("background Plot: Can not read initial point")
+                attempt += 1
+            else:
+                self.data = []
+                for point in first_point[1:]:
+                    self.data.append([point, ])
 
     def _update(self, frame, *fargs):
         """
@@ -170,6 +178,7 @@ class BackgroundPlot(object):
         for data_set, line in zip(self.data, self.lines):
             line.set_data(self.data_x, data_set)
         self.figure.gca().relim()
+        self.figure.gca().set_xlim(left=self.data_x[0], right=self.data_x[-1])
         self.figure.gca().autoscale_view()
 
         return self.lines
@@ -276,6 +285,28 @@ class BackgroundBlockPlot(BackgroundPlot):
 
         return CaChannelWrapper.get_pv_value(pv_name, timeout=self._interval / 4.0, to_string=to_string)
 
+    def _get_pv_none_on_invalid_alarm(self, pv_name):
+        """
+        Get a pv value but return none if it is invalid alarm
+
+        Parameters
+        ----------
+        pv_name:
+            name of the pv to read
+
+        Returns
+        -------
+            value or None is disconnected or in INVALID alarm
+        """
+        try:
+            data = self._get_pv_with_timeout(pv_name)
+            error = self._get_pv_with_timeout(pv_name + ".SEVR")
+            if error == "INVALID":
+                data = None
+        except (CaChannelException, UnableToConnectToPVException):
+            data = None
+        return data
+
     def set_up_plot(self):
         """
         Do any initial figure setup on start of plotting. Draw legend and label axes
@@ -294,8 +325,8 @@ class BackgroundBlockPlot(BackgroundPlot):
         -------
         time, block value, block setpoint
         """
-        data = self._get_pv_with_timeout(self._pv_name)
-        sp = self._get_pv_with_timeout(self._pv_name + ":SP")
+        data = self._get_pv_none_on_invalid_alarm(self._pv_name)
+        sp = self._get_pv_none_on_invalid_alarm("{}:SP".format(self._pv_name))
 
         return datetime.now(), data, sp
 
@@ -307,14 +338,17 @@ class BackgroundBlockPlot(BackgroundPlot):
         -------
         True when plot should be cleared, False otherwise
         """
-        num = self._get_pv_with_timeout(self._run_number_pv)
-        
-        if num != self.current_run_number:
-            run_state = self._get_pv_with_timeout(self._run_state_pv, to_string=True)
-            if run_state == 'RUNNING':
-                self.current_run_number = num
-                return True
-        return False
+        try:
+            num = self._get_pv_with_timeout(self._run_number_pv)
+
+            if num != self.current_run_number:
+                run_state = self._get_pv_with_timeout(self._run_state_pv, to_string=True)
+                if run_state == 'RUNNING':
+                    self.current_run_number = num
+                    return True
+            return False
+        except (CaChannelException, UnableToConnectToPVException):
+            return False
 
     def get_data_set_labels(self):
         """
