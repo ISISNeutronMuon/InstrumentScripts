@@ -155,7 +155,9 @@ def construct_title():
         str: run title
     """
     sample_pars = g.get_sample_pars()
-    return "{}_{}_{}".format(sample_pars[name_par], sample_pars[temp_par], sample_pars[field_par])
+    return "{}_{}_{}".format(sample_pars.get(name_par, "name not set"),
+                             sample_pars.get(temp_par, "temp not set"),
+                             sample_pars.get(field_par, "field not set"))
 
 
 def set_label(sample=True, orient=True, temp=True, field=True, geometry=True, rb_num=True, exp_team=True, comment=True):
@@ -213,6 +215,8 @@ def begin_precmd(**pars):
     quiet: bool
       If true suppress run title question output
     """
+    new_title = construct_title()
+    g.change_title(new_title)
     if not pars.get('quiet', False):
         set_label()
 
