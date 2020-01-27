@@ -1,6 +1,7 @@
 from __future__ import print_function
 from genie_python import genie as g
 from six.moves import input
+import time
 
 
 def get_input(prompt):
@@ -155,7 +156,7 @@ def construct_title():
         str: run title
     """
     sample_pars = g.get_sample_pars()
-    return "{}_{}_{}".format(sample_pars[name_par], sample_pars[temp_par], sample_pars[field_par])
+    return "{}_T={}_F={}".format(sample_pars[name_par], sample_pars[temp_par], sample_pars[field_par])
 
 
 def set_label(sample=True, orient=True, temp=True, field=True, geometry=True, rb_num=True, exp_team=True, comment=True):
@@ -215,6 +216,7 @@ def begin_precmd(**pars):
     """
     if not pars.get('quiet', False):
         set_label()
+    print("{}: Beginning Run".format(time.ctime()))
 
 
 def show_label():
@@ -262,7 +264,6 @@ def end_precmd(**pars):
     quiet: bool
       If true suppress run title question output
     """
-
     if not pars.get('quiet', False):
         while True:
             print("Run information:\n")
@@ -272,3 +273,4 @@ def end_precmd(**pars):
                 break
             else:
                 set_label()
+    print("{}: Ending Run".format(time.ctime()))
