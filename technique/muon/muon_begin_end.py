@@ -220,7 +220,10 @@ def begin_precmd(**pars):
     g.change_title(new_title)
     if not pars.get('quiet', False):
         set_label()
-    print("{}: Beginning Run".format(time.ctime()))
+    else:
+        # A timestamp and printing of begin run does not happen in quiet mode normally
+        # EMU requested that it does here to keep track of what happens with their scripts
+        print("{}: Beginning Run".format(time.ctime()))
 
 
 def show_label():
@@ -277,4 +280,7 @@ def end_precmd(**pars):
                 break
             else:
                 set_label()
-    print("{}: Ending Run".format(time.ctime()))
+    else:
+        # A timestamp and printing of end run does not happen in quiet mode normally
+        # EMU requested that it does here to keep track of what happens with their scripts
+        print("{}: Ending Run".format(time.ctime()))
