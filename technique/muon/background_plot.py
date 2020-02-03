@@ -13,6 +13,12 @@ from genie_python import genie as g
 from genie_python.genie_cachannel_wrapper import CaChannelWrapper, CaChannelException, UnableToConnectToPVException
 from requests import head, ConnectionError
 
+try:
+    from thread import interrupt_main
+except ImportError:
+    from _thread import interrupt_main
+
+    
 # Default Figure name for the plot
 BLOCK_PREFIX = "CS:SB:"
 DEFAULT_FIGURE_NAME = "Background Plot"
@@ -59,6 +65,8 @@ class BackgroundPlot(object):
             return
         except ConnectionError:
             pass
+        except KeyboardInterrupt:
+            interrupt_main()
 
         self.thread = Thread(target=self._start_plot)
         self.thread.daemon = True
@@ -103,23 +111,26 @@ class BackgroundPlot(object):
         attempt = 0
         self.data = None
         while self.data is None:
-            first_point = self.get_data_point()
             try:
-                if len(first_point) < 2:
-                    raise TypeError
-            except TypeError:
-                raise TypeError("Error in plot: get_data_point() must return a list of at least two entries.")
-            self.data_x = [first_point[0], ]
-            if all([point is None for point in first_point[1:]]):
-                self.data = None
-                if attempt % 10 == 0:
-                    print("background Plot: Can not read initial point")
-                attempt += 1
-            else:
-                self.data = []
-                for point in first_point[1:]:
-                    self.data.append([point, ])
-
+                first_point = self.get_data_point()
+                try:
+                    if len(first_point) < 2:
+                        raise TypeError
+                except TypeError:
+                    raise TypeError("Error in plot: get_data_point() must return a list of at least two entries.")
+                self.data_x = [first_point[0], ]
+                if all([point is None for point in first_point[1:]]):
+                    self.data = None
+                    if attempt % 10 == 0:
+                        print("background Plot: Can not read initial point")
+                    attempt += 1
+                else:
+                    self.data = []
+                    for point in first_point[1:]:
+                        self.data.append([point, ])
+            except KeyboardInterrupt:
+                interrupt_main()
+                    
     def _update(self, frame, *fargs):
         """
         Update the plot, call update but catches any exceptions and prints them for the user to see
@@ -133,6 +144,8 @@ class BackgroundPlot(object):
         """
         try:
             self.update(frame, *fargs)
+        except KeyboardInterrupt:
+            interrupt_main()
         except Exception as ex:
             print("Update plot failed with {}".format(ex))
 
@@ -151,10 +164,13 @@ class BackgroundPlot(object):
         -------
             List of matplotlib artists
         """
-        if self.should_clear_plot():
-            self.clear_plot()
-        else:
-            self.update_data()
+        try:
+            if self.should_clear_plot():
+                self.clear_plot()
+            else:
+                self.update_data()
+        except KeyboardInterrupt:
+            interrupt_main()
 
         return self.update_figure()
 
@@ -177,11 +193,14 @@ class BackgroundPlot(object):
         Artists used to update the plot.
 
         """
-        for data_set, line in zip(self.data, self.lines):
-            line.set_data(self.data_x, data_set)
-        self.figure.gca().relim()
-        self.figure.gca().set_xlim(left=self.data_x[0], right=self.data_x[-1] + timedelta(seconds=0.5))
-        self.figure.gca().autoscale_view()
+        try:
+            for data_set, line in zip(self.data, self.lines):
+                line.set_data(self.data_x, data_set)
+            self.figure.gca().relim()
+            self.figure.gca().set_xlim(left=self.data_x[0], right=self.data_x[-1] + timedelta(seconds=0.5))
+            self.figure.gca().autoscale_view()
+        except KeyboardInterrupt:
+            interrupt_main()
 
         return self.lines
 
@@ -216,7 +235,7 @@ class BackgroundPlot(object):
         False, the plot is never cleared
         """
         return False
-
+        
     def clear_plot(self):
         """
         Clear the plot by adding the first point and updating the figure
@@ -225,8 +244,11 @@ class BackgroundPlot(object):
         -------
 
         """
-        self._first_point()
-        self.update_figure()
+        try:
+            self._first_point()
+            self.update_figure()
+        except KeyboardInterrupt:
+            interrupt_main()
 
 
 class BackgroundBlockPlot(BackgroundPlot):
@@ -296,8 +318,11 @@ class BackgroundBlockPlot(BackgroundPlot):
         -------
             pv's value
         """
-
-        return CaChannelWrapper.get_pv_value(pv_name, timeout=self._interval / 4.0, to_string=to_string)
+        try:
+            return CaChannelWrapper.get_pv_value(pv_name, timeout=self._interval / 4.0, to_string=to_string)
+        except KeyboardInterrupt:
+            interrupt_main()
+            return None
 
     def _get_pv_none_on_invalid_alarm(self, pv_name):
         """
@@ -317,6 +342,9 @@ class BackgroundBlockPlot(BackgroundPlot):
             error = self._get_pv_with_timeout(pv_name + ".SEVR")
             if error == "INVALID":
                 data = None
+        except KeyboardInterrupt:
+            interrupt_main()
+            data = None
         except (CaChannelException, UnableToConnectToPVException):
             data = None
         return data
@@ -325,11 +353,14 @@ class BackgroundBlockPlot(BackgroundPlot):
         """
         Do any initial figure setup on start of plotting. Draw legend and label axes
         """
-        pyplot.legend(bbox_to_anchor=(0., 1.02, 1., .102), loc=3,
-                      ncol=min(3, len(self.data)), mode="expand", borderaxespad=0.)
-        self.figure.gca().set_xlabel("Time")
-        self.figure.gca().set_ylabel(self.y_axis_label)
-        self.current_run_number = g.get_runnumber()
+        try:
+            pyplot.legend(bbox_to_anchor=(0., 1.02, 1., .102), loc=3,
+                          ncol=min(3, len(self.data)), mode="expand", borderaxespad=0.)
+            self.figure.gca().set_xlabel("Time")
+            self.figure.gca().set_ylabel(self.y_axis_label)
+            self.current_run_number = 0
+        except KeyboardInterrupt:
+            interrupt_main()
 
     def get_data_point(self):
         """
@@ -339,7 +370,11 @@ class BackgroundBlockPlot(BackgroundPlot):
         -------
         time, block value, block setpoint
         """
-        data = [self._get_pv_none_on_invalid_alarm(pv_name) for pv_name in self._pv_names]
+        try:
+            data = [self._get_pv_none_on_invalid_alarm(pv_name) for pv_name in self._pv_names]
+        except KeyboardInterrupt:
+            interrupt_main()
+            data = [None for pv_name in self._pv_names]
 
         return [datetime.now()] + data
 
@@ -361,6 +396,9 @@ class BackgroundBlockPlot(BackgroundPlot):
                     return True
             return False
         except (CaChannelException, UnableToConnectToPVException):
+            return False
+        except KeyboardInterrupt:
+            interrupt_main()
             return False
 
     def get_data_set_labels(self):
