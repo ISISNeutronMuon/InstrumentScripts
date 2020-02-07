@@ -215,6 +215,10 @@ def begin_precmd(**pars):
     ----------
     quiet: bool
       If true suppress run title question output
+
+    Return
+    ------
+    str: None if we want to begin the run, reason as a string if not
     """
     new_title = construct_title()
     g.change_title(new_title)
@@ -224,6 +228,13 @@ def begin_precmd(**pars):
         # A timestamp and printing of begin run does not happen in quiet mode normally
         # EMU requested that it does here to keep track of what happens with their scripts
         print("{}: Beginning Run".format(time.ctime()))
+    # If we are in a run do not start another
+    if g.get_runstate() in ["RUNNING", "PAUSED", "WAITING", "VETOING", "SAVING", "RESUMING",
+                            "PAUSING", "BEGINNING", "UPDATING", "STORING", "CHANGING"]:
+        # We are already in a run so do not being another and give the reason
+        return "Run {} is already in progress, continuing run".format(g.get_runnumber())
+    else:
+        return None  # We are not in a run so we should start another
 
 
 def show_label():
