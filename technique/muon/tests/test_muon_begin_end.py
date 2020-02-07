@@ -19,12 +19,12 @@ class TestRunControl(unittest.TestCase):
         self.get_input_call_count = 0
 
     @patch.object(g, 'change_title')
-    def test_WHEN_begin_pre_cmd_quiet_THEN_do_not_change_title(self, _):
+    def test_WHEN_begin_pre_cmd_quiet_THEN_change_title(self, _):
         # Act
         muon_begin_end.begin_precmd(quiet=True)
 
         # Assert
-        self.assertFalse(g.change_title.called, "Should not have called g.change_title(title)")
+        self.assertTrue(g.change_title.called, "Should not have called g.change_title(title)")
 
     @patch.object(g, 'change_title')
     @patch.object(muon_begin_end, 'set_label')
