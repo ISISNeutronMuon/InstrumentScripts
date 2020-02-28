@@ -11,11 +11,14 @@ from random import randrange
 from functools import partial
 from genie_python import genie as g
 from genie_python.genie_cachannel_wrapper import CaChannelWrapper, CaChannelException, UnableToConnectToPVException
+from genie_python.matplotlib_backend.ibex_web_backend import set_up_plot_default, SECONDARY_WEB_PORT
 from requests import head, ConnectionError
 
 # Default Figure name for the plot
-BLOCK_PREFIX = "CS:SB:"
 DEFAULT_FIGURE_NAME = "Background Plot"
+
+# The prefix for the block server
+BLOCK_PREFIX = "CS:SB:"
 
 
 class BackgroundPlot(object):
@@ -24,6 +27,9 @@ class BackgroundPlot(object):
     """
 
     def __init__(self, interval, figure_name=DEFAULT_FIGURE_NAME):
+
+        set_up_plot_default(is_primary=False, should_open_ibex_window_on_show=False)
+
         # Animation object which updates the plot
         self._animation = None
         # x daa for the plot, date time objects
@@ -54,7 +60,7 @@ class BackgroundPlot(object):
         self
         """
         try:
-            head("http://localhost:8988")
+            head("http://localhost:{}".format(SECONDARY_WEB_PORT))
             print("Background Plot: new plot not started because it is already running")
             return
         except ConnectionError:
