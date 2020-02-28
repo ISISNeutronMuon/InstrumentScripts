@@ -1,8 +1,10 @@
 """
-Create a background plot. Which is a matplotlib figure that runs in the background
+Create a background plot. Which is a matplotlib figure that runs on the secondary plot
 """
+import matplotlib
+matplotlib.use('module://genie_python.matplotlib_backend.ibex_web_backend')
+
 from datetime import datetime, timedelta
-from threading import Thread
 
 from genie_python.genie_dae import DAE_PVS_LOOKUP
 from matplotlib import pyplot
@@ -66,16 +68,6 @@ class BackgroundPlot(object):
         except ConnectionError:
             pass
 
-        self.thread = Thread(target=self._start_plot)
-        self.thread.daemon = True
-        self.thread.start()
-        return self
-
-    def _start_plot(self):
-        """
-        Start animation to plot the data in a new Thread
-        """
-    
         if pyplot.fignum_exists(self._figure_name):
             print("Figure already exists!")
             return
