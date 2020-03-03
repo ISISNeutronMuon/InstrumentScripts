@@ -9,6 +9,7 @@ from math import tan, radians, sin
 from six.moves import input
 from genie_python import genie as g
 
+from technique.reflectometry import Sample
 from technique.reflectometry.instrument_constants import get_instrument_constants
 
 
@@ -33,6 +34,23 @@ def run_angle(sample, angle, count_uamps=None, count_seconds=None, count_frames=
         auto_height: if True when taking data run the auto-height routine
         dry_run: True just print what is going to happen; False do the experiment
 
+    Examples:
+        The simplest scan is:
+        >>> my_sample = Sample("My title", "my subtitle", 0, 0, 0, 0, 0, 0.6, 3.0)
+        >>> run_angle(my_sample, 0.3, count_seconds=10)
+        This will use my_sample settings to perform a measurement at the theta angle of 0.3 for 10 seconds. It will set
+        slits 1 and 2 so that the resolution is 0.6 and the footprint is 3, then set slits 3 and 4 based on the fraction
+        of the the maximum theta allowed. It will not move the super mirror in or out of the beam. The mode will not be
+        changed and it will not use a height gun for auto-height mode.
+
+        >>> run_angle(my_sample, 0.0, s1vg=0.1, s2vg=0.3, mode="NR")
+        In this evocation we are setting theta to 0 with s1 and s2 set to 0.1 and 0.3. The mode is also
+        changed to NR. Depending on what this means on your instrument this may also set the offsets for components
+        back to 0. No count was specified so in this case the beamline is moved to the position and left there; no
+        data is captured.
+
+        >>> run_angle(my_sample, 0.0, dry_run=True)
+        In this run nothing is changed and just the settings that will be used are printed.
     """
 
     print("** Run angle {} **".format(sample.title))
@@ -101,6 +119,23 @@ def transmission(sample, title, s1vg, s2vg, s3vg=None, s4vg=None,
         smangle: super mirror angle, place in the beam, if set to 0 remove from the beam; None don't move super mirror
         mode: mode to run in; None don't change mode
         dry_run: True to print what happens; False to do experiment
+    Examples:
+        The simplest transmission is:
+
+        >>> my_sample = Sample("My title", "my subtitle", 0, 0, 0, 0, 0, 0.6, 3.0)
+        >>> transmission(my_sample, "My Title", 0.1, 0.2, count_seconds=1)
+        This will set slit gaps 1 and 2 to 0.1 and 0.2. Slits 3 and 4 will be set to maximum vertical width. The
+        horizontal slits will be left where they are. The height of the sample will be set to 5mm below the expected
+        sample position. The super mirror will stay where it is and the mode won't change. After the run the horizontal
+        slits will be set back to where they were when the move started.
+
+        A more complicated example:
+        >>> transmission(my_sample, "My Title", 0.1, 0.2, 0.3, 0.4, count_frames=1,
+        >>>              s1hg=20, s2hg=20, s3hg=20, s4hg=20, smangle=0.1, mode="PNR", dry_run=True)
+        Dry_run is true here so nothing will actually happen, but the effects will be printed to the screen. If
+        dry_run had not been set then the vertical gaps would be set to 0.1, 0.2, 0.3 and 0.4, the horizontal gaps
+        would be all set to 20. The super mirror would be moved into the beam and set to the angle 0.1. The mode will
+        be changed to PNR. The system will be record at least 1 frame of data.
     """
 
     print("** Transmission {} **".format(title))
