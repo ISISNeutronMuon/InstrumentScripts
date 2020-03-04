@@ -68,7 +68,7 @@ def get_reflectometry_value(value_name):
     :return: value for the value_name stored in the pv on the REFL server
     :raises IOError: if PV does not exist
     """
-    pv_name = "REFL:VALUE:{}".format(value_name)
+    pv_name = "REFL:CONST:{}".format(value_name)
     value = g.get_pv(pv_name, is_local=True)
     if value is None:
         raise IOError("PV {} does not exist".format(pv_name))
