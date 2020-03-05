@@ -23,12 +23,18 @@ class InstrumentConstant(object):
         """
         self.s1s2 = s1s2
         self.s2sa = s2sa
-        self.maxTheta = max_theta
+        self.max_theta = max_theta
         self.s4max = s4max
-        self.SM_sa = sm_sa
+        self.sm_sa = sm_sa
         self.s3max = s4max if s3max is None else s3max
         self.has_height2 = has_height2
         self.incoming_beam_angle = incoming_beam_angle
+
+    def __repr__(self):
+        return "s1s2={}, s2sa={}, SM_sa={}, maxTheta={}, s3max={}, s4max={}, has_height_2={}, natural_angle={}".format(
+            self.s1s2, self.s2sa, self.sm_sa, self.max_theta, self.s3max, self.s4max, self.has_height2,
+            self.incoming_beam_angle
+        )
 
 
 def get_instrument_constants():
@@ -53,8 +59,8 @@ def get_instrument_constants():
             s1s2=s2_z - s1_z,
             s2sa=sample_z - s2_z,
             max_theta=max_theta,  # usual maximum angle
-            s4max=s4_max,  # max s4_vg at maxTheta
-            s3max=s3_max,  # max s4_vg at maxTheta
+            s4max=s4_max,  # max s4_vg at max Theta
+            s3max=s3_max,  # max s4_vg at max Theta
             sm_sa=sample_z - sm_z,
             incoming_beam_angle=natural_angle,
             has_height2=has_height2)

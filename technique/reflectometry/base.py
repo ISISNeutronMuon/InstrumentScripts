@@ -329,7 +329,7 @@ class _Movement(object):
         """
         s1, s2 = self.calculate_slit_gaps(theta, sample.footprint, sample.resolution, constants)
 
-        factor = theta / constants.maxTheta
+        factor = theta / constants.max_theta
         s3 = constants.s3max * factor
         s4 = constants.s4max * factor
 
