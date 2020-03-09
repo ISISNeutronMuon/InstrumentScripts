@@ -31,7 +31,7 @@ class InstrumentConstant(object):
         self.incoming_beam_angle = incoming_beam_angle
 
     def __repr__(self):
-        return "s1s2={}, s2sa={}, SM_sa={}, maxTheta={}, s3max={}, s4max={}, has_height_2={}, natural_angle={}".format(
+        return "s1s2={}, s2sa={}, sm_sa={}, max_theta={}, s3max={}, s4max={}, has_height_2={}, natural_angle={}".format(
             self.s1s2, self.s2sa, self.sm_sa, self.max_theta, self.s3max, self.s4max, self.has_height2,
             self.incoming_beam_angle
         )
