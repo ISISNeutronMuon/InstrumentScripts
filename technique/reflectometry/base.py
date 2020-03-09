@@ -50,7 +50,8 @@ def run_angle(sample, angle, count_uamps=None, count_seconds=None, count_frames=
         data is captured.
 
         >>> run_angle(my_sample, 0.0, dry_run=True)
-        In this run nothing is changed and just the settings that will be used are printed.
+        In this run, dry_run is set to True so nothing will actually happen, it will only print the settings that would be
+        used for the run to the screen.
     """
 
     print("** Run angle {} **".format(sample.title))
