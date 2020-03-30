@@ -152,7 +152,7 @@ class Scan(object):
 
     def plot(self, detector=None, save=None,
              action=None, **kwargs):
-        """Run over the scan an perform a simple measurement at each position.
+        """Run over the scan and perform a simple measurement at each position.
         The measurement parameter can be used to set what type of measurement
         is to be taken.  If the save parameter is set to a file name, then the
         plot will be saved in that file."""
