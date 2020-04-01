@@ -249,7 +249,10 @@ class Scan(object):
             result = np.array([x for x in result if x is not None])
             result = np.median(result, axis=0)
 
-        return fit.readable(result)
+        fit_result = fit.readable(result)
+        print("Fit: {}".format(fit_result))
+
+        return fit_result
 
     def calculate(self, time=False, pad=0, **kwargs):
         # pylint: disable=redefined-outer-name
