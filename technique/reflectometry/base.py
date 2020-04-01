@@ -4,13 +4,15 @@ Base routine for reflectometry techniques
 import sys
 from collections import OrderedDict
 from contextlib import contextmanager
+
+from future.moves import itertools
 from math import tan, radians, sin
 
 from six.moves import input
 from genie_python import genie as g
 
-from technique.reflectometry import Sample
-from technique.reflectometry.instrument_constants import get_instrument_constants
+from .sample import Sample
+from .instrument_constants import get_instrument_constants
 
 
 def run_angle(sample, angle, count_uamps=None, count_seconds=None, count_frames=None, s1vg=None, s2vg=None, s3vg=None,
@@ -50,8 +52,8 @@ def run_angle(sample, angle, count_uamps=None, count_seconds=None, count_frames=
         data is captured.
 
         >>> run_angle(my_sample, 0.0, dry_run=True)
-        In this run, dry_run is set to True so nothing will actually happen, it will only print the settings that would be
-        used for the run to the screen.
+        In this run, dry_run is set to True so nothing will actually happen, it will only print the settings that would
+        be used for the run to the screen.
     """
 
     print("** Run angle {} **".format(sample.title))
@@ -220,11 +222,13 @@ def reset_hgaps_and_sample_height(movement, sample, constants):
         elif choice.upper() == "E":
             movement.end()
             _reset_gaps()
+
         elif choice.upper() == "K":
             print("Continuing counting, remember to set back horizontal slit gaps when the run is ended.")
             movement.resume()
 
         movement.wait_for_seconds(5)
+        raise  # reraise the exception so that any running script will be aborted
 
 
 def slit_check(theta, footprint, resolution):
@@ -263,7 +267,7 @@ class _Movement(object):
             if not self.dry_run:
                 g.cset("MODE", mode)
         else:
-            mode = g.cget("MODE")["value"]
+            mode = self._get_block_value("MODE")
         return mode
 
     def dry_run_warning(self):
@@ -291,9 +295,23 @@ class _Movement(object):
         gaps = OrderedDict()
         for slit_num in [1, 2, 3, 4]:
             gap_pv = "S{}{}G".format(slit_num, v_or_h)
-            gaps[gap_pv.lower()] = g.cget(gap_pv)["value"]
+            gaps[gap_pv.lower()] = self._get_block_value(gap_pv)
 
         return gaps
+
+    def _get_block_value(self, pv_name):
+        """
+        Get a block value of post an error if block doesn't exist
+
+        :param pv_name: pv name
+        :return :value of pv
+        :raises ValueError: if block does not exist
+
+        """
+        block_value = g.cget(pv_name)
+        if block_value is None:
+            raise KeyError("Block {} does not exist".format(pv_name))
+        return block_value["value"]
 
     def update_title(self, title, subtitle, theta, smangle, add_current_gaps):
         """
@@ -311,8 +329,7 @@ class _Movement(object):
             new_title = "{} SM={:.4g}".format(new_title, smangle)
 
         if add_current_gaps:
-            gaps = self.get_gaps(vertical=True).values()
-            gaps.extend(self.get_gaps(vertical=False).values())
+            gaps = itertools.chain(self.get_gaps(vertical=True).values(), self.get_gaps(vertical=False).values())
             new_title = "{} VGs ({:.3g} {:.3g} {:.3g} {:.3g}) HGs ({:.3g} {:.3g} {:.3g} {:.3g})".format(
                 new_title, *gaps)
 
@@ -418,7 +435,10 @@ class _Movement(object):
         :return:
         """
         print("Setting hgaps to {} (None's are not changed)".format([s1hg, s2hg, s3hg, s4hg]))
-        if s1hg < 0.0 or s2hg < 0.0 or s3hg < 0.0 or s4hg < 0.0:
+
+        def _val_lt_0(val):
+            return val is not None and val < 0.0
+        if any([_val_lt_0(s1hg), _val_lt_0(s2hg), _val_lt_0(s3hg), _val_lt_0(s4hg)]):
             sys.stderr.write("Horizontal slit gaps are being set to less than 0!\n")
 
         if not self.dry_run:
