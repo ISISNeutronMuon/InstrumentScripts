@@ -99,7 +99,7 @@ class ReflectometryScan(Defaults):
         """
         from datetime import datetime
         now = datetime.now()
-        return os.path.join("C:\\", "scripts", "TEST", "{}_{}_{}_{}_{}_{}_{}.dat".format(
+        return os.path.join("U:\\", "scripts", "TEST", "{}_{}_{}_{}_{}_{}_{}.dat".format(
             ReflectometryScan.block, now.year, now.month, now.day, now.hour, now.minute, now.second))
 
     @staticmethod
