@@ -129,7 +129,7 @@ class Fit(object):
                         fity = self.get_y(plot_x, params)
                 axis.plot(plot_x, fity, "-",
                           label="{} fit".format(self.title(params)))
-            axis.legend()
+            axis.legend(bbox_to_anchor=(0, 1.02, 1, 0.2), loc="lower left", mode="expand", borderaxespad=0, ncol=3)
             return params
         return action
 
@@ -583,7 +583,7 @@ class CentreOfMassFit(Fit):
             errs = np.array(y.err())
             params = self.fit(x, values, errs)
             axis.axvline(x=params[0], color="orange")
-            axis.legend([self.title(params)])
+            axis.legend([self.title(params)], bbox_to_anchor=(0, 1.02, 1, 0.2), loc="lower left", mode="expand", borderaxespad=0, ncol=3)
             return params
         return action
 
