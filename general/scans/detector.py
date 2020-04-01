@@ -110,7 +110,8 @@ class DaePeriods(DetectorManager):
         else:
             title = "Scan"
         g.change_title(title)
-        g.change(nperiods=self.period_function(self._scan))
+        period_count = self.period_function(self._scan)
+        g.change(nperiods=period_count)
         g.change(period=1)
         try:
             g.begin(paused=1)
@@ -119,7 +120,9 @@ class DaePeriods(DetectorManager):
             def wrap(*args, **kwargs):
                 """Wrapped function to change periods"""
                 x = self._f(*args, **kwargs)
-                g.change_period(1 + g.get_period())
+                new_period = 1 + g.get_period()
+                if new_period <= period_count:
+                    g.change_period(new_period)
                 return x
 
             return wrap
