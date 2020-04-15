@@ -5,7 +5,7 @@ from math import fabs
 
 from genie_python import genie as g
 
-from technique.reflectometry.base import _Movement
+from .base import _Movement
 
 
 def contrast_change(valve_position, concentrations, flow, volume=None, seconds=None, wait=False, dry_run=False):

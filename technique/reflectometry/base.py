@@ -206,29 +206,34 @@ def reset_hgaps_and_sample_height(movement, sample, constants):
         yield
         _reset_gaps()
     except KeyboardInterrupt:
-        movement.pause()
+        try:
+            movement.pause()
 
-        while True:
-            choice = input("ctrl-c hit do you wish to (A)bort or (E)nd or (K)eep Counting?")
-            if choice is not None and choice.upper() in ["A", "E", "K"]:
-                break
-            print("Invalid choice try again!")
+            while True:
+                choice = input("ctrl-c hit do you wish to (A)bort or (E)nd or (K)eep Counting?")
+                if choice is not None and choice.upper() in ["A", "E", "K"]:
+                    break
+                print("Invalid choice try again!")
 
-        if choice.upper() == "A":
-            movement.abort()
-            print("Setting horizontal slit gaps to pre-tranmission values.")
-            _reset_gaps()
+            if choice.upper() == "A":
+                movement.abort()
+                print("Setting horizontal slit gaps to pre-tranmission values.")
+                _reset_gaps()
 
-        elif choice.upper() == "E":
-            movement.end()
-            _reset_gaps()
+            elif choice.upper() == "E":
+                movement.end()
+                _reset_gaps()
 
-        elif choice.upper() == "K":
-            print("Continuing counting, remember to set back horizontal slit gaps when the run is ended.")
-            movement.resume()
+            elif choice.upper() == "K":
+                print("Continuing counting, remember to set back horizontal slit gaps when the run is ended.")
+                movement.resume()
 
-        movement.wait_for_seconds(5)
-        raise  # reraise the exception so that any running script will be aborted
+            movement.wait_for_seconds(5)
+            raise  # reraise the exception so that any running script will be aborted
+        except Exception as ex:
+            sys.stderr.write("An exception thrown while reseting the horizontal gaps {}. "
+                             "Rethrowing keyboard exception!".format(ex))
+            raise KeyboardInterrupt()
 
 
 def slit_check(theta, footprint, resolution):
