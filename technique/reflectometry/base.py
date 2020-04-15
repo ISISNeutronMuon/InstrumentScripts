@@ -195,7 +195,7 @@ def reset_hgaps_and_sample_height(movement, sample, constants):
     horizontal_gaps = movement.get_gaps(vertical=False)
 
     def _reset_gaps():
-        print("Reset horizontal gaps to {}".format(horizontal_gaps.values))
+        print("Reset horizontal gaps to {}".format(horizontal_gaps.values()))
         movement.set_h_gaps(**horizontal_gaps)
 
         movement.set_height_offset(sample.height)
@@ -206,34 +206,36 @@ def reset_hgaps_and_sample_height(movement, sample, constants):
         yield
         _reset_gaps()
     except KeyboardInterrupt:
-        try:
+        running_on_entry = not movement.is_in_setup()
+        if running_on_entry:
             movement.pause()
 
-            while True:
-                choice = input("ctrl-c hit do you wish to (A)bort or (E)nd or (K)eep Counting?")
-                if choice is not None and choice.upper() in ["A", "E", "K"]:
-                    break
-                print("Invalid choice try again!")
+        while True:
+            print("")
+            choice = input("ctrl-c hit do you wish to (A)bort or (E)nd or (K)eep Counting?")
+            if choice is not None and choice.upper() in ["A", "E", "K"]:
+                break
+            print("Invalid choice try again!")
 
-            if choice.upper() == "A":
+        if choice.upper() == "A":
+            if running_on_entry:
                 movement.abort()
-                print("Setting horizontal slit gaps to pre-tranmission values.")
-                _reset_gaps()
+            print("Setting horizontal slit gaps to pre-tranmission values.")
+            _reset_gaps()
 
-            elif choice.upper() == "E":
+        elif choice.upper() == "E":
+            if running_on_entry:
                 movement.end()
-                _reset_gaps()
+            _reset_gaps()
 
-            elif choice.upper() == "K":
-                print("Continuing counting, remember to set back horizontal slit gaps when the run is ended.")
+        elif choice.upper() == "K":
+            print("Continuing counting, remember to set back horizontal slit gaps when the run is ended.")
+            if running_on_entry:
                 movement.resume()
 
-            movement.wait_for_seconds(5)
-            raise  # reraise the exception so that any running script will be aborted
-        except Exception as ex:
-            sys.stderr.write("An exception thrown while reseting the horizontal gaps {}. "
-                             "Rethrowing keyboard exception!".format(ex))
-            raise KeyboardInterrupt()
+        movement.wait_for_seconds(5)
+        print("\n\n PRESS ctl + c to get the prompt back \n\n")  # This is because there is a bug in pydev
+        raise  # reraise the exception so that any running script will be aborted
 
 
 def slit_check(theta, footprint, resolution):
@@ -563,3 +565,12 @@ class _Movement(object):
                 g.begin()
                 g.waitfor_frames(final_frame)
                 g.end()
+
+    def is_in_setup(self):
+        """
+        :Returns True if DAE is in setup; in dry run mode will return True
+        """
+        if self.dry_run:
+            return True
+        else:
+            return g.get_runstate() == "SETUP"
