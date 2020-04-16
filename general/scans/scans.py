@@ -152,7 +152,7 @@ class Scan(object):
 
     def plot(self, detector=None, save=None,
              action=None, **kwargs):
-        """Run over the scan an perform a simple measurement at each position.
+        """Run over the scan and perform a simple measurement at each position.
         The measurement parameter can be used to set what type of measurement
         is to be taken.  If the save parameter is set to a file name, then the
         plot will be saved in that file."""
@@ -249,7 +249,10 @@ class Scan(object):
             result = np.array([x for x in result if x is not None])
             result = np.median(result, axis=0)
 
-        return fit.readable(result)
+        fit_result = fit.readable(result)
+        print("Fit: {}".format(fit_result))
+
+        return fit_result
 
     def calculate(self, time=False, pad=0, **kwargs):
         # pylint: disable=redefined-outer-name

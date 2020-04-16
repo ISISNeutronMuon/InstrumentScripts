@@ -66,7 +66,7 @@ class BlockDetector(DetectorManager):
 class DaePeriods(DetectorManager):
     """This helper class aids in making detector managers that perform all
     of their measurements in a single DAE run, instead of constantly
-    starting and stoping the DAE."""
+    starting and stopping the DAE."""
 
     def __init__(self, f, pre_init, period_function=len, unit="Intensity"):
         """Create a new detector manager that runs in a single Dae run
@@ -102,6 +102,7 @@ class DaePeriods(DetectorManager):
         if g.get_runstate() != "SETUP":  # pragma: no cover
             raise RuntimeError("Cannot start scan while already in a run!" +
                                " Current state is: " + str(g.get_runstate()))
+
         kwargs = self._kwargs
         if "title" in kwargs:
             title = kwargs["title"]
@@ -109,20 +110,31 @@ class DaePeriods(DetectorManager):
         else:
             title = "Scan"
         g.change_title(title)
-        g.change(nperiods=self.period_function(self._scan))
+        period_count = self.period_function(self._scan)
+        g.change(nperiods=period_count)
         g.change(period=1)
-        g.begin(paused=1)
+        try:
+            g.begin(paused=1)
 
-        @wraps(self._f)
-        def wrap(*args, **kwargs):
-            """Wrapped function to change periods"""
-            x = self._f(*args, **kwargs)
-            g.change_period(1 + g.get_period())
-            return x
+            @wraps(self._f)
+            def wrap(*args, **kwargs):
+                """Wrapped function to change periods"""
+                x = self._f(*args, **kwargs)
+                new_period = 1 + g.get_period()
+                if new_period <= period_count:
+                    g.change_period(new_period)
+                return x
 
-        return wrap
+            return wrap
+        except Exception:
+            if g.get_runstate() != "SETUP":  # pragma: no cover
+                self._end_or_abort()
+            raise
 
     def __exit__(self, typ, value, traceback):
+        self._end_or_abort()
+
+    def _end_or_abort(self):
         if self._save:
             g.end()
         else:

@@ -58,7 +58,7 @@ class Monoid(object):
 
 class Average(Monoid):
     """
-    This monoid calculates the average of its values.
+    This monoid calculates the average of its values, e.g. detector count/monitor count
     """
 
     def __init__(self, x, count=1):
@@ -81,6 +81,20 @@ class Average(Monoid):
         return Average(0, 0)
 
     def err(self):
+        """
+        Calculates error in average count.
+
+        z=x/y
+        err_x = sqrt(x)
+        err_y = sqrt(y)
+        err_z^2 = (err_x . dz/dx)^2 + (err_y . dx_dy)^2
+        err_z^2 = x. 1/y^2 + y . x^2 / y^4
+        err_z^2 = x^2/y^2 . (1/x + 1/y)
+
+        Returns
+        -------
+        Error in average counts
+        """
         if self.count == 0:
             return np.nan
         if self.total == 0:
