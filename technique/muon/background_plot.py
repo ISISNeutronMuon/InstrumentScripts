@@ -1,6 +1,7 @@
 """
 Create a background plot. Which is a matplotlib figure that runs on the secondary plot
 """
+import csv
 import matplotlib
 matplotlib.use('module://genie_python.matplotlib_backend.ibex_web_backend')
 
@@ -21,6 +22,9 @@ DEFAULT_FIGURE_NAME = "Background Plot"
 
 # The prefix for the block server
 BLOCK_PREFIX = "CS:SB:"
+
+# Name of file which data points are saved to
+SAVE_FILE = "C:\\Instrument\\var\\tmp\\background_plot_data.csv"
 
 
 class BackgroundPlot(object):
@@ -81,6 +85,7 @@ class BackgroundPlot(object):
             self.lines.append(line)
 
         self.set_up_plot()
+        self.start_new_data_file()
 
         self._animation = FuncAnimation(self.figure, partial(self._update, self), interval=self._interval*1000)
 
@@ -151,10 +156,28 @@ class BackgroundPlot(object):
         """
         if self.should_clear_plot():
             self.clear_plot()
+            self.start_new_data_file()
         else:
             self.update_data()
 
         return self.update_figure()
+
+    def start_new_data_file(self):
+        """
+        Starts a new data file, or deletes old data and creates new file
+        """
+        open(SAVE_FILE, 'w').close()
+
+    def save_data_point(self, points):
+        """
+        Appends the temporary save file with the latest data points
+
+        Args:
+            points: list containing data points to save. First value is timestamp
+        """
+        with open(SAVE_FILE, 'a', newline='') as csvfile:
+            csvwriter = csv.writer(csvfile, delimiter=',')
+            csvwriter.writerow(points)
 
     def update_data(self):
         """
@@ -162,6 +185,7 @@ class BackgroundPlot(object):
         Default behaviour gets the next point from get_data-point and adds it to data and data_x.
         """
         point = self.get_data_point()
+        self.save_data_point(point)
         self.data_x.append(point[0])
         for data_set, point in zip(self.data, point[1:]):
             data_set.append(point)
@@ -370,3 +394,11 @@ class BackgroundBlockPlot(BackgroundPlot):
         Legend labels
         """
         return self._legend_labels
+
+    def start_new_data_file(self):
+        """
+        Starts a new data file with custom header
+        """
+        with open(SAVE_FILE, 'w') as csvfile:
+            csvfile.write("# run_number={}\n".format(self.current_run_number))
+            csvfile.write("# Axes: time, {}\n".format(' ,'.join(self.get_data_set_labels())))
