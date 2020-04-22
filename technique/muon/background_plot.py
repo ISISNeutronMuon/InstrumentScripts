@@ -16,6 +16,7 @@ from genie_python import genie as g
 from genie_python.genie_cachannel_wrapper import CaChannelWrapper, CaChannelException, UnableToConnectToPVException
 from genie_python.matplotlib_backend.ibex_web_backend import set_up_plot_default, SECONDARY_WEB_PORT
 from requests import head, ConnectionError
+import numpy as np
 
 # Default Figure name for the plot
 DEFAULT_FIGURE_NAME = "Background Plot"
@@ -38,7 +39,7 @@ class BackgroundPlot(object):
 
         # Animation object which updates the plot
         self._animation = None
-        # x daa for the plot, date time objects
+        # x data for the plot, date time objects
         self.data_x = None
         # point data dictionary of arrays for each point
         self.data = None
@@ -85,7 +86,13 @@ class BackgroundPlot(object):
             self.lines.append(line)
 
         self.set_up_plot()
-        self.start_new_data_file()
+
+        print(np.shape(self.data))
+        if self.saved_data_matches_current_dataset():
+            self.load_data_from_save()
+            print(np.shape(self.data))
+        else:
+            self.start_new_data_file()
 
         self._animation = FuncAnimation(self.figure, partial(self._update, self), interval=self._interval*1000)
 
@@ -123,6 +130,63 @@ class BackgroundPlot(object):
                 for point in first_point[1:]:
                     self.data.append([point, ])
 
+    def load_data_from_save(self):
+        """
+        Imports data from the save file
+        """
+
+        data_x = self.data_x
+        print(data_x)
+        data = self.data
+
+        loaded_data_x = []
+
+        # Copy nested list structure
+        loaded_data = [list() for x in range(len(self.data))]
+
+        with open(SAVE_FILE, 'r') as csvfile:
+
+            file_without_header = filter(lambda row: row if not row.startswith('#') else '', csvfile)
+            reader = csv.reader(file_without_header)
+
+            for points in reader:
+                loaded_data_x.append(datetime.fromisoformat(points[0]))
+                
+                for dataset, restored_dataset in zip(loaded_data, points[1:]):
+                    dataset.append(float(restored_dataset))
+
+        #loaded_data.extend(self.data)
+        
+        for dataset, first_point in zip(loaded_data, self.data):
+            dataset.extend(first_point)
+        
+        loaded_data_x.extend(self.data_x)
+
+        print(loaded_data_x)
+        print(loaded_data)
+
+        self.data = loaded_data
+        self.data_x = loaded_data_x
+
+        # chronological_order = np.argsort(data_x)
+
+        # self.data_x = data_x[chronological_order].tolist()
+        # self.data = np.asarray(data)[:, chronological_order].tolist()
+
+        # restored_dataset = np.genfromtxt(SAVE_FILE, comments='#', converters={0: lambda x: datetime.fromisoformat(str(x))}, delimiter=',', dtype=None)
+        # #restored_dataset = np.genfromtxt(SAVE_FILE, comments='#', delimiter=',', usecols=[1, 2], converters={0: datetime.fromisoformat})
+
+        # print(restored_dataset[:, 0])
+
+        # # Re-add first data points to start of array
+        # np.append(restored_dataset, first_points)
+        # restored_dataset.sort(axis=0)
+
+        # x_dim, data = np.split(restored_dataset, [1, ])
+
+        # self.data_x = x_dim
+        # self.data = data
+
     def _update(self, frame, *fargs):
         """
         Update the plot, call update but catches any exceptions and prints them for the user to see
@@ -155,6 +219,7 @@ class BackgroundPlot(object):
             List of matplotlib artists
         """
         if self.should_clear_plot():
+            print('clearing plot')
             self.clear_plot()
             self.start_new_data_file()
         else:
@@ -190,6 +255,7 @@ class BackgroundPlot(object):
         for data_set, point in zip(self.data, point[1:]):
             data_set.append(point)
 
+
     def update_figure(self):
         """
         Update the figure with the new data. Data is in self.data and self.data_x. Lines to update are in self.lines.
@@ -202,7 +268,7 @@ class BackgroundPlot(object):
         for data_set, line in zip(self.data, self.lines):
             line.set_data(self.data_x, data_set)
         self.figure.gca().relim()
-        self.figure.gca().set_xlim(left=self.data_x[0], right=self.data_x[-1] + timedelta(seconds=0.5))
+        self.figure.gca().set_xlim(left=min(self.data_x), right=max(self.data_x) + timedelta(seconds=0.5))
         self.figure.gca().autoscale_view()
 
         return self.lines
@@ -239,6 +305,18 @@ class BackgroundPlot(object):
         """
         return False
 
+    def saved_data_matches_current_dataset(self):
+        """
+        True if the saved dataset dimensions match, else False
+
+        Should be overloaded for desired behaviour
+        
+        Returns
+        -------
+        False, data is never loaded from disc
+        """
+        return False
+
     def clear_plot(self):
         """
         Clear the plot by adding the first point and updating the figure
@@ -247,6 +325,7 @@ class BackgroundPlot(object):
         -------
 
         """
+        print('3')
         self._first_point()
         self.update_figure()
 
@@ -380,6 +459,7 @@ class BackgroundBlockPlot(BackgroundPlot):
                 run_state = self._get_pv_with_timeout(self._run_state_pv, to_string=True)
                 if run_state == 'RUNNING':
                     self.current_run_number = num
+                    print('should clear plot')
                     return True
             return False
         except (CaChannelException, UnableToConnectToPVException):
@@ -395,10 +475,39 @@ class BackgroundBlockPlot(BackgroundPlot):
         """
         return self._legend_labels
 
+    def saved_data_matches_current_dataset(self):
+        """
+        Returns True if the saved dataset has same dimensions and run number as current dataset
+        """
+        with open(SAVE_FILE, 'r') as csvfile:
+            run_number = csvfile.readline()
+            _ = csvfile.readline()
+            sample_data = csvfile.readline()
+
+        # Data dimensions + time
+        current_dataset_dims = len(self.data) + 1
+
+        # Count the number of columns in one row
+        saved_dataset_dims = len(sample_data.split(','))
+
+        saved_run_number = run_number.replace("# run_number=", "")
+
+        print(int(saved_run_number))
+        print(int(self.current_run_number))
+
+        if int(saved_run_number) == int(self.current_run_number) and saved_dataset_dims == current_dataset_dims:
+            print('dataset matches')
+            dataset_matches = True
+        else:
+            print('dataset doesnt match')
+            dataset_matches = False
+        
+        return dataset_matches
+
     def start_new_data_file(self):
         """
         Starts a new data file with custom header
         """
         with open(SAVE_FILE, 'w') as csvfile:
             csvfile.write("# run_number={}\n".format(self.current_run_number))
-            csvfile.write("# Axes: time, {}\n".format(' ,'.join(self.get_data_set_labels())))
+            csvfile.write("# Axes: time, {}\n".format(', '.join(self.get_data_set_labels())))
