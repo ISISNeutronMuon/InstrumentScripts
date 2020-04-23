@@ -134,18 +134,11 @@ class BackgroundPlot(object):
         """
         Imports data from the save file
         """
-
-        data_x = self.data_x
-        print(data_x)
-        data = self.data
-
+        # Copy nested list structure from first point
+        loaded_data = [list() for x in range(len(self.data))]
         loaded_data_x = []
 
-        # Copy nested list structure
-        loaded_data = [list() for x in range(len(self.data))]
-
         with open(SAVE_FILE, 'r') as csvfile:
-
             file_without_header = filter(lambda row: row if not row.startswith('#') else '', csvfile)
             reader = csv.reader(file_without_header)
 
@@ -155,37 +148,13 @@ class BackgroundPlot(object):
                 for dataset, restored_dataset in zip(loaded_data, points[1:]):
                     dataset.append(float(restored_dataset))
 
-        #loaded_data.extend(self.data)
-        
+        # Add first points already plotted
         for dataset, first_point in zip(loaded_data, self.data):
             dataset.extend(first_point)
-        
         loaded_data_x.extend(self.data_x)
-
-        print(loaded_data_x)
-        print(loaded_data)
 
         self.data = loaded_data
         self.data_x = loaded_data_x
-
-        # chronological_order = np.argsort(data_x)
-
-        # self.data_x = data_x[chronological_order].tolist()
-        # self.data = np.asarray(data)[:, chronological_order].tolist()
-
-        # restored_dataset = np.genfromtxt(SAVE_FILE, comments='#', converters={0: lambda x: datetime.fromisoformat(str(x))}, delimiter=',', dtype=None)
-        # #restored_dataset = np.genfromtxt(SAVE_FILE, comments='#', delimiter=',', usecols=[1, 2], converters={0: datetime.fromisoformat})
-
-        # print(restored_dataset[:, 0])
-
-        # # Re-add first data points to start of array
-        # np.append(restored_dataset, first_points)
-        # restored_dataset.sort(axis=0)
-
-        # x_dim, data = np.split(restored_dataset, [1, ])
-
-        # self.data_x = x_dim
-        # self.data = data
 
     def _update(self, frame, *fargs):
         """
@@ -219,7 +188,6 @@ class BackgroundPlot(object):
             List of matplotlib artists
         """
         if self.should_clear_plot():
-            print('clearing plot')
             self.clear_plot()
             self.start_new_data_file()
         else:
@@ -254,7 +222,6 @@ class BackgroundPlot(object):
         self.data_x.append(point[0])
         for data_set, point in zip(self.data, point[1:]):
             data_set.append(point)
-
 
     def update_figure(self):
         """
@@ -310,7 +277,7 @@ class BackgroundPlot(object):
         True if the saved dataset dimensions match, else False
 
         Should be overloaded for desired behaviour
-        
+
         Returns
         -------
         False, data is never loaded from disc
@@ -325,7 +292,6 @@ class BackgroundPlot(object):
         -------
 
         """
-        print('3')
         self._first_point()
         self.update_figure()
 
@@ -459,7 +425,6 @@ class BackgroundBlockPlot(BackgroundPlot):
                 run_state = self._get_pv_with_timeout(self._run_state_pv, to_string=True)
                 if run_state == 'RUNNING':
                     self.current_run_number = num
-                    print('should clear plot')
                     return True
             return False
         except (CaChannelException, UnableToConnectToPVException):
@@ -492,16 +457,13 @@ class BackgroundBlockPlot(BackgroundPlot):
 
         saved_run_number = run_number.replace("# run_number=", "")
 
-        print(int(saved_run_number))
-        print(int(self.current_run_number))
-
         if int(saved_run_number) == int(self.current_run_number) and saved_dataset_dims == current_dataset_dims:
-            print('dataset matches')
+            print("Dataset matches - loading values from save")
             dataset_matches = True
         else:
-            print('dataset doesnt match')
+            print("Dataset doesn't match - do not load from save")
             dataset_matches = False
-        
+
         return dataset_matches
 
     def start_new_data_file(self):
