@@ -16,7 +16,6 @@ from genie_python import genie as g
 from genie_python.genie_cachannel_wrapper import CaChannelWrapper, CaChannelException, UnableToConnectToPVException
 from genie_python.matplotlib_backend.ibex_web_backend import set_up_plot_default, SECONDARY_WEB_PORT
 from requests import head, ConnectionError
-import numpy as np
 
 # Default Figure name for the plot
 DEFAULT_FIGURE_NAME = "Background Plot"
@@ -87,10 +86,8 @@ class BackgroundPlot(object):
 
         self.set_up_plot()
 
-        print(np.shape(self.data))
         if self.saved_data_matches_current_dataset():
             self.load_data_from_save()
-            print(np.shape(self.data))
         else:
             self.start_new_data_file()
 
