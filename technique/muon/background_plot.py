@@ -2,6 +2,7 @@
 Create a background plot. Which is a matplotlib figure that runs on the secondary plot
 """
 import csv
+import os
 import matplotlib
 matplotlib.use('module://genie_python.matplotlib_backend.ibex_web_backend')
 
@@ -24,15 +25,14 @@ DEFAULT_FIGURE_NAME = "Background Plot"
 BLOCK_PREFIX = "CS:SB:"
 
 # Name of file which data points are saved to
-SAVE_FILE = "C:\\Instrument\\var\\tmp\\background_plot_data.csv"
-
+SAVE_FILE = os.path.join(r"C:\\", "Instrument", "var", "tmp", "background_plot_data_{ioc_number:02d}.csv")
 
 class BackgroundPlot(object):
     """
     Create a background plot of some points which update
     """
 
-    def __init__(self, interval, figure_name=DEFAULT_FIGURE_NAME):
+    def __init__(self, interval, figure_name=DEFAULT_FIGURE_NAME, ioc_number=None):
 
         set_up_plot_default(is_primary=False, should_open_ibex_window_on_show=False)
 
@@ -55,6 +55,7 @@ class BackgroundPlot(object):
         self._interval = interval
         self.thread = None
 
+        self._save_file = SAVE_FILE.format(ioc_number=ioc_number)
         self._figure_name = figure_name
 
     def start(self):
@@ -135,7 +136,7 @@ class BackgroundPlot(object):
         loaded_data = [list() for x in range(len(self.data))]
         loaded_data_x = []
 
-        with open(SAVE_FILE, 'r') as csvfile:
+        with open(self._save_file, 'r') as csvfile:
             file_without_header = filter(lambda row: row if not row.startswith('#') else '', csvfile)
             reader = csv.reader(file_without_header)
 
@@ -196,7 +197,7 @@ class BackgroundPlot(object):
         """
         Starts a new data file, or deletes old data and creates new file
         """
-        open(SAVE_FILE, 'w').close()
+        open(self._save_file, 'w').close()
 
     def save_data_point(self, points):
         """
@@ -205,7 +206,7 @@ class BackgroundPlot(object):
         Args:
             points: list containing data points to save. First value is timestamp
         """
-        with open(SAVE_FILE, 'a', newline='') as csvfile:
+        with open(self._save_file, 'a', newline='') as csvfile:
             csvwriter = csv.writer(csvfile, delimiter=',')
             csvwriter.writerow(points)
 
@@ -314,7 +315,7 @@ class BackgroundBlockPlot(BackgroundPlot):
     In this example we create a three line plot of Temp_Sample, Temp_SP and Result. The delay between samples is 1s.
     """
 
-    def __init__(self, block_and_name_list, y_axis_label, interval=0.5):
+    def __init__(self, block_and_name_list, y_axis_label, ioc_number=1, interval=0.5):
         """
         Initialisation.
 
@@ -329,7 +330,7 @@ class BackgroundBlockPlot(BackgroundPlot):
         interval: float
             interval at which block should be plotted in seconds
         """
-        super(BackgroundBlockPlot, self).__init__(interval, "{} Plot".format(y_axis_label))
+        super(BackgroundBlockPlot, self).__init__(interval, "{} Plot".format(y_axis_label), ioc_number=1)
         self._run_state_pv = g.prefix_pv_name(DAE_PVS_LOOKUP["runstate"])
         self._run_number_pv = g.prefix_pv_name(DAE_PVS_LOOKUP["runnumber"])
         self._pv_names = []
@@ -441,32 +442,57 @@ class BackgroundBlockPlot(BackgroundPlot):
         """
         Returns True if the saved dataset has same dimensions and run number as current dataset
         """
-        with open(SAVE_FILE, 'r') as csvfile:
-            run_number = csvfile.readline()
-            _ = csvfile.readline()
-            sample_data = csvfile.readline()
 
-        # Data dimensions + time
+        # Dimensions of current data are (data dimensions + time)
         current_dataset_dims = len(self.data) + 1
 
-        # Count the number of columns in one row
-        saved_dataset_dims = len(sample_data.split(','))
+        try:
+            saved_run_number, saved_dataset_dims = self._read_header()
 
-        saved_run_number = run_number.replace("# run_number=", "")
+            # Check the parameters in file match current dataset
+            run_numbers_match = int(saved_run_number) == int(self.current_run_number)
+            data_dimensions_match = saved_dataset_dims == current_dataset_dims
 
-        if int(saved_run_number) == int(self.current_run_number) and saved_dataset_dims == current_dataset_dims:
+        except FileNotFoundError:
+            valid_file_found = False
+        else:
+            valid_file_found = True
+
+        if valid_file_found and run_numbers_match and data_dimensions_match:
             print("Dataset matches - loading values from save")
             dataset_matches = True
-        else:
+        elif valid_file_found:
             print("Dataset doesn't match - do not load from save")
+            dataset_matches = False
+        else:
+            print("No valid save file found")
             dataset_matches = False
 
         return dataset_matches
+
+    def _read_header(self):
+        """
+        Strips the usable information from the save file header
+        """
+        with open(self._save_file, "r") as csvfile:
+            run_number_line = csvfile.readline()
+            # Second line is for human readability, skip
+            _ = csvfile.readline()
+            sample_data_row = csvfile.readline()
+
+        # Strip text from run number, must match header in start_new_data_file
+        saved_run_number = run_number_line.replace("# run_number:", "")
+
+        # Count number of columns in data row
+        dimensions_in_saved_dataset = len(sample_data_row.split(","))
+
+        return saved_run_number, dimensions_in_saved_dataset
 
     def start_new_data_file(self):
         """
         Starts a new data file with custom header
         """
-        with open(SAVE_FILE, 'w') as csvfile:
-            csvfile.write("# run_number={}\n".format(self.current_run_number))
+        with open(self._save_file, 'w') as csvfile:
+            csvfile.write("# run_number:{}\n".format(self.current_run_number))
+            # Save axis names for human readability
             csvfile.write("# Axes: time, {}\n".format(', '.join(self.get_data_set_labels())))
