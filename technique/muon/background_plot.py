@@ -330,8 +330,11 @@ class BackgroundBlockPlot(BackgroundPlot):
 
         interval: float
             interval at which block should be plotted in seconds
+
+        ioc_number: int
+            The number of the BGRSCRPT IOC which has spawned this class.        
         """
-        super(BackgroundBlockPlot, self).__init__(interval, "{} Plot".format(y_axis_label), ioc_number=1)
+        super(BackgroundBlockPlot, self).__init__(interval, "{} Plot".format(y_axis_label), ioc_number=ioc_number)
         self._run_state_pv = g.prefix_pv_name(DAE_PVS_LOOKUP["runstate"])
         self._run_number_pv = g.prefix_pv_name(DAE_PVS_LOOKUP["runnumber"])
         self._pv_names = []
