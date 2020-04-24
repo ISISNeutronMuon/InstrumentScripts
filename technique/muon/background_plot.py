@@ -27,6 +27,7 @@ BLOCK_PREFIX = "CS:SB:"
 # Name of file which data points are saved to
 SAVE_FILE = os.path.join(r"C:\\", "Instrument", "var", "tmp", "background_plot_data_{ioc_number:02d}.csv")
 
+
 class BackgroundPlot(object):
     """
     Create a background plot of some points which update
@@ -140,13 +141,13 @@ class BackgroundPlot(object):
             file_without_header = filter(lambda row: row if not row.startswith('#') else '', csvfile)
             reader = csv.reader(file_without_header)
 
-            for points in reader:
-                loaded_data_x.append(datetime.fromisoformat(points[0]))
-                
-                for dataset, restored_dataset in zip(loaded_data, points[1:]):
+            for row in reader:
+                loaded_data_x.append(datetime.fromisoformat(row[0]))
+
+                for dataset, restored_dataset in zip(loaded_data, row[1:]):
                     dataset.append(float(restored_dataset))
 
-        # Add first points already plotted
+        # Add first points already taken
         for dataset, first_point in zip(loaded_data, self.data):
             dataset.extend(first_point)
         loaded_data_x.extend(self.data_x)
@@ -233,7 +234,7 @@ class BackgroundPlot(object):
         for data_set, line in zip(self.data, self.lines):
             line.set_data(self.data_x, data_set)
         self.figure.gca().relim()
-        self.figure.gca().set_xlim(left=min(self.data_x), right=max(self.data_x) + timedelta(seconds=0.5))
+        self.figure.gca().set_xlim(left=self.data_x[0], right=self.data_x[-1] + timedelta(seconds=0.5))
         self.figure.gca().autoscale_view()
 
         return self.lines
