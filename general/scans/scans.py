@@ -173,7 +173,10 @@ class Scan(object):
                 for x in self:
                     # FIXME: Handle multidimensional plots
                     ((label, unit), position) = next(iter(x.items()))
+
+                    # perform measurement
                     acc, value = detect(acc, **just_times(kwargs))
+
                     if isinstance(value, float):
                         value = Average(value)
                     if not xs:
