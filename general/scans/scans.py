@@ -168,7 +168,9 @@ class Scan(object):
         acc = None
         action_remainder = None
         try:
-            with open(self.defaults.log_file(), "w") as logfile, \
+            log_filename = self.defaults.log_file(self.log_file_info())
+            print("Writing data to: {}".format(log_filename))
+            with open(log_filename, "w") as logfile, \
                     detector(self, save=save, **kwargs) as detect:
                 for x in self:
                     # FIXME: Handle multidimensional plots
@@ -278,6 +280,22 @@ class Scan(object):
             delta = timedelta(0, total)
             print("The run would finish at {}".format(delta + datetime.now()))
         return total
+
+    def log_file_info(self):
+        """
+        Generate some info for creating the log file path.
+
+        Returns
+        -------
+        Dictionary containing keys for information. Keys are:
+            action_title: title of the action
+        """
+        log_info = {}
+        try:
+            log_info["action_title"] = self.action.title
+        except AttributeError:
+            pass
+        return log_info
 
 
 class SimpleScan(Scan):
@@ -408,7 +426,7 @@ class ContinuousScan(Scan):
         action_remainder = None
 
         try:
-            with open(self.defaults.log_file(), "w") as logfile, \
+            with open(self.defaults.log_file(self.log_file_info()), "w") as logfile, \
                     detector(self, save=save, **kwargs) as detect:
 
                 for move in self:
@@ -633,7 +651,7 @@ class ProductScan(Scan):
 
         acc = action_remainder = None
         try:
-            with open(self.defaults.log_file(), "w") as logfile, \
+            with open(self.defaults.log_file(self.log_file_info()), "w") as logfile, \
                     detector(self, save) as detect:
                 for x in self:
                     acc, value = detect(acc, **kwargs)
