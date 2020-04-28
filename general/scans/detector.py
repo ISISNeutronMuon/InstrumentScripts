@@ -1,17 +1,16 @@
 """This module adds a helper class for detectors."""
 from collections import namedtuple
 from functools import wraps
-
-
-# Number of time to retry getting spectra if None is returned
-SPECTRA_RETRY_COUNT = 5
+from .monoid import Average, MonoidList
 
 try:
     # pylint: disable=import-error
     from genie_python import genie as g
 except ImportError:
     from .mocks import g
-from .monoid import Average, MonoidList
+
+# Number of time to retry getting spectra if None is returned
+SPECTRA_RETRY_COUNT = 5
 
 
 def _resume_count_pause(frames=None, uamps=None, seconds=None, minutes=None, hours=None, **kwargs):
@@ -205,7 +204,7 @@ def specific_spectra(spectra_list, preconfig=lambda: None):
     @dae_periods(preconfig, unit="Integrated Intensity")
     def inner(acc, **kwargs):
         """Get counts on a set of channels"""
-        _resume_count_pause(kwargs)
+        _resume_count_pause(**kwargs)
 
         # Ensure that get_spectrum actually returns a value
         spec = None

@@ -136,7 +136,7 @@ class Defaults(object):
         stop
           An absolute ending position for the scan
         step
-          The absolue step size.  The final position may be skipped if
+          The absolute step size.  The final position may be skipped if
           it is not an integer number of steps from the starting
           position.
         frames
