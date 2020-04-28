@@ -37,7 +37,8 @@ class SurfDefaultScan(Defaults):
     def __init__(self):
         super(SurfDefaultScan, self).__init__()
 
-    def scan(self, motion, start=None, stop=None, count=None, frames=None, det_num=None, mon_num=None, **kwargs):
+    def scan(self, motion, start=None, stop=None, count=None, frames=None, detector_number=None, monitor_number=None,
+             **kwargs):
         """
         Scan a motion.
 
@@ -54,9 +55,9 @@ class SurfDefaultScan(Defaults):
         frames
             number of frames to count for; None either use a different measurement method or define the scan don't
             perform it
-        det_num
+        detector_number
             the detector spectra number; None use the default
-        mon_num
+        monitor_number
             the monitor spectra number; None use the default
         kwargs
             various other options consistent with the scan library, common options are:
@@ -79,8 +80,8 @@ class SurfDefaultScan(Defaults):
         Scan theta from -0.5 to 0.5 with 11 steps and counting 100 frames using default detector and monitors
         >>> scan("THETA", -0.5, 0.5, 11, frames=100)
         """
-        return super().scan(motion, start=start, stop=stop, count=count, frames=frames, det_num=det_num,
-                            mon_num=mon_num, **kwargs)
+        return super().scan(motion, start=start, stop=stop, count=count, frames=frames, detector_number=detector_number,
+                            monitor_number=monitor_number, **kwargs)
 
     @staticmethod
     def log_file(info):

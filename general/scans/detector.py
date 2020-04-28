@@ -314,7 +314,7 @@ class NormalisedIntensityDetector(DaePeriods):
         self.monitor = None  # type:SpectraDefinition
         self.detector = None  # type:SpectraDefinition
 
-    def __call__(self, scan, mon_num=None, det_num=None, **kwargs):
+    def __call__(self, scan, monitor_number=None, detector_number=None, **kwargs):
         """
         Call detect manger. This is typically done once before a scanning loop
 
@@ -322,9 +322,9 @@ class NormalisedIntensityDetector(DaePeriods):
         ----------
         scan
             scan that is calling this detect routine
-        mon_num
+        monitor_number
             set the name of the spectra definition to use for the monitor; None use the default
-        det_num
+        detector_number
             set the name of the spectra definition to use for the detector; None use the default
         kwargs
             arguments to pass to super
@@ -334,9 +334,9 @@ class NormalisedIntensityDetector(DaePeriods):
             self
         """
         super(NormalisedIntensityDetector, self).__call__(scan, **kwargs)
-        monitor_name = mon_num if mon_num is not None else self.default_monitor
+        monitor_name = monitor_number if monitor_number is not None else self.default_monitor
         self.monitor = self.spectra_definitions[monitor_name]
-        detector_name = det_num if det_num is not None else self.default_detector
+        detector_name = detector_number if detector_number is not None else self.default_detector
         self.detector = self.spectra_definitions[detector_name]
         return self
 
