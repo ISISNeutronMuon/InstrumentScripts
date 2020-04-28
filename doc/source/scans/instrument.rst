@@ -96,11 +96,10 @@ a single argument which is a dictionary of useful information. Any or all of the
 values may be missing so log_file should be prepared to use defaults. An example is:
 
     >>> def log_file(info):
-    >>>    from datetime import datetime
-    >>>    now = datetime.now()
-    >>>    action_name = info.get("action_name", "unknown")
-    >>>    return os.path.join("C:\\", "scripts", "{}_{}_{}_{}_{}_{}_{}.dat".format(
-    >>>        action_name, now.year, now.month, now.day, now.hour, now.minute, now.second))
+    ...    from datetime import datetime
+    ...    now = datetime.now()
+    ...    action_name = info.get("action_name", "unknown")
+    ...    return os.path.join(r"C:\", "scripts", "{}_{}_{}_{}_{}_{}_{}.dat".format(action_name, now.year, now.month, now.day, now.hour, now.minute, now.second))
 
 Monoid
 ======
