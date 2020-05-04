@@ -195,7 +195,7 @@ def reset_hgaps_and_sample_height(movement, sample, constants):
     horizontal_gaps = movement.get_gaps(vertical=False)
 
     def _reset_gaps():
-        print("Reset horizontal gaps to {}".format(horizontal_gaps.values()))
+        print("Reset horizontal gaps to {}".format(list(horizontal_gaps.values())))
         movement.set_h_gaps(**horizontal_gaps)
 
         movement.set_height_offset(sample.height)
