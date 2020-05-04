@@ -167,7 +167,7 @@ class TestSpectrasWithTimeRange(unittest.TestCase):
 
         detector = NormalisedIntensityDetector(spectra_definitions=[create_spectra_definition(monitor_spectra_number_and_name, monitor_t_min, monitor_t_max),
                                                                     create_spectra_definition(detector_spectra_number, detector_t_min, detector_t_max, detector_spectra_name)])
-        with detector(scan, save=False, monitor=monitor_spectra_number_and_name, detector=detector_spectra_name) as detector_routine:
+        with detector(scan, save=False, monitor_number=monitor_spectra_number_and_name, detector_number=detector_spectra_name) as detector_routine:
 
             acc, result = detector_routine(None, frames=1)
 
