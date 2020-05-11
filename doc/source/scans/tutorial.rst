@@ -25,8 +25,7 @@ Plot Motor Scan
   detector intensity as the motor moves from 0 to 2 exclusively in
   steps of 0.6.
 
-  >>> populate()
-  >>> scan(theta, 0, 2, 0.6, 50)
+  >>> scan("theta", 0, 2, 0.6, 50)
   Taking a count at theta=0.00 and two theta=0.00
   Taking a count at theta=0.60 and two theta=0.00
   Taking a count at theta=1.20 and two theta=0.00

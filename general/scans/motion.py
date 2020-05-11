@@ -1,13 +1,9 @@
 """This module contains helper classes for controlling motions on the beamline
 
-There's three levels of depth to this module.  At the simplest level, merely
-import and call populate().  This create motion object for every block
-currently registered on the instrument.
+There's two levels of depth to this module.  At the simplest level the BlockMotion class,
+allows for creating single objects that correspond to single IBEX blocks.
 
-The next level down is the BlockMotion class, which allows for creating
-single objects that correspond to single IBEX blocks.
-
-Finally, at the bottom, BlockMotion derives from the Motion object,
+At the bottom, BlockMotion derives from the Motion object,
 which gives a simple framework for all physical parameters that
 can be controlled by an instrument.  Although it is called Motion,
 it will also handle temperatures, currents, and other physical properties.

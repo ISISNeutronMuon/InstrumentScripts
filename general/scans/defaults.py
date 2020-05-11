@@ -173,9 +173,7 @@ class Defaults(object):
         else:
             raise TypeError(
                 "Cannot run scan on axis {}. Try a string or a motion "
-                "object instead.  It's also possible that you may "
-                "need to rerun populate() to recreate your motion "
-                "axes." .format(motion))
+                "object instead." .format(motion))
 
         points = get_points(motion(), **kwargs)
 
@@ -312,19 +310,6 @@ class Defaults(object):
             return self.scan(motor, **kwargs)
         finally:
             motor(init)
-
-    def populate(self):
-        """Create Motion objects in the GLOBAL namespace for each
-        block registered with IBEX."""
-        for i in g.get_blocks():
-            if not isinstance(i, (str, text_type)):
-                continue
-            temp = BlockMotion(i, self.get_units(i))
-            __builtins__[i.upper()] = temp
-            __builtins__[i] = temp
-            __builtins__[i.lower()] = temp
-
-    _UNITS = {"Theta": u"deg", "Two_Theta": u"deg"}
 
     @staticmethod
     def get_units(motion):
