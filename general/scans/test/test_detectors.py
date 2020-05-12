@@ -65,7 +65,7 @@ class TestSpectrasWithTimeRange(unittest.TestCase):
         g_mock.waitfor_frames.assert_called_once_with(expected_frame_count)
         g_mock.pause.assert_called_once()
 
-    def test_GIVEN_upamps_WHEN_detect_THEN_wait_until_correct_upamps(self, g_mock):
+    def test_GIVEN_uamps_WHEN_detect_THEN_wait_until_correct_uamps(self, g_mock):
         initial_uamps = 1
         requested_uamps = 9
         expected_uamps_count = requested_uamps + initial_uamps
