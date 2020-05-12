@@ -1,7 +1,7 @@
 import unittest
 import numpy as np
 
-from ..fit import PeakFit, PolyFit, GaussianFit, Fit
+from ..fit import PeakFit, PolyFit, CentreOfMassFit, GaussianFit, Fit
 
 
 class MinimalFit(Fit):
@@ -86,27 +86,19 @@ class ScansPeakFitTest(unittest.TestCase):
         self.assertAlmostEqual(self.fitter.fit(test_x, test_y, 10.0), test_peak_location, delta=1e-5)
 
 
-class GaussianFitTest(unittest.TestCase):
+class CentreOfMassFitTest(unittest.TestCase):
     """
-    Tests for Gaussian fitting routines
+    Tests for centre of mass fitting routines
     """
-
-    def _gaussian(self, x, amplitude, centre, sigma, background):
-        """
-        Returns value of gaussian with supplied coefficients evaluated at x
-        """
-
-        return amplitude * np.exp(- np.power((x - background), 2)/np.power(2.0*sigma, 2)) + background
 
     def setUp(self):
-        self.plotter = GaussianFit()
+        self.fitter = CentreOfMassFit()
 
-    def test_GIVEN_sample_data_WHEN_guess_estimated_THEN_correct_estimate_returned(self):
-        test_sigma = 2.0
-        test_amplitude = 5.0
-        test_centre = 2.0
-        test_background = 10.0
+    def test_GIVEN_symmetrical_data_WHEN_fit_performed_THEN_correct_centre_of_mass_returned(self):
+        test_x = np.array(np.linspace(0, 20, 100))
 
-        test_x = np.linspace(0, 20, 100)
+        peak_location = 10
+        test_function = np.poly1d([-1.0, 0, 10])
+        test_y = test_function(test_x - peak_location)
 
-        test_y = self._gaussian(test_x, test_amplitude, test_centre, test_sigma, test_background)
+        self.assertAlmostEqual(self.fitter.fit(test_x, test_y, 0.1*test_y)[0], 10.0)
