@@ -28,6 +28,7 @@ class SurfDefaultScan(Defaults):
     This class represents a scan of a block. This is not a thread safe class.
     """
 
+    # spectra definition based on gcl script.
     _spectra_definitions = [create_spectra_definition(1, 1050.0, 15500.0),
                             create_spectra_definition(2, 1050.0, 15500.0),
                             create_spectra_definition(3, 1450.0, 16500.0)]

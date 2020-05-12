@@ -33,11 +33,12 @@ class TestSpectrasWithTimeRange(unittest.TestCase):
 
     def setup_mock(self, g_mock, initial_frames=0, initial_uamps=0, integrated_spectra=None):
         g_mock.get_runstate = Mock(return_value="SETUP")
-        def get_spectrum(specturm, period=1, t_min=None, t_max=None):
+
+        def _get_spectrum(spectrum, period=1, t_min=None, t_max=None):
             if integrated_spectra is None:
                 return 1
-            return integrated_spectra[specturm]
-        g_mock.integrate_spectrum = Mock(side_effect=get_spectrum)
+            return integrated_spectra[spectrum]
+        g_mock.integrate_spectrum = Mock(side_effect=_get_spectrum)
 
         g_mock.get_period = Mock(return_value=1)
         g_mock.get_frames = Mock(return_value=initial_frames)
@@ -150,7 +151,7 @@ class TestSpectrasWithTimeRange(unittest.TestCase):
         assert_that(g_mock.integrate_spectrum.call_count, is_(SPECTRA_RETRY_COUNT * 2),
                     "retry count multiple by two one for detector one for monitor")
 
-    def test_GIVEN_user_definied_spectra_WHEN_detect_using_none_default_monitor_THEN_result_is_user_spectra_average(self, g_mock):
+    def test_GIVEN_user_defined_spectra_WHEN_detect_using_none_default_monitor_THEN_result_is_user_spectra_average(self, g_mock):
         integrated_detector = 2
         integrated_monitor = 4
         monitor_spectra_number_and_name = 4

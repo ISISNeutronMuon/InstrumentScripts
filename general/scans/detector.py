@@ -275,7 +275,7 @@ class NormalisedIntensityDetector(DaePeriods):
         >>> scan(...)
 
         or to use specific spectra (these must be called with keywords)
-        >>> scan(... monitor=1, detector=2)
+        >>> scan(... monitor_number=1, detector_number=2)
 
     """
 
