@@ -84,7 +84,7 @@ class TestSpectrasWithTimeRange(unittest.TestCase):
                            ({"minutes":2}, None, 2, None),
                            ({"hours": 3}, None, None, 3),
                            ({"seconds":1, "minutes": 2, "hours": 3}, 1, 2, 3)],)
-    def test_GIVEN_seconds_WHEN_detect_THEN_wait_until_correct_upamps(self, g_mock, args, expected_secs, expected_mins, expected_hours):
+    def test_GIVEN_time_WHEN_detect_THEN_wait_for_the_correct_duration(self, g_mock, args, expected_secs, expected_mins, expected_hours):
         self.setup_mock(g_mock)
         scan = MockScan()
         detector = NormalisedIntensityDetector()
