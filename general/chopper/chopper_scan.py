@@ -47,7 +47,7 @@ def scan_chopper(disc_name, chopper_pv_name, scan_from=800, scan_to=1600, scan_s
         step = abs(scan_step)
     else:
         step = -1 * abs(scan_step)
-    phases = range(scan_from, scan_to, step)
+    phases = list(range(scan_from, scan_to, step))
     if phases[:-1] != scan_to:
         phases.append(scan_to)
     phases = [phase % max_phase for phase in phases]
