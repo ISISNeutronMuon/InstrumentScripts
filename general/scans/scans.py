@@ -292,7 +292,7 @@ class SimpleScan(Scan):
 
         """
         return SimpleScan(self.action,
-                          map(func, self.values),
+                          list(map(func, self.values)),
                           self.name)
 
     @property
