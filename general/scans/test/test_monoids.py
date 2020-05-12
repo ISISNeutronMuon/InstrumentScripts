@@ -6,7 +6,7 @@ from hamcrest import *
 from general.scans.monoid import Average
 
 
-class TestMoniods(unittest.TestCase):
+class TestMonoids(unittest.TestCase):
 
     def test_GIVEN_average_WHEN_zero_total_and_count_is_zero_THEN_float_is_zero(self):
 

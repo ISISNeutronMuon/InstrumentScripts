@@ -256,7 +256,7 @@ def create_spectra_definition(spectra_number, t_min=None, t_max=None, name=None)
 
 class NormalisedIntensityDetector(DaePeriods):
     """
-    Detector Manger to detect the normalised inentisty of two spectra with optional time of flight ranges.
+    Detector Manager to detect the normalised intensity of two spectra with optional time of flight ranges.
 
     E.g. sums up two spectra specified between energy ranges and gives one divided by the other.
 
