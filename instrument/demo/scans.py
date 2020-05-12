@@ -51,7 +51,7 @@ class DemoDetector(NormalisedIntensityDetector):
 class DemoDefaultScan(Defaults):
     """
     Default class exposing scan functionality to the user. Has a default demo detector routine allowing it
-     to produce demonstatrion data.
+     to produce demonstration data.
     """
 
     _spectra_definitions = [create_spectra_definition(1, 100.0, 900.0),
