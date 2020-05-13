@@ -7,4 +7,4 @@ commands for this instrument."""
 from general.scans.detector import specific_spectra  # noqa: F401
 from general.scans.fit import *  # noqa: F401, F403
 
-import scans
+from . import scans
