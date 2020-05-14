@@ -24,7 +24,17 @@ class Zoom(Defaults):
     detector = specific_spectra([[4]])
 
     @staticmethod
-    def log_file():
+    def log_file(info):
+        """
+        Parameters
+        ----------
+            info
+              dictionary containing useful keys to help form paths. It may contain no keys at all.
+                    possible keys are action_title - the name of the action requested
+        Returns
+        -------
+            Name for the log file
+        """
         now = datetime.now()
         return "U:/zoom_scan_{}_{}_{}_{}_{}_{}.dat".format(
             now.year, now.month, now.day, now.hour, now.minute, now.second)
