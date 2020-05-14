@@ -90,6 +90,15 @@ file where the results of the current scan should be stored.  This
 function should return a unique value for each scan, to ensure that
 previous results are not overwritten.  This can easily be achieved by
 appending the current date and time onto the file name.
+To help with creating more usable log file names this function should take
+a single argument which is a dictionary of useful information. Any or all of these
+values may be missing so log_file should be prepared to use defaults. An example is:
+
+    >>> def log_file(info):
+    ...    from datetime import datetime
+    ...    now = datetime.now()
+    ...    action_name = info.get("action_name", "unknown")
+    ...    return os.path.join(r"C:\", "scripts", "{}_{}_{}_{}_{}_{}_{}.dat".format(action_name, now.year, now.month, now.day, now.hour, now.minute, now.second))
 
 Monoid
 ======

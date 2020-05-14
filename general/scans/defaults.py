@@ -47,9 +47,18 @@ class Defaults(object):
 
     @staticmethod
     @abstractmethod
-    def log_file():
+    def log_file(info):
         """
         Returns the name of a unique log file where the scan data can be saved.
+
+        Parameters
+        ----------
+            info
+              dictionary containing useful keys to help form paths. It may contain no keys at all.
+                    possible keys are action_title - the name of the action requested
+        Returns
+        -------
+            Name for the log file
         """
 
     def get_fig(self):
