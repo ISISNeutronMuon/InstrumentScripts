@@ -76,9 +76,9 @@ useful helper function for creating function the read from specific detectors.  
     >>> whole_detector = specific_spectra([[1]])
 
 Will create a new detector function ``whole_detector`` which returns
-the total counts on detector spectrum 1.  The user could then runghc
+the total counts on detector spectrum 1.  The user could then run
 
-    >>> scan(Theta, 0, 2, 0.6, 50, detector=whole_detector)
+    >>> scan("Theta", 0, 2, 0.6, 50, detector=whole_detector)
 
 To run the scan over those channels, instead of over the default setup.
 

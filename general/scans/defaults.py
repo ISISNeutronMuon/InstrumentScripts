@@ -12,12 +12,12 @@ in the middle of a user run when a missing method is called.
 
 from abc import ABCMeta, abstractmethod
 import os
-from six import add_metaclass, text_type
+from six import add_metaclass
 import matplotlib.pyplot as plt
 import numpy as np
 from .scans import SimpleScan, ReplayScan
 from .monoid import Average
-from .motion import Motion, BlockMotion
+from .motion import get_motion
 from .util import get_points, TIME_KEYS
 
 try:
@@ -75,13 +75,13 @@ class Defaults(object):
         Examples
         --------
 
-        >>> scan(translation, -5, 5, 0.1, 50)
+        >>> scan("translation", -5, 5, 0.1, 50)
 
-        This will run a scan on the translation axis from -5 to 5
+        This will run a scan on the translation block from -5 to 5
         (exclusive) in steps of 0.1, measuring for 50 frames at each
         point and taking a plot
 
-        >>> scan(translation, start=-5, stop=5, stride=0.1).plot(frames=50)
+        >>> scan("translation", start=-5, stop=5, stride=0.1).plot(frames=50)
 
         This will scan the translation access from -5 to 5 inclusive
         in steps of 0.1.  At each point, the a measurement will be
@@ -89,7 +89,7 @@ class Defaults(object):
 
         As a different example,
 
-        >>> s = scan(coarsez, before=-50, step=5, gaps=20)
+        >>> s = scan("coarsez", before=-50, step=5, gaps=20)
 
         This will create a scan on the CoarseZ axis, starting at 50 mm
         below the current position and continuing in 5 mm increments
@@ -104,7 +104,7 @@ class Defaults(object):
         the end of the measurement, the `result` variable will hold
         the position of the observed peak.
 
-        >>> scan(translation, -5, 5, 0.1, 50, detector=specfic_spectra([[3]]))
+        >>> scan("translation", -5, 5, 0.1, 50, detector=specfic_spectra([[3]]))
 
         This is similar to our original scan on translation, except
         that the scan will be performed on monitor 3, instead of the
@@ -114,20 +114,20 @@ class Defaults(object):
         The scan function itself has one mandatory parameter `motion`
         but will require another three keyword parameters to define
         the range of the scan.  In the example above, the motion
-        parameter was TRANSLATION and the keyword parameters were
+        parameter was "TRANSLATION" and the keyword parameters were
         start, stop, and stride.  Any set of three position parameters
         that uniquely define a range of motions will be accepted.
 
         PARAMETERS
         ----------
         motion
-          The axis on which to perform the scan
+          The axis on which to perform the scan, either a motion object or a blockname
         start
           An absolute starting position for the scan.
         stop
           An absolute ending position for the scan
         step
-          The absolue step size.  The final position may be skipped if
+          The absolute step size.  The final position may be skipped if
           it is not an integer number of steps from the starting
           position.
         frames
@@ -166,14 +166,7 @@ class Defaults(object):
         if frames:
             kwargs["frames"] = frames
 
-        if isinstance(motion, Motion):
-            pass
-        elif isinstance(motion, (str, text_type)):
-            motion = BlockMotion(motion, self.get_units(motion))
-        else:
-            raise TypeError(
-                "Cannot run scan on axis {}. Try a string or a motion "
-                "object instead." .format(motion))
+        motion = get_motion(motion)
 
         points = get_points(motion(), **kwargs)
 
@@ -194,12 +187,12 @@ class Defaults(object):
             return scn.plot(**kwargs)
         return scn
 
-    def ascan(self, motor, start, end, intervals, time):
+    def ascan(self, motion, start, end, intervals, time):
         """A reimplementations of ascan from spec
 
         Example
         -------
-        >>> ascan(COARSEZ, -20, 20, 40, -50)
+        >>> ascan("COARSEZ", -20, 20, 40, -50)
 
         Scan the CoarseZ motor from position -20 to position 20
         (inclusive) in 1 mm steps.  At each point, take measure for
@@ -208,31 +201,31 @@ class Defaults(object):
 
         Parameters
         ----------
-        motor
-        The axis to scan
+        motion
+          The axis to scan
         start
-        The initial position
+          The initial position
         stop
-        The final position
+          The final position
         intervals
-        How many steps to take between the initial and final position
+          How many steps to take between the initial and final position
         time
-        If positive, the measurement time at each point in seconds.  If
-        negative, the measurement frames at each point.
+          If positive, the measurement time at each point in seconds.  If
+          negative, the measurement frames at each point.
 
         """
         if time > 0:
-            return self.scan(motor, start=start, stop=end,
+            return self.scan(motion, start=start, stop=end,
                              gaps=intervals).plot(seconds=time)
-        return self.scan(motor, start=start, stop=end,
+        return self.scan(motion, start=start, stop=end,
                          gaps=intervals).plot(frames=-time)
 
-    def dscan(self, motor, start, end, intervals, time):
+    def dscan(self, motion, start, end, intervals, time):
         """A reimplementations of dscan from spec
 
         Example
         -------
-        >>> dscan(COARSEZ, -20, 20, 40, -50)
+        >>> dscan("COARSEZ", -20, 20, 40, -50)
 
         Scan the CoarseZ motor from 20 mm below the current position
         to position 20 mm above the current position (inclusive) in 1
@@ -242,30 +235,31 @@ class Defaults(object):
 
         Parameters
         ----------
-        motor
-        The axis to scan
+        motion
+          The axis to scan
         start
-        The initial position as an offset from the current position
+          The initial position as an offset from the current position
         stop
-        The final position as an offset from the current position
+          The final position as an offset from the current position
         intervals
-        How many steps to take between the initial and final position
+          How many steps to take between the initial and final position
         time
-        If positive, the measurement time at each point in seconds.  If
-        negative, the measurement frames at each point.
+          If positive, the measurement time at each point in seconds.  If
+          negative, the measurement frames at each point.
 
         """
-        init = motor()
+        motion = get_motion(motion)
+        init = motion()
         try:
             if time > 0:
-                return self.scan(motor, before=start, after=end,
+                return self.scan(motion, before=start, after=end,
                                  gaps=intervals).plot(seconds=time)
-            return self.scan(motor, before=start, after=end,
+            return self.scan(motion, before=start, after=end,
                              gaps=intervals).plot(frames=-time)
         finally:
-            motor(init)
+            motion(init)
 
-    def rscan(self, motor, before=None, after=None, step=None, frames=None,
+    def rscan(self, motion, before=None, after=None, step=None, frames=None,
               **kwargs):
         """An ISIS specific relative scan function
 
@@ -274,7 +268,7 @@ class Defaults(object):
 
         Example
         -------
-        >>> rscan(coarsez, -20, 20, 1, 50)
+        >>> rscan("coarsez", -20, 20, 1, 50)
 
         Scan the CoarseZ motor from 20 mm below the current position
         to position 20 mm above the current position (exclusive) in 1
@@ -296,7 +290,8 @@ class Defaults(object):
         The number of pulse frames to measure at each point
 
         """
-        init = motor()
+        motion = get_motion(motion)
+        init = motion()
         try:
             if before:
                 kwargs["before"] = before
@@ -307,22 +302,9 @@ class Defaults(object):
             if frames:
                 kwargs["frames"] = frames
 
-            return self.scan(motor, **kwargs)
+            return self.scan(motion, **kwargs)
         finally:
-            motor(init)
-
-    @staticmethod
-    def get_units(motion):
-        """Get the physical measurement units associated with a block name."""
-        pv_name = g.adv.get_pv_from_block(motion)
-        if "." in pv_name:
-            # Remove any headers
-            pv_name = pv_name.split(".")[0]
-        unit_name = pv_name + ".EGU"
-        # pylint: disable=protected-access
-        if getattr(g, "__api").pv_exists(unit_name):
-            return g.get_pv(unit_name)
-        return ""
+            motion(init)
 
     def last_scan(self, path=None, axis="replay"):
         """Load the last run scan and replay that scan

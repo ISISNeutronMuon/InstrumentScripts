@@ -15,6 +15,8 @@ try:
 except ImportError:
     from .mocks import g
 
+from six import text_type
+
 
 class Motion(object):
     # pylint: disable=too-many-instance-attributes
@@ -199,3 +201,49 @@ def pv_motion(pv_str, name):
                       "{}.VELO".format(pv_str), x),
                   tolerance_getter=lambda: g.get_pv(
                       "{}.RDBD".format(pv_str)))
+
+
+def get_motion(motion_or_block_name):
+    """
+    Get a motion object from the argument. Use to pass a motion argument in scans.
+
+    Parameters
+    ----------
+    motion_or_block_name
+      either a motion object or a block name
+
+    Returns
+    -------
+    motion object
+    """
+    if isinstance(motion_or_block_name, Motion):
+        motion = motion_or_block_name
+    elif isinstance(motion_or_block_name, (str, text_type)):
+        motion = BlockMotion(motion_or_block_name, g.get_units(motion_or_block_name))
+    else:
+        raise TypeError("Cannot run scan on axis {}. Try a string or a motion object instead.".format(
+            motion_or_block_name))
+    return motion
+
+
+def get_units(block_name):
+    """
+    Get the physical measurement units associated with a block name.
+
+    Parameters
+    ----------
+    block_name: name of the block
+
+    Returns
+    -------
+    units of the block
+    """
+    pv_name = g.adv.get_pv_from_block(block_name)
+    if "." in pv_name:
+        # Remove any headers
+        pv_name = pv_name.split(".")[0]
+    unit_name = pv_name + ".EGU"
+    # pylint: disable=protected-access
+    if getattr(g, "__api").pv_exists(unit_name):
+        return g.get_pv(unit_name)
+    return ""
