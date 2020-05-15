@@ -1,6 +1,16 @@
 import unittest
 
-from general.scans.monoid import Average
+from general.scans.monoid import Average, Sum
+
+class SumTest(unittest.TestCase):
+    """
+    Tests for the Sum class
+    """
+
+    def test_GIVEN_sum_with_value_zero_WHEN_number_added_THEN_sum_is_correct(self):
+        summer = Sum(0)
+        new_sum = summer + 1
+        self.assertEqual(new_sum.total, 1)
 
 
 class AverageTest(unittest.TestCase):
