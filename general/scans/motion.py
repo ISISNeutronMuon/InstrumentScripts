@@ -219,7 +219,7 @@ def get_motion(motion_or_block_name):
     if isinstance(motion_or_block_name, Motion):
         motion = motion_or_block_name
     elif isinstance(motion_or_block_name, (str, text_type)):
-        motion = BlockMotion(motion_or_block_name, g.get_units(motion_or_block_name))
+        motion = BlockMotion(motion_or_block_name, get_units(motion_or_block_name))
     else:
         raise TypeError("Cannot run scan on axis {}. Try a string or a motion object instead.".format(
             motion_or_block_name))

@@ -170,9 +170,9 @@ class Defaults(object):
             kwargs["start"] = start
         if stop is not None:
             kwargs["stop"] = stop
-        if step:
+        if step is not None:
             kwargs["step"] = step
-        if frames:
+        if frames is not None:
             kwargs["frames"] = frames
 
         motion = get_motion(motion)
@@ -302,13 +302,13 @@ class Defaults(object):
         motion = get_motion(motion)
         init = motion()
         try:
-            if before:
+            if before is not None:
                 kwargs["before"] = before
-            if after:
+            if after is not None:
                 kwargs["after"] = after
-            if step:
+            if step is not None:
                 kwargs["step"] = step
-            if frames:
+            if frames is not None:
                 kwargs["frames"] = frames
 
             return self.scan(motion, **kwargs)
