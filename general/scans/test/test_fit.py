@@ -1,5 +1,6 @@
 import unittest
 import numpy as np
+from parameterized import parameterized
 
 from ..fit import PeakFit, PolyFit, CentreOfMassFit, Fit
 
@@ -44,7 +45,6 @@ class ScansFitTest(unittest.TestCase):
         fit_error = np.sqrt(self.fitter.fit_quality(x, real_y, errs, fit))
 
         self.assertAlmostEqual(fit_error, 10.0)
-
 
 class ScansPolyFitTest(unittest.TestCase):
     """
@@ -102,3 +102,16 @@ class CentreOfMassFitTest(unittest.TestCase):
         test_y = test_function(test_x - peak_location)
 
         self.assertAlmostEqual(self.fitter.fit(test_x, test_y, 0.1*test_y)[0], 10.0)
+
+    @parameterized.expand([
+        (range(10), range(10), None),
+        (range(10), None, range(10)),
+        (None, range(10), range(10)),
+        ([], range(10), range(10)),
+        (range(10), [], range(10)),
+        (range(10), range(10), [])
+    ])
+    def test_GIVEN_invalid_fit_arguments_WHEN_fit_requested_THEN_nan_returned(self, x, y, err):
+        fit = self.fitter.fit(x, y, err)
+        self.assertEquals(len(fit), 1)
+        self.assertIs(fit[0], np.nan)
