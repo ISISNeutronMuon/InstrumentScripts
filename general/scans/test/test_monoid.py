@@ -1,8 +1,6 @@
 import unittest
-import numpy as np
 
-from mock import MagicMock
-from general.scans.monoid import Average, ListOfMonoids
+from general.scans.monoid import Average
 
 
 class AverageTest(unittest.TestCase):

@@ -1,7 +1,7 @@
 import unittest
 import numpy as np
 
-from ..fit import PeakFit, PolyFit, CentreOfMassFit, GaussianFit, Fit
+from ..fit import PeakFit, PolyFit, CentreOfMassFit, Fit
 
 
 class MinimalFit(Fit):
