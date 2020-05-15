@@ -1,5 +1,7 @@
 import unittest
 
+from parameterized import parameterized
+
 from general.scans.monoid import Average, Sum
 
 class SumTest(unittest.TestCase):
@@ -7,10 +9,13 @@ class SumTest(unittest.TestCase):
     Tests for the Sum class
     """
 
-    def test_GIVEN_sum_with_value_zero_WHEN_number_added_THEN_sum_is_correct(self):
+    @parameterized.expand([
+        (0, 1)
+    ])
+    def test_GIVEN_sum_with_value_zero_WHEN_number_added_THEN_sum_is_correct(self, init_value, added_value):
         summer = Sum(0)
         new_sum = summer + 1
-        self.assertEqual(new_sum.total, 1)
+        self.assertEqual(new_sum.total, init_value + added_value)
 
 
 class AverageTest(unittest.TestCase):
