@@ -10,11 +10,32 @@ class SumTest(unittest.TestCase):
     """
 
     @parameterized.expand([
-        (0, 1)
+        (0, 1),
+        (0, 1.0),
+        (0.0, 1),
+        (0.0, 1.0),
+        (1, 0),
+        (1, 0.0),
+        (1.0, 0),
+        (1.0, 0.0),
+        (10, 11),
+        (10.0, 11.0),
+        (0, -1),
+        (0, -1.0),
+        (0.0, -1.0),
+        (0.0, -1),
+        (10, -1),
+        (10, -1.0),
+        (10.0, -1),
+        (10.0, -1.0),
+        (-1, 10),
+        (-1, 10.0),
+        (-1.0, 10),
+        (-1.0, 10.0)
     ])
     def test_GIVEN_sum_with_value_zero_WHEN_number_added_THEN_sum_is_correct(self, init_value, added_value):
-        summer = Sum(0)
-        new_sum = summer + 1
+        summer = Sum(init_value)
+        new_sum = summer + added_value
         self.assertEqual(new_sum.total, init_value + added_value)
 
 
