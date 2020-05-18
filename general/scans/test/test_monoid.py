@@ -38,6 +38,7 @@ class SumTest(unittest.TestCase):
         new_sum = summer + added_value
         self.assertEqual(new_sum.total, init_value + added_value)
 
+
 class AverageTest(unittest.TestCase):
     """
     Tests for the averaging class

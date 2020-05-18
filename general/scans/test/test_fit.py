@@ -2,7 +2,7 @@ import unittest
 import numpy as np
 from parameterized import parameterized
 
-from ..fit import PeakFit, PolyFit, CentreOfMassFit, Fit
+from ..fit import PeakFit, PolyFit, CentreOfMassFit, Fit, ExactFit
 
 
 class MinimalFit(Fit):
@@ -113,5 +113,24 @@ class CentreOfMassFitTest(unittest.TestCase):
     ])
     def test_GIVEN_invalid_fit_arguments_WHEN_fit_requested_THEN_nan_returned(self, x, y, err):
         fit = self.fitter.fit(x, y, err)
-        self.assertEquals(len(fit), 1)
+        self.assertEqual(len(fit), 1)
         self.assertIs(fit[0], np.nan)
+
+
+class ExactFitTest(unittest.TestCase):
+    """
+    Tests for the ExactFit class
+    """
+
+    def setUp(self):
+        self.fitter = ExactFit()
+
+    def test_GIVEN_x_and_y_data_WHEN_readable_form_requested_THEN_data_returned(self):
+        x = list(range(1, 10))
+        err = x
+        y = [2. * value for value in x]
+
+        fit = self.fitter.fit(x, y, err)
+        readable_form = self.fitter.readable(fit)
+        self.assertListEqual(readable_form['x'], x)
+        self.assertListEqual(readable_form['y'], y)

@@ -183,7 +183,7 @@ class ExactFit(Fit):
         return fit[1]
 
     def readable(self, fit):
-        return {"x": fit[0], "y": map(float, fit[1])}
+        return {"x": fit[0], "y": list(map(float, fit[1]))}
 
     def title(self, _):
         return "Exact Points"
