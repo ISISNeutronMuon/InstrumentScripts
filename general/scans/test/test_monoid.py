@@ -33,11 +33,10 @@ class SumTest(unittest.TestCase):
         (-1.0, 10),
         (-1.0, 10.0)
     ])
-    def test_GIVEN_sum_with_value_zero_WHEN_number_added_THEN_sum_is_correct(self, init_value, added_value):
+    def test_GIVEN_sum_with_inital_value_WHEN_number_added_THEN_sum_is_correct(self, init_value, added_value):
         summer = Sum(init_value)
         new_sum = summer + added_value
         self.assertEqual(new_sum.total, init_value + added_value)
-
 
 class AverageTest(unittest.TestCase):
     """
