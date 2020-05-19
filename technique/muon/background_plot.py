@@ -34,6 +34,8 @@ class BackgroundPlot(object):
     """
 
     def __init__(self, interval, figure_name=DEFAULT_FIGURE_NAME, ioc_number=None):
+        if ioc_number is None:
+            raise ValueError("IOC number must be set")
 
         set_up_plot_default(is_primary=False, should_open_ibex_window_on_show=False)
 
