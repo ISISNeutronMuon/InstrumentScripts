@@ -136,20 +136,28 @@ class BackgroundPlot(object):
         Imports data from the save file
         """
         # Copy nested list structure from first point
+        # Each list will contain data for one axis (a 'dataset')
         loaded_data = [list() for x in range(len(self.data))]
         loaded_data_x = []
 
         with open(self._save_file, 'r') as csvfile:
+            # Ignore header lines starting with #
             file_without_header = filter(lambda row: row if not row.startswith('#') else '', csvfile)
             reader = csv.reader(file_without_header)
 
             for row in reader:
-                loaded_data_x.append(datetime.fromisoformat(row[0]))
+                # CSV format is timestamp in first column, then data columns
+                timestamp = row[0]
+                data_points_in_row = row[1:]
 
-                for dataset, restored_dataset in zip(loaded_data, row[1:]):
-                    dataset.append(float(restored_dataset))
+                loaded_data_x.append(datetime.fromisoformat(timestamp))
 
-        # Add first points already taken
+                # Split the data up so the nth point in the row gets appended to the nth list in loaded_data
+                for dataset, restored_data_point in zip(loaded_data, data_points_in_row):
+                    # Append the new data point from this row onto the correct dataset
+                    dataset.append(float(restored_data_point))
+
+        # Add the data points collected since class initialisation
         for dataset, first_point in zip(loaded_data, self.data):
             dataset.extend(first_point)
         loaded_data_x.extend(self.data_x)
@@ -446,10 +454,10 @@ class BackgroundBlockPlot(BackgroundPlot):
 
     def saved_data_matches_current_dataset(self):
         """
-        Returns True if the saved dataset has same dimensions and run number as current dataset
+        Returns True if the saved dataset has same run number and number of variables as current dataset
         """
 
-        # Dimensions of current data are (data dimensions + time)
+        # Dimensions of current data are (number of variables + 1 time dimension)
         current_dataset_dims = len(self.data) + 1
 
         try:
