@@ -313,7 +313,7 @@ class SimpleScan(Scan):
 
         """
         return SimpleScan(self.action,
-                          map(func, self.values),
+                          list(map(func, self.values)),
                           self.name)
 
     @property
@@ -831,7 +831,7 @@ class ReplayScan(Scan):
                           self.result, self.defaults)
 
     def map(self, func):
-        return ReplayScan(map(func, self.xs), self.ys, self.axis,
+        return ReplayScan(list(map(func, self.xs)), self.ys, self.axis,
                           self.result, self.defaults)
 
     def __len__(self):

@@ -183,7 +183,7 @@ class ExactFit(Fit):
         return fit[1]
 
     def readable(self, fit):
-        return {"x": fit[0], "y": map(float, fit[1])}
+        return {"x": fit[0], "y": list(map(float, fit[1]))}
 
     def title(self, _):
         return "Exact Points"
@@ -515,7 +515,7 @@ class CentreOfMassFit(Fit):
         warnings.simplefilter("ignore", RuntimeWarning)
 
     def fit(self, x, y, err):
-        if not (x and y.size and err.size):
+        if x is None or y is None or err is None or len(x) < 1 or len(y) < 1 or len(err) < 1:
             return [np.nan]
 
         raw_data = np.array([
