@@ -243,8 +243,7 @@ Motion Objects
   Traceback (most recent call last):
       ...
   TypeError: Cannot run scan on axis True. Try a string or a motion
-  object instead.  It's also possible that you may need to rerun
-  populate() to recreate your motion axes.
+  object instead.
 
   The block needs to point at the underlying motor, e.g. `MOT:MTR0101`, 
   and not an axis PV.
