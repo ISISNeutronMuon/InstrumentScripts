@@ -214,7 +214,7 @@ class Defaults(object):
           The axis to scan
         start
           The initial position
-        stop
+        end
           The final position
         intervals
           How many steps to take between the initial and final position
@@ -248,7 +248,7 @@ class Defaults(object):
           The axis to scan
         start
           The initial position as an offset from the current position
-        stop
+        end
           The final position as an offset from the current position
         intervals
           How many steps to take between the initial and final position
@@ -287,16 +287,16 @@ class Defaults(object):
 
         Parameters
         ----------
-        motor
-        The axis to scan
+        motion
+          The axis to scan
         before
-        The initial position as an offset from the current position
+          The initial position as an offset from the current position
         after
-        The ending position as an offset from the current position
+          The ending position as an offset from the current position
         step
-        The absolute step size
+          The absolute step size
         frames
-        The number of pulse frames to measure at each point
+          The number of pulse frames to measure at each point
 
         """
         motion = get_motion(motion)
