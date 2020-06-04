@@ -1,6 +1,8 @@
 """
 Create a background plot. Which is a matplotlib figure that runs on the secondary plot
 """
+import csv
+import os
 import matplotlib
 matplotlib.use('module://genie_python.matplotlib_backend.ibex_web_backend')
 
@@ -22,19 +24,24 @@ DEFAULT_FIGURE_NAME = "Background Plot"
 # The prefix for the block server
 BLOCK_PREFIX = "CS:SB:"
 
+# Name of file which data points are saved to
+SAVE_FILE = os.path.join(r"C:\\", "Instrument", "var", "tmp", "background_plot_data_{ioc_number:02d}.csv")
+
 
 class BackgroundPlot(object):
     """
     Create a background plot of some points which update
     """
 
-    def __init__(self, interval, figure_name=DEFAULT_FIGURE_NAME):
+    def __init__(self, interval, figure_name=DEFAULT_FIGURE_NAME, ioc_number=None):
+        if ioc_number is None:
+            raise ValueError("IOC number must be set")
 
         set_up_plot_default(is_primary=False, should_open_ibex_window_on_show=False)
 
         # Animation object which updates the plot
         self._animation = None
-        # x daa for the plot, date time objects
+        # x data for the plot, date time objects
         self.data_x = None
         # point data dictionary of arrays for each point
         self.data = None
@@ -51,6 +58,7 @@ class BackgroundPlot(object):
         self._interval = interval
         self.thread = None
 
+        self._save_file = SAVE_FILE.format(ioc_number=ioc_number)
         self._figure_name = figure_name
 
     def start(self):
@@ -81,6 +89,11 @@ class BackgroundPlot(object):
             self.lines.append(line)
 
         self.set_up_plot()
+
+        if self.saved_data_matches_current_dataset():
+            self.load_data_from_save()
+        else:
+            self.start_new_data_file()
 
         self._animation = FuncAnimation(self.figure, partial(self._update, self), interval=self._interval*1000)
 
@@ -118,6 +131,40 @@ class BackgroundPlot(object):
                 for point in first_point[1:]:
                     self.data.append([point, ])
 
+    def load_data_from_save(self):
+        """
+        Imports data from the save file
+        """
+        # Copy nested list structure from first point
+        # Each list will contain data for one axis (a 'dataset')
+        loaded_data = [list() for x in range(len(self.data))]
+        loaded_data_x = []
+
+        with open(self._save_file, 'r') as csvfile:
+            # Ignore header lines starting with #
+            file_without_header = filter(lambda row: row if not row.startswith('#') else '', csvfile)
+            reader = csv.reader(file_without_header)
+
+            for row in reader:
+                # CSV format is timestamp in first column, then data columns
+                timestamp = row[0]
+                data_points_in_row = row[1:]
+
+                loaded_data_x.append(datetime.fromisoformat(timestamp))
+
+                # Split the data up so the nth point in the row gets appended to the nth list in loaded_data
+                for dataset, restored_data_point in zip(loaded_data, data_points_in_row):
+                    # Append the new data point from this row onto the correct dataset
+                    dataset.append(float(restored_data_point))
+
+        # Add the data points collected since class initialisation
+        for dataset, first_point in zip(loaded_data, self.data):
+            dataset.extend(first_point)
+        loaded_data_x.extend(self.data_x)
+
+        self.data = loaded_data
+        self.data_x = loaded_data_x
+
     def _update(self, frame, *fargs):
         """
         Update the plot, call update but catches any exceptions and prints them for the user to see
@@ -151,10 +198,28 @@ class BackgroundPlot(object):
         """
         if self.should_clear_plot():
             self.clear_plot()
+            self.start_new_data_file()
         else:
             self.update_data()
 
         return self.update_figure()
+
+    def start_new_data_file(self):
+        """
+        Starts a new data file, or deletes old data and creates new file
+        """
+        open(self._save_file, 'w').close()
+
+    def save_data_point(self, points):
+        """
+        Appends the temporary save file with the latest data points
+
+        Args:
+            points: list containing data points to save. First value is timestamp
+        """
+        with open(self._save_file, 'a', newline='') as csvfile:
+            csvwriter = csv.writer(csvfile, delimiter=',')
+            csvwriter.writerow(points)
 
     def update_data(self):
         """
@@ -162,6 +227,7 @@ class BackgroundPlot(object):
         Default behaviour gets the next point from get_data-point and adds it to data and data_x.
         """
         point = self.get_data_point()
+        self.save_data_point(point)
         self.data_x.append(point[0])
         for data_set, point in zip(self.data, point[1:]):
             data_set.append(point)
@@ -215,6 +281,18 @@ class BackgroundPlot(object):
         """
         return False
 
+    def saved_data_matches_current_dataset(self):
+        """
+        True if the saved dataset dimensions match, else False
+
+        Should be overloaded for desired behaviour
+
+        Returns
+        -------
+        False, data is never loaded from disc
+        """
+        return False
+
     def clear_plot(self):
         """
         Clear the plot by adding the first point and updating the figure
@@ -248,7 +326,7 @@ class BackgroundBlockPlot(BackgroundPlot):
     In this example we create a three line plot of Temp_Sample, Temp_SP and Result. The delay between samples is 1s.
     """
 
-    def __init__(self, block_and_name_list, y_axis_label, interval=0.5):
+    def __init__(self, block_and_name_list, y_axis_label, ioc_number=1, interval=0.5):
         """
         Initialisation.
 
@@ -262,8 +340,11 @@ class BackgroundBlockPlot(BackgroundPlot):
 
         interval: float
             interval at which block should be plotted in seconds
+
+        ioc_number: int
+            The number of the BGRSCRPT IOC which has spawned this class.        
         """
-        super(BackgroundBlockPlot, self).__init__(interval, "{} Plot".format(y_axis_label))
+        super(BackgroundBlockPlot, self).__init__(interval, "{} Plot".format(y_axis_label), ioc_number=ioc_number)
         self._run_state_pv = g.prefix_pv_name(DAE_PVS_LOOKUP["runstate"])
         self._run_number_pv = g.prefix_pv_name(DAE_PVS_LOOKUP["runnumber"])
         self._pv_names = []
@@ -370,3 +451,62 @@ class BackgroundBlockPlot(BackgroundPlot):
         Legend labels
         """
         return self._legend_labels
+
+    def saved_data_matches_current_dataset(self):
+        """
+        Returns True if the saved dataset has same run number and number of variables as current dataset
+        """
+
+        # Dimensions of current data are (number of variables + 1 time dimension)
+        current_dataset_dims = len(self.data) + 1
+
+        try:
+            saved_run_number, saved_dataset_dims = self._read_header()
+
+            # Check the parameters in file match current dataset
+            run_numbers_match = int(saved_run_number) == int(self.current_run_number)
+            data_dimensions_match = saved_dataset_dims == current_dataset_dims
+
+        except FileNotFoundError:
+            valid_file_found = False
+        else:
+            valid_file_found = True
+
+        if valid_file_found and run_numbers_match and data_dimensions_match:
+            print("Dataset matches - loading values from save")
+            dataset_matches = True
+        elif valid_file_found:
+            print("Dataset doesn't match - do not load from save")
+            dataset_matches = False
+        else:
+            print("No valid save file found")
+            dataset_matches = False
+
+        return dataset_matches
+
+    def _read_header(self):
+        """
+        Strips the usable information from the save file header
+        """
+        with open(self._save_file, "r") as csvfile:
+            run_number_line = csvfile.readline()
+            # Second line is for human readability, skip
+            _ = csvfile.readline()
+            sample_data_row = csvfile.readline()
+
+        # Strip text from run number, must match header in start_new_data_file
+        saved_run_number = run_number_line.replace("# run_number:", "")
+
+        # Count number of columns in data row
+        dimensions_in_saved_dataset = len(sample_data_row.split(","))
+
+        return saved_run_number, dimensions_in_saved_dataset
+
+    def start_new_data_file(self):
+        """
+        Starts a new data file with custom header
+        """
+        with open(self._save_file, 'w') as csvfile:
+            csvfile.write("# run_number:{}\n".format(self.current_run_number))
+            # Save axis names for human readability
+            csvfile.write("# Axes: time, {}\n".format(', '.join(self.get_data_set_labels())))

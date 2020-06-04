@@ -4,6 +4,7 @@
 *.dot.pdf
 *.dot
 *.egg-info 
+*__pycache__/
 .idea/
 /doc/build
 /doc/source/scans/*.dat
