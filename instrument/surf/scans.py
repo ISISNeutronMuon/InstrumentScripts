@@ -108,5 +108,4 @@ scan = _scan_instance.scan
 ascan = _scan_instance.ascan
 dscan = _scan_instance.dscan
 rscan = _scan_instance.rscan
-populate = _scan_instance.populate
 last_scan = _scan_instance.last_scan
