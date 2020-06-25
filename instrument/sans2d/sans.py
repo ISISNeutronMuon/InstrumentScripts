@@ -53,7 +53,7 @@ class Sans2d(ScanningInstrument):
 
     @staticmethod
     def set_aperture(size):
-        g.set_pv("LKUP:APERTURE:POSN:SP", size, is_local=True)
+        g.set_pv("LKUP:SCRAPER:POSN:SP", size, is_local=True)
 
     def _detector_is_on(self):
         return True
