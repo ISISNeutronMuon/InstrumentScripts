@@ -1,9 +1,9 @@
 """This is the instrument implementation for the Sans2d beamline."""
+from technique.sans.genie import gen
 from technique.sans.instrument import ScanningInstrument
 # pylint: disable=unused-import
 from technique.sans.util import dae_setter  # noqa: F401
 from general.scans.util import local_wrapper
-from genie_python import genie as g
 
 
 class Sans2d(ScanningInstrument):
@@ -53,7 +53,18 @@ class Sans2d(ScanningInstrument):
 
     @staticmethod
     def set_aperture(size):
-        g.set_pv("LKUP:SCRAPER:POSN:SP", size, is_local=True)
+        """
+        Set the beam aperture to the desired size.
+
+        Parameters
+        ----------
+        size : str
+          The aperture size.  e.g. "Small" or "Medium"
+          A blank string (the default value) results in
+          the aperture not being changed."""
+        if size == "":
+            pass
+        gen.set_pv("LKUP:SCRAPER:POSN:SP", size, is_local=True)
 
     def _detector_is_on(self):
         return True
@@ -66,11 +77,11 @@ class Sans2d(ScanningInstrument):
 
     def _configure_sans_custom(self):
         # move the transmission monitor out
-        g.set_pv("FINS_VAC:MONITOR3:STATUS:SP", "OUT", is_local=True)
+        gen.set_pv("FINS_VAC:MONITOR3:STATUS:SP", "OUT", is_local=True)
 
     def _configure_trans_custom(self):
         # move the transmission monitor in
-        g.set_pv("FINS_VAC:MONITOR3:STATUS:SP", "IN", is_local=True)
+        gen.set_pv("FINS_VAC:MONITOR3:STATUS:SP", "IN", is_local=True)
 
 
 obj = Sans2d()
