@@ -244,6 +244,6 @@ def get_units(block_name):
         pv_name = pv_name.split(".")[0]
     unit_name = pv_name + ".EGU"
     # pylint: disable=protected-access
-    if getattr(g, "__api").pv_exists(unit_name):
+    if g._genie_api.pv_exists(unit_name):
         return g.get_pv(unit_name)
     return ""

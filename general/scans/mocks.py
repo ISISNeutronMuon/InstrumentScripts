@@ -36,7 +36,7 @@ def pv_exists(pv_name):
 
 g.adv.get_pv_from_block.side_effect = get_pv_from_block
 # pylint: disable=protected-access
-g.__api.pv_exists.side_effect = pv_exists
+g._genie_api.pv_exists.side_effect = pv_exists
 
 
 PVS = {"PV:THETA.EGU": "deg", "PV:TWO_THETA.EGU": "deg",
