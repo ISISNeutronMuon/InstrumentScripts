@@ -14,6 +14,8 @@ class SampleGenerator:
         Initialiser.
         Args:
             translation: The translation for the sample
+            height_offset: Height between the sample and center of rotation; If no height stage 2 then this needs to
+                have the offset to the beam added
             height2_offset: Height of the second stage with no mirror relative to the beam for this sample
             phi_offset: offset from 0 for the sample in the phi direction (along the beam)
             psi_offset: offset from 0 for the sample in the psi direction (perpendicular to the beam)
@@ -38,6 +40,8 @@ class SampleGenerator:
         Create a new sample with given values; if no value defined use defaults
         Args:
             translation: The translation for the sample
+            height_offset: Height between the sample and center of rotation; If no height stage 2 then this needs to
+                have the offset to the beam added
             height2_offset: Height of the second stage with no mirror relative to the beam for this sample
             phi_offset: offset from 0 for the sample in the phi direction (along the beam)
             psi_offset: offset from 0 for the sample in the psi direction (perpendicular to the beam)
@@ -84,6 +88,8 @@ class Sample:
         Initialiser.
         Args:
             translation: The translation for the sample
+            height_offset: Height between the sample and center of rotation; If no height stage 2 then this needs to
+                have the offset to the beam added
             height2_offset: Height of the second stage with no mirror relative to the beam for this sample
             phi_offset: offset from 0 for the sample in the phi direction (along the beam)
             psi_offset: offset from 0 for the sample in the psi direction (perpendicular to the beam)
