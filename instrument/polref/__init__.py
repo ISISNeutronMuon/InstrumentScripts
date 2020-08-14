@@ -1,4 +1,4 @@
-"""The base module for the SURF beamline
+"""The base module for the POLREF beamline
 
 Using a wildcard import will pull in most of the interesting
 commands for this instrument."""
