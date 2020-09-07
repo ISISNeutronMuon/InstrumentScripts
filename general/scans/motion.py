@@ -228,6 +228,7 @@ def get_motion(motion_or_block_name):
 
 def get_units(block_name):
     """
+    This method is deprecated and will be removed, please use g.get_block_units(block_name).
     Get the physical measurement units associated with a block name.
 
     Parameters
