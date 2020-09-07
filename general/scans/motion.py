@@ -224,3 +224,19 @@ def get_motion(motion_or_block_name):
         raise TypeError("Cannot run scan on axis {}. Try a string or a motion object instead.".format(
             motion_or_block_name))
     return motion
+
+
+def get_units(block_name):
+    """
+    Get the physical measurement units associated with a block name.
+
+    Parameters
+    ----------
+    block_name: name of the block
+
+    Returns
+    -------
+    units of the block
+    """
+    print("This method is deprecated and will be removed, please use g.get_block_units(block_name)")
+    return g.get_block_units(block_name)
