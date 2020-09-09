@@ -107,9 +107,9 @@ class ScanningInstrument(object):
         """
         gen.change(nperiods=1)
         gen.change_start()
-        if self.get_pv("DAE:DETECTOR_FILE") != wiring:
+        if self.get_pv("DAE:DETECTOR_FILE") != detector:
             gen.change_tables(detector=detector)
-        if self.get_pv("DAE:SPECTRA_FILE") != wiring:
+        if self.get_pv("DAE:SPECTRA_FILE") != spectra:
             gen.change_tables(spectra=spectra)
         if self.get_pv("DAE:WIRING_FILE") != wiring:
             gen.change_tables(wiring=wiring)
@@ -132,7 +132,8 @@ class ScanningInstrument(object):
                 '1WT', '2WT', '3WT', '4WT', '5WT', '6WT', '7WT',
                 '8WT', '9WT', '10WT', '11WT', '12WT', '13WT', '14WT',
                 '1GT', '2GT', '3GT', '4GT', '5GT', '6GT', '7GT', '8GT', '9GT',
-                '10GT', '11GT', '12GT']
+                '10GT', '11GT', '12GT','2GB', '3GB', '4GB', '5GB', '6GB', '7GB',
+                '8GB', '9GB', '10GB', '11GB']
 
     def _attempt_resume(self, title, pos, thick, dae, **kwargs):
         if gen.get_title() != title+self.title_footer:

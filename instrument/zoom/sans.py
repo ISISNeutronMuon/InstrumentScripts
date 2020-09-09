@@ -34,6 +34,7 @@ class Zoom(ScanningInstrument):
 
     @dae_setter("SANS", "sans")
     def setup_dae_event(self):
+        print("Setting DAE into event mode")
         self._generic_scan(
             detector=r"detector_1det_1dae3card.dat",
             spectra=r"spec2det_280318_to_test_18_1.txt",
@@ -48,6 +49,7 @@ class Zoom(ScanningInstrument):
 
     @dae_setter("TRANS", "transmission")
     def setup_dae_transmission(self):
+        print("Setting up DAE for trans")
         self._generic_scan(
             spectra=r"spectrum_8mon_1dae3card_00.dat",
             wiring=r"wiring_8mon_1dae3card_00_hist.dat",
