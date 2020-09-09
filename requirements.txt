@@ -6,3 +6,4 @@ flake8
 scipy
 six
 sphinx
+mock

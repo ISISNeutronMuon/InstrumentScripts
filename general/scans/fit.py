@@ -129,7 +129,7 @@ class Fit(object):
                         fity = self.get_y(plot_x, params)
                 axis.plot(plot_x, fity, "-",
                           label="{} fit".format(self.title(params)))
-            axis.legend()
+            axis.legend(bbox_to_anchor=(0, 1.02, 1, 0.2), loc="lower left", mode="expand", borderaxespad=0, ncol=3)
             return params
         return action
 
@@ -183,7 +183,7 @@ class ExactFit(Fit):
         return fit[1]
 
     def readable(self, fit):
-        return {"x": fit[0], "y": map(float, fit[1])}
+        return {"x": fit[0], "y": list(map(float, fit[1]))}
 
     def title(self, _):
         return "Exact Points"
@@ -515,7 +515,7 @@ class CentreOfMassFit(Fit):
         warnings.simplefilter("ignore", RuntimeWarning)
 
     def fit(self, x, y, err):
-        if not (x and y.size and err.size):
+        if x is None or y is None or err is None or len(x) < 1 or len(y) < 1 or len(err) < 1:
             return [np.nan]
 
         raw_data = np.array([
@@ -583,7 +583,8 @@ class CentreOfMassFit(Fit):
             errs = np.array(y.err())
             params = self.fit(x, values, errs)
             axis.axvline(x=params[0], color="orange")
-            axis.legend([self.title(params)])
+            axis.legend([self.title(params)], bbox_to_anchor=(0, 1.02, 1, 0.2), loc="lower left", mode="expand",
+                        borderaxespad=0, ncol=3)
             return params
         return action
 

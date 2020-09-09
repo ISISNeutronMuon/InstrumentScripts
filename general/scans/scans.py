@@ -152,7 +152,7 @@ class Scan(object):
 
     def plot(self, detector=None, save=None,
              action=None, **kwargs):
-        """Run over the scan an perform a simple measurement at each position.
+        """Run over the scan and perform a simple measurement at each position.
         The measurement parameter can be used to set what type of measurement
         is to be taken.  If the save parameter is set to a file name, then the
         plot will be saved in that file."""
@@ -168,12 +168,17 @@ class Scan(object):
         acc = None
         action_remainder = None
         try:
-            with open(self.defaults.log_file(), "w") as logfile, \
+            log_filename = self.defaults.log_file(self.log_file_info())
+            print("Writing data to: {}".format(log_filename))
+            with open(log_filename, "w") as logfile, \
                     detector(self, save=save, **kwargs) as detect:
                 for x in self:
                     # FIXME: Handle multidimensional plots
                     ((label, unit), position) = next(iter(x.items()))
+
+                    # perform measurement
                     acc, value = detect(acc, **just_times(kwargs))
+
                     if isinstance(value, float):
                         value = Average(value)
                     if not xs:
@@ -249,7 +254,10 @@ class Scan(object):
             result = np.array([x for x in result if x is not None])
             result = np.median(result, axis=0)
 
-        return fit.readable(result)
+        fit_result = fit.readable(result)
+        print("Fit: {}".format(fit_result))
+
+        return fit_result
 
     def calculate(self, time=False, pad=0, **kwargs):
         # pylint: disable=redefined-outer-name
@@ -273,6 +281,22 @@ class Scan(object):
             print("The run would finish at {}".format(delta + datetime.now()))
         return total
 
+    def log_file_info(self):
+        """
+        Generate some info for creating the log file path.
+
+        Returns
+        -------
+        Dictionary containing keys for information. Keys are:
+            action_title: title of the action
+        """
+        log_info = {}
+        try:
+            log_info["action_title"] = self.action.title
+        except AttributeError:
+            pass
+        return log_info
+
 
 class SimpleScan(Scan):
     """SimpleScan is a scan along a single axis for a fixed set of values"""
@@ -289,7 +313,7 @@ class SimpleScan(Scan):
 
         """
         return SimpleScan(self.action,
-                          map(func, self.values),
+                          list(map(func, self.values)),
                           self.name)
 
     @property
@@ -402,7 +426,7 @@ class ContinuousScan(Scan):
         action_remainder = None
 
         try:
-            with open(self.defaults.log_file(), "w") as logfile, \
+            with open(self.defaults.log_file(self.log_file_info()), "w") as logfile, \
                     detector(self, save=save, **kwargs) as detect:
 
                 for move in self:
@@ -627,7 +651,7 @@ class ProductScan(Scan):
 
         acc = action_remainder = None
         try:
-            with open(self.defaults.log_file(), "w") as logfile, \
+            with open(self.defaults.log_file(self.log_file_info()), "w") as logfile, \
                     detector(self, save) as detect:
                 for x in self:
                     acc, value = detect(acc, **kwargs)
@@ -807,7 +831,7 @@ class ReplayScan(Scan):
                           self.result, self.defaults)
 
     def map(self, func):
-        return ReplayScan(map(func, self.xs), self.ys, self.axis,
+        return ReplayScan(list(map(func, self.xs)), self.ys, self.axis,
                           self.result, self.defaults)
 
     def __len__(self):

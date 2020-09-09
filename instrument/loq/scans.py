@@ -19,7 +19,17 @@ class LOQ(Defaults):
     detector = specific_spectra([[4]])
 
     @staticmethod
-    def log_file():
+    def log_file(info):
+        """
+        Parameters
+        ----------
+            info
+              dictionary containing useful keys to help form paths. It may contain no keys at all.
+                    possible keys are action_title - the name of the action requested
+        Returns
+        -------
+            Name for the log file
+        """
         now = datetime.now()
         return "U:/loq_scan_{}_{}_{}_{}_{}_{}.dat".format(
             now.year, now.month, now.day, now.hour, now.minute, now.second)
@@ -33,6 +43,4 @@ scan = local_wrapper(_loq, "scan")
 ascan = local_wrapper(_loq, "ascan")
 dscan = local_wrapper(_loq, "dscan")
 rscan = local_wrapper(_loq, "rscan")
-populate = local_wrapper(_loq, "populate")
 last_scan = local_wrapper(_loq, "last_scan")
-print("Remember to populate")
