@@ -24,7 +24,7 @@ class LOQ(ScanningInstrument):
                 'C8T', 'C9T', 'C10T', 'C11T', 'C12T', 'C13T', 'C14T',
                 'W1B', 'W2B', 'W3B', 'W4B', 'W5B', 'W6B', 'W7B', 'W8B',
                 'W9B', 'W10B', 'W11B', 'W12B', 'W13B', 'W14B', 'W15B', 'W16B',
-                'DLS2', 'DLS3', 'DLS4', 'DLS5', 'DLS6']
+                'DLS2', 'DLS3', 'DLS4', 'DLS5', 'DLS6', 'FIVE', 'SIX', 'SEVEN', 'EIGHT']
 
     def _generic_scan(  # pylint: disable=dangerous-default-value
             self,
