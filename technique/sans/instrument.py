@@ -111,9 +111,9 @@ class ScanningInstrument(object):
             gen.change_tcb(**tcb)
         gen.change_finish()
         gen.change_start()
-        if self.get_pv("DAE:DETECTOR_FILE") != wiring:
+        if self.get_pv("DAE:DETECTOR_FILE") != detector:
             gen.change_tables(detector=detector)
-        if self.get_pv("DAE:SPECTRA_FILE") != wiring:
+        if self.get_pv("DAE:SPECTRA_FILE") != spectra:
             gen.change_tables(spectra=spectra)
         if self.get_pv("DAE:WIRING_FILE") != wiring:
             gen.change_tables(wiring=wiring)
