@@ -99,7 +99,7 @@ class PolrefDefaultScan(Defaults):
         from datetime import datetime
         now = datetime.now()
         action_title = info.get("action_title", "unknown")
-        return os.path.join("U:\\", "scripts", "TEST", "{}_{}_{}_{}_{}_{}_{}.dat".format(
+        return os.path.join(r"U:\TEST\Sept2020\IBEX SECI scans\\", "{}_{}_{}_{}_{}_{}_{}_IBEX.dat".format(
             action_title, now.year, now.month, now.day, now.hour, now.minute, now.second))
 
 
