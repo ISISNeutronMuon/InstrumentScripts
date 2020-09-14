@@ -19,7 +19,7 @@ except ImportError:
     from general.scans.mocks import g
 
 from general.scans.defaults import Defaults
-from general.scans.detector import NormalisedIntensityDetector, create_spectra_definition
+from general.scans.detector import NormalisedIntensityDetector, create_spectra_definition, create_multi_spectra_definition
 
 
 # pylint: disable=no-name-in-module
@@ -29,9 +29,10 @@ class PolrefDefaultScan(Defaults):
     """
 
     # spectra definition based on gcl script.
-    _spectra_definitions = [create_spectra_definition(1, 1050.0, 15500.0),
-                            create_spectra_definition(2, 1050.0, 15500.0),
-                            create_spectra_definition(3, 1450.0, 16500.0)]
+    _spectra_definitions = [create_spectra_definition(1, 100.0, 50000.0),
+                            create_spectra_definition(2, 100.0, 60000.0),
+                            create_spectra_definition(3, 3000.0, 70000.0),
+                            create_multi_spectra_definition(280, 2, 3800.0, 90000.0, name="multiple")]
     detector = NormalisedIntensityDetector(default_monitor=2, default_detector=3,
                                            spectra_definitions=_spectra_definitions)
 
