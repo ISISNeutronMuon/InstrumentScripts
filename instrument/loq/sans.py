@@ -24,7 +24,7 @@ class LOQ(ScanningInstrument):
                 'C8T', 'C9T', 'C10T', 'C11T', 'C12T', 'C13T', 'C14T',
                 'W1B', 'W2B', 'W3B', 'W4B', 'W5B', 'W6B', 'W7B', 'W8B',
                 'W9B', 'W10B', 'W11B', 'W12B', 'W13B', 'W14B', 'W15B', 'W16B',
-                'DLS2', 'DLS3', 'DLS4', 'DLS5', 'DLS6']
+                'DLS2', 'DLS3', 'DLS4', 'DLS5', 'DLS6', 'FIVE', 'SIX', 'SEVEN', 'EIGHT']
 
     def _generic_scan(  # pylint: disable=dangerous-default-value
             self,
@@ -34,8 +34,16 @@ class LOQ(ScanningInstrument):
             tcbs=[{"low": 3500.0, "high": 43500.0, "step": 0.025,
                    "log": True}]):
         base = r"C:\Instrument\Settings\config\NDXLOQ\configurations\tables\\"
-        self._generic_scan(
-            base + detector, base + spectra, base + wiring, tcbs)
+        gen.change_start()
+        for trange in range(1, 6):
+            gen.change_tcb(low=0, high=0, step=0, log=0,
+                           trange=trange, regime=1)
+            sleep(1.5)
+        gen.change_tcb(low=0, high=0, step=0, log=0,
+                       trange=1, regime=2)
+        gen.change_finish()
+        ScanningInstrument._generic_scan(
+            self, base + detector, base + spectra, base + wiring, tcbs)
 
     @dae_setter("SANS/TRANS", "sans")
     def setup_dae_event(self):
@@ -47,7 +55,10 @@ class LOQ(ScanningInstrument):
 
     @dae_setter("TRANS", "transmission")
     def setup_dae_transmission(self):
-        return self._generic_scan()
+        return self._generic_scan(
+            detector="detector8.dat",
+            spectra="spectra8.dat",
+            wiring="wiring8.dat")
 
     @dae_setter("SANS", "sans")
     def setup_dae_bsalignment(self):
@@ -77,7 +88,9 @@ class LOQ(ScanningInstrument):
                          ext0=True, ext1=True, ext2=True, ext3=True)
         return self._generic_scan(
             tcbs=[{"low": 3500.0, "high": 43500.0, "step": 0.025,
-                   "log": True}])
+                   "log": True},
+                  {"low": 3500, "high": 43500.0, "step": 40000,
+                   "log": False, "trange": 1, "regime": 2}])
 
     @dae_setter("SANS/TRANS", "sans")
     def setup_dae_quiet(self):
@@ -88,7 +101,9 @@ class LOQ(ScanningInstrument):
                          ext0=False, ext1=False, ext2=False, ext3=False)
         return self._generic_scan(
             tcbs=[{"low": 5.0, "high": 19995.0, "step": 4000.0,
-                   "log": False}])
+                   "log": False},
+                  {"low": 5, "high": 19995.0, "step": 19990.0, "log": False,
+                   "trange": 1, "regime": 2}])
 
     @dae_setter("SANS/TRANS", "sans")
     def setup_dae_50hz_short(self):
@@ -98,10 +113,16 @@ class LOQ(ScanningInstrument):
         gen.change_vetos(clearall=True, smp=True, TS2=True,
                          ext0=True, ext1=True, ext2=True, ext3=True)
         return self._generic_scan(
-            tcbs=[{"low": 6e3, "high": 1.96e4, "step": 4e2, "log": False},
-                  {"low": 1.96e4, "high": 1.99e4, "step": 3e2, "log": False},
-                  {"low": 1.99e4, "high": 2.08e4, "step": 1e2, "log": False},
-                  {"low": 2.08e4, "high": 2.60e4, "step": 4e2, "log": False}])
+            tcbs=[{"low": 6e3, "high": 1.96e4, "step": 4e2,
+                   "log": False, "trange": 1},
+                  {"low": 1.96e4, "high": 1.99e4, "step": 3e2,
+                   "log": False, "trange": 2},
+                  {"low": 1.99e4, "high": 2.08e4, "step": 1e2,
+                   "log": False, "trange": 3},
+                  {"low": 2.08e4, "high": 2.60e4, "step": 4e2,
+                   "log": False, "trange": 4},
+                  {"low": 6000, "high": 2.60e4, "step": 20000,
+                   "log": False, "trange": 1, "regime": 2}])
 
     @dae_setter("SANS/TRANS", "sans")
     def setup_dae_50hz_long(self):
@@ -111,8 +132,12 @@ class LOQ(ScanningInstrument):
         gen.change_vetos(clearall=True, smp=True, TS2=True,
                          ext0=True, ext1=True, ext2=True, ext3=True)
         return self._generic_scan(
-            tcbs=[{"low": 2e4, "high": 3.95e4, "step": 2.5e2, "log": False},
-                  {"low": 3.95e4, "high": 4e4, "step": 1e2, "log": False}])
+            tcbs=[{"low": 2e4, "high": 3.95e4, "step": 2.5e2,
+                   "log": False, "trange": 1},
+                  {"low": 3.95e4, "high": 4e4, "step": 1e2,
+                   "log": False, "trange": 2},
+                  {"low": 20000, "high": 40000, "step": 20000,
+                   "log": False, "trange": 1, "regime": 2}])
 
     @property
     def changer_pos(self):
@@ -206,5 +231,9 @@ class LOQ(ScanningInstrument):
 
 
 obj = LOQ()
-for method in obj.method_iterator():
-    locals()[method] = local_wrapper(obj, method)
+for method in dir(obj):
+    if method[0] != "_" and method not in locals() and \
+       method not in obj._block_accessors and \
+       callable(getattr(obj, method)):
+        locals()[method.lower()] = local_wrapper(obj, method)
+        locals()[method.upper()] = local_wrapper(obj, method)

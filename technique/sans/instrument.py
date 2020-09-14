@@ -107,15 +107,18 @@ class ScanningInstrument(object):
         """
         gen.change(nperiods=1)
         gen.change_start()
-        if self.get_pv("DAE:DETECTOR_FILE") != wiring:
-            gen.change_tables(detector=detector)
-        if self.get_pv("DAE:SPECTRA_FILE") != wiring:
-            gen.change_tables(spectra=spectra)
-        if self.get_pv("DAE:WIRING_FILE") != wiring:
-            gen.change_tables(wiring=wiring)
         for tcb in tcbs:
             gen.change_tcb(**tcb)
         gen.change_finish()
+        gen.change_start()
+        if self.get_pv("DAE:DETECTOR_FILE") != detector:
+            gen.change_tables(detector=detector)
+        if self.get_pv("DAE:SPECTRA_FILE") != spectra:
+            gen.change_tables(spectra=spectra)
+        if self.get_pv("DAE:WIRING_FILE") != wiring:
+            gen.change_tables(wiring=wiring)
+        gen.change_finish()
+        
 
     _poslist = ['AB', 'BB', 'CB', 'DB', 'EB', 'FB', 'GB', 'HB', 'IB', 'JB',
                 'KB', 'LB', 'MB', 'NB', 'OB', 'PB', 'QB', 'RB', 'SB', 'TB',

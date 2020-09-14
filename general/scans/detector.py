@@ -230,6 +230,31 @@ def specific_spectra(spectra_list, preconfig=lambda: None):
 SpectraDefinition = namedtuple("SpectraDefintion", ["name", "spectra_number", "t_min", "t_max"])
 
 
+def create_multi_spectra_definition(central_spectra, plus_minus, t_min=None, t_max=None, name=None):
+    """
+    Create a spectra definition to be used with SpectraWithTimeRange for instance.
+
+    Parameters
+    ----------
+    spectra_number: List[int]
+        spectra number to use and add up
+    t_min: float|None
+        minimum time of flight to integrate spectra from; None for as low as possible
+    t_max: float|None
+        maximum time of flight to integrate spectra to; None for as high as possible
+    name: str|int
+        unique name of the spectra definition; None use the spectra_number
+
+    Returns
+    -------
+        spectra definition
+    """
+    if name is None:
+        name = "{}+_{}".format(central_spectra, plus_minus)
+    spectra_numbers = range(central_spectra-plus_minus, central_spectra+plus_minus+1)
+    return SpectraDefinition(name, spectra_numbers, t_min, t_max)
+
+
 def create_spectra_definition(spectra_number, t_min=None, t_max=None, name=None):
     """
     Create a spectra definition to be used with SpectraWithTimeRange for instance.
@@ -251,7 +276,7 @@ def create_spectra_definition(spectra_number, t_min=None, t_max=None, name=None)
     """
     if name is None:
         name = spectra_number
-    return SpectraDefinition(name, spectra_number, t_min, t_max)
+    return SpectraDefinition(name, [spectra_number], t_min, t_max)
 
 
 class NormalisedIntensityDetector(DaePeriods):
@@ -354,20 +379,24 @@ class NormalisedIntensityDetector(DaePeriods):
         _resume_count_pause(**kwargs)
 
         for _ in range(SPECTRA_RETRY_COUNT):  # tries to get a non-None spectrum from the DAE
-            monitor_spec_sum = g.integrate_spectrum(self.monitor.spectra_number, g.get_period(),
-                                                    self.monitor.t_min, self.monitor.t_max)
-            detector_spec_sum = g.integrate_spectrum(self.detector.spectra_number, g.get_period(),
-                                                     self.detector.t_min, self.detector.t_max)
+            monitor_spec_sum = 0
+            for monitor_num in self.monitor.spectra_number:
+                monitor_spec_sum += g.integrate_spectrum(monitor_num, g.get_period(),
+                                                        self.monitor.t_min, self.monitor.t_max)
+            detector_spec_sum = 0
+            for spectrum_num in self.detector.spectra_number:
+                detector_spec_sum += g.integrate_spectrum(spectrum_num, g.get_period(),
+                                                         self.detector.t_min, self.detector.t_max)
 
-            if monitor_spec_sum is None or detector_spec_sum is None:
-                print("Spectrum is zero, retrying")
-            else:
-                break
+                if monitor_spec_sum is None or detector_spec_sum is None:
+                    print("Spectrum is zero, retrying")
+                else:
+                    break
         else:
             detector_spec_sum = 0
             monitor_spec_sum = 0
 
-        print("Measuring (det {}/mon {}: {}/{})".format(self.detector.spectra_number, self.monitor.spectra_number,
+        print("Measuring (det {}/mon {}: {}/{})".format(detector_spec_sum, self.monitor.spectra_number,
                                                         detector_spec_sum, monitor_spec_sum))
 
         return acc, Average(detector_spec_sum, monitor_spec_sum)
