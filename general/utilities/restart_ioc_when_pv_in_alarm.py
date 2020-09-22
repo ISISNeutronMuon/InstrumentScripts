@@ -8,8 +8,6 @@ from time import sleep
 from server_common.helpers import register_ioc_start
 
 IOC_TO_RUN_IN = "BGRSCRPT_02"
-#BLOCK_TO_MONITOR = "SIMPLE_VAL"
-#IOC_TO_RESTART = ["SIMPLE"]
 BLOCK_TO_MONITOR = "field_ZF_status"
 IOC_TO_RESTART = ["ZFMAGFLD_01"]
 
