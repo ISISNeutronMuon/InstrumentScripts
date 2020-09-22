@@ -20,7 +20,10 @@ g.set_instrument(None)
 
 while True:
     block_details = g.cget(BLOCK_TO_MONITOR)
-    if block_details["value"] == "No new magnetometer data" or block_details["value"] == "Magnetometer data invalid":
+    block_details_second_check = g.cget(BLOCK_TO_MONITOR)
+    # Check twice to make sure error is consistent
+    if all([pv_update["value"] in ["No new magnetometer data", "Magnetometer data invalid"]
+            for pv_update in [block_details, block_details_second_check]]):
         for ioc in IOC_TO_RESTART:
             print("Restarting {}".format(ioc))
             g.set_pv("CS:PS:{}:RESTART".format(ioc), 1, is_local=True)
