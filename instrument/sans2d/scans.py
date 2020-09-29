@@ -9,7 +9,7 @@ from datetime import datetime
 from general.scans.defaults import Defaults
 from general.scans.detector import NormalisedIntensityDetector, create_spectra_definition
 from general.scans.util import local_wrapper
-from instrument.sans2d.sans import Sans2d
+from instrument.sans2d.sans import Sans2d as Sans2d_sans
 from genie_python import genie as g
 
 
@@ -38,31 +38,23 @@ class Sans2d(Defaults):
     def scan(self, motion, start=None, stop=None, step=None, frames=None,
              **kwargs):
         # Override scan so that we can do setup first
-        mon = kwargs.get("monitor_number", DEFAULT_MONITOR)
+
+        # The name of this keyword arg must match __call__ in NormalisedIntensityDetector
         det = kwargs.get("detector_number", DEFAULT_DETECTOR)
-        tubes = kwargs.get("use_tubes", False)
 
         if det == 3:
-            # do_trans /large
-            Sans2d().setup_trans()
-            Sans2d().set_aperture("Large")
+            Sans2d_sans().setup_trans()
+            Sans2d_sans().set_aperture("Large")
             g.set_pv("FINS_VAC:MONITOR3:STATUS:SP", "IN", is_local=True)
         else:
-            Sans2d().set_aperture("Large")
+            Sans2d_sans().set_aperture("Large")
             g.set_pv("FINS_VAC:MONITOR3:STATUS:SP", "OUT", is_local=True)
 
-            if tubes:
-                g.change_tables(
-                    wiring="wiring_gastubes_01_hist.dat",
-                    detector="detector_gastubes_01.dat",
-                    spectra="spectra_scanning_auto.dat",
-                )
-            else:
-                g.change_tables(
-                    wiring="wiring_trans8.dat",
-                    detector="detector_trans8.dat",
-                    spectra="spectra_trans8.dat",
-                )
+            g.change_tables(
+                wiring="wiring_trans8.dat",
+                detector="detector_trans8.dat",
+                spectra="spectra_trans8.dat",
+            )
 
         return super().scan(motion, start, stop, step, frames, **kwargs)
 
@@ -92,12 +84,3 @@ ascan = local_wrapper(_sans2d, "ascan")
 dscan = local_wrapper(_sans2d, "dscan")
 rscan = local_wrapper(_sans2d, "rscan")
 last_scan = local_wrapper(_sans2d, "last_scan")
-
-monitor1 = sans2d_monitor(1)
-monitor2 = sans2d_monitor(2)
-monitor3 = sans2d_monitor(3)
-monitor4 = sans2d_monitor(4)
-monitor5 = sans2d_monitor(5)
-monitor6 = sans2d_monitor(6)
-monitor7 = sans2d_monitor(7)
-monitor8 = sans2d_monitor(8)
