@@ -5,8 +5,11 @@ from genie_python import genie as g
 from time import sleep
 from server_common.helpers import register_ioc_start
 from typing import List
+from threading import Thread
 
 IOC_TO_RUN_IN = "BGRSCRPT_02"
+register_ioc_start(IOC_TO_RUN_IN)
+g.set_instrument(None)
 
 
 def restart_ioc_when_pv_in_alarm(block_to_monitor: str, iocs_to_restart: List[str], error_states: List[str],
@@ -19,8 +22,13 @@ def restart_ioc_when_pv_in_alarm(block_to_monitor: str, iocs_to_restart: List[st
     :param wait_between_restarts: The time (seconds) to wait between restarts
     :param wait_for_polling: The time (seconds) to wait between polling for the block's value
     """
-    register_ioc_start(IOC_TO_RUN_IN)
-    g.set_instrument(None)
+
+    a = Thread(target=_loop, args=[block_to_monitor, error_states, iocs_to_restart, wait_between_restarts, wait_for_polling])
+    a.setDaemon(True)
+    a.start()
+
+
+def _loop(block_to_monitor, error_states, iocs_to_restart, wait_between_restarts, wait_for_polling):
     while True:
         block_details = g.cget(block_to_monitor)
         if block_details["value"] in error_states:
