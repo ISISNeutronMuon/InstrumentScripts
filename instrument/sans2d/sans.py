@@ -4,11 +4,12 @@ from technique.sans.instrument import ScanningInstrument
 # pylint: disable=unused-import
 from technique.sans.util import dae_setter  # noqa: F401
 from general.scans.util import local_wrapper
+from genie_python import genie as g
 
 
 class Sans2d(ScanningInstrument):
     """This class handles the SANS2D beamline"""
-    _PV_BASE = "IN:SANS2D:"
+    _PV_BASE = g.my_pv_prefix
 
     @dae_setter("SCAN", "scan")
     def setup_dae_scanning(self):
