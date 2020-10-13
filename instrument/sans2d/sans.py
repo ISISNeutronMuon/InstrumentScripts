@@ -2,7 +2,7 @@
 from technique.sans.genie import gen
 from technique.sans.instrument import ScanningInstrument
 # pylint: disable=unused-import
-from technique.sans.util import dae_setter  # noqa: F401
+from technique.sans.util import set_metadata  # noqa: F401
 from general.scans.util import local_wrapper
 from genie_python import genie as g
 
@@ -11,20 +11,20 @@ class Sans2d(ScanningInstrument):
     """This class handles the SANS2D beamline"""
     _PV_BASE = g.my_pv_prefix
 
-    @dae_setter("SCAN", "scan")
+    @set_metadata("SCAN", "scan")
     def setup_dae_scanning(self):
         raise NotImplementedError("Scanning tables not yet set")
 
-    @dae_setter("SCAN", "scan")
+    @set_metadata("SCAN", "scan")
     def setup_dae_nr(self):
         raise NotImplementedError("Neutron reflectivity tables not yet set")
 
-    @dae_setter("SCAN", "scan")
+    @set_metadata("SCAN", "scan")
     def setup_dae_nrscanning(self):
         raise NotImplementedError(
             "Neutron reflectivity scanning tables not yet set")
 
-    @dae_setter("SANS", "sans")
+    @set_metadata("SANS", "sans")
     def setup_dae_event(self):
         self._generic_scan(
             detector=r"detector_gastubes_01.dat",
@@ -32,7 +32,7 @@ class Sans2d(ScanningInstrument):
             wiring=r"wiring_gastubes_01_event.dat",
             tcbs=[])
 
-    @dae_setter("SANS", "sans")
+    @set_metadata("SANS", "sans")
     def setup_dae_histogram(self):
         self._generic_scan(
             detector=r"wiring_gastubes_02_hist.dat",
@@ -40,7 +40,7 @@ class Sans2d(ScanningInstrument):
             wiring=r"detector_gastubes_02.dat",
             tcbs=[])
 
-    @dae_setter("TRANS", "transmission")
+    @set_metadata("TRANS", "transmission")
     def setup_dae_transmission(self):
         self._generic_scan(
             spectra=r"spectra_trans8.dat",
@@ -48,7 +48,7 @@ class Sans2d(ScanningInstrument):
             detector=r"detector_trans8.dat",
             tcbs=[])
 
-    @dae_setter("SANS", "sans")
+    @set_metadata("SANS", "sans")
     def setup_dae_bsalignment(self):
         raise NotImplementedError("Beam Stop Alignment tables not yet set")
 
