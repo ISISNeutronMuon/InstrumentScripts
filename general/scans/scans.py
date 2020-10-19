@@ -177,7 +177,7 @@ class Scan(object):
                     ((label, unit), position) = next(iter(x.items()))
 
                     # perform measurement
-                    acc, value = detect(acc, **just_times(kwargs))
+                    acc, value = detect(acc, **kwargs)
 
                     if isinstance(value, float):
                         value = Average(value)
@@ -446,7 +446,7 @@ class ContinuousScan(Scan):
                                 self.motion.tolerance:
 
                             position = self.motion()
-                            acc, value = detect(acc, **just_times(kwargs))
+                            acc, value = detect(acc, **kwargs)
                             value = Exact(value)
 
                             xs.append(position)
