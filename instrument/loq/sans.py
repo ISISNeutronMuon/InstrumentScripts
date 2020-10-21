@@ -3,7 +3,7 @@ from time import sleep
 from technique.sans.instrument import ScanningInstrument
 from technique.sans.genie import gen
 # pylint: disable=unused-import
-from technique.sans.util import dae_setter  # noqa: F401
+from technique.sans.util import set_metadata  # noqa: F401
 from general.scans.util import local_wrapper
 
 
@@ -45,41 +45,41 @@ class LOQ(ScanningInstrument):
         ScanningInstrument._generic_scan(
             self, base + detector, base + spectra, base + wiring, tcbs)
 
-    @dae_setter("SANS/TRANS", "sans")
+    @set_metadata("SANS/TRANS", "sans")
     def setup_dae_event(self):
         self.setup_dae_normal()
 
-    @dae_setter("SANS/TRANS", "sans")
+    @set_metadata("SANS/TRANS", "sans")
     def setup_dae_histogram(self):
         self.setup_dae_normal()
 
-    @dae_setter("TRANS", "transmission")
+    @set_metadata("TRANS", "transmission")
     def setup_dae_transmission(self):
         return self._generic_scan(
             detector="detector8.dat",
             spectra="spectra8.dat",
             wiring="wiring8.dat")
 
-    @dae_setter("SANS", "sans")
+    @set_metadata("SANS", "sans")
     def setup_dae_bsalignment(self):
         raise NotImplementedError("DAE mode bsalignment unwritten for LOQ")
 
-    @dae_setter("SCAN", "scan")
+    @set_metadata("SCAN", "scan")
     def setup_dae_scanning(self):
         # FIXME: LOQ doesn't have a history of scanning, so it's not
         # certain what mode should be used.  For now, we'll guess it
         # to be the same as histogram
         return self._generic_scan()
 
-    @dae_setter("SCAN", "scan")
+    @set_metadata("SCAN", "scan")
     def setup_dae_nr(self):
         raise NotImplementedError("LOQ cannot perform reflectometry")
 
-    @dae_setter("SCAN", "scan")
+    @set_metadata("SCAN", "scan")
     def setup_dae_nrscanning(self):
         raise NotImplementedError("LOQ cannot perform reflectometry")
 
-    @dae_setter("SANS/TRANS", "sans")
+    @set_metadata("SANS/TRANS", "sans")
     def setup_dae_normal(self):
         """Setup LOQ for normal operation"""
         gen.change_sync("smp")
@@ -92,7 +92,7 @@ class LOQ(ScanningInstrument):
                   {"low": 3500, "high": 43500.0, "step": 40000,
                    "log": False, "trange": 1, "regime": 2}])
 
-    @dae_setter("SANS/TRANS", "sans")
+    @set_metadata("SANS/TRANS", "sans")
     def setup_dae_quiet(self):
         """Setup LOQ for quiet operation"""
         gen.change_sync("internal")
@@ -105,7 +105,7 @@ class LOQ(ScanningInstrument):
                   {"low": 5, "high": 19995.0, "step": 19990.0, "log": False,
                    "trange": 1, "regime": 2}])
 
-    @dae_setter("SANS/TRANS", "sans")
+    @set_metadata("SANS/TRANS", "sans")
     def setup_dae_50hz_short(self):
         """Setup LOQ for 50hz mode while short"""
         gen.change_sync("isis")
@@ -124,7 +124,7 @@ class LOQ(ScanningInstrument):
                   {"low": 6000, "high": 2.60e4, "step": 20000,
                    "log": False, "trange": 1, "regime": 2}])
 
-    @dae_setter("SANS/TRANS", "sans")
+    @set_metadata("SANS/TRANS", "sans")
     def setup_dae_50hz_long(self):
         """Setup LOQ for 50hz mode while long"""
         gen.change_sync("isis")

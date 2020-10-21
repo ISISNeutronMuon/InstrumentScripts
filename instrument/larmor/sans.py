@@ -3,7 +3,7 @@ from logging import info
 from technique.sans.instrument import ScanningInstrument
 from technique.sans.genie import gen
 # pylint: disable=unused-import
-from technique.sans.util import dae_setter, user_script  # noqa: F401
+from technique.sans.util import set_metadata, user_script  # noqa: F401
 from general.scans.util import local_wrapper
 from .util import flipper1
 
@@ -79,14 +79,14 @@ class Larmor(ScanningInstrument):  # pylint: disable=too-many-public-methods
                 "The only known lranges for the chopper "
                 "are '0.9-13.25' and '0.65-12.95'")
 
-    @dae_setter("SCAN", "scan")
+    @set_metadata("SCAN", "scan")
     def setup_dae_scanning(self):
         self._generic_scan(
             spectra=r"C:\Instrument\Settings\Tables\spectra_scanning_80.dat",
             tcbs=[{"low": 5.0, "high": 100000.0, "step": 100.0,
                    "trange": 1, "log": 0}])
 
-    @dae_setter("SCAN", "scan")
+    @set_metadata("SCAN", "scan")
     def setup_dae_scanning12(self):  # pylint: disable=no-self-use
         """Set the wiring tables for performing a scan where the entire main
 detector is contained in only two channels."""
@@ -95,27 +95,27 @@ detector is contained in only two channels."""
             tcbs=[{"low": 5.0, "high": 100000.0, "step": 100.0,
                    "trange": 1, "log": 0}])
 
-    @dae_setter("SCAN", "scan")
+    @set_metadata("SCAN", "scan")
     def setup_dae_echoscan(self):  # pylint: disable=no-self-use
         """Set the wiring tables for performing a spin echo tuning scan.  This
 involves only having two spectra covering the entire main detecor."""
         self.setup_dae_scanning12()
 
-    @dae_setter("SCAN", "scan")
+    @set_metadata("SCAN", "scan")
     def setup_dae_nr(self):
         self._generic_scan(
             spectra=r"C:\Instrument\Settings\Tables\spectra_nrscanning.dat",
             tcbs=[{"low": 5.0, "high": 100000.0, "step": 100.0,
                    "trange": 1, "log": 0}])
 
-    @dae_setter("SCAN", "scan")
+    @set_metadata("SCAN", "scan")
     def setup_dae_nrscanning(self):
         self._generic_scan(
             spectra=r"U:\Users\Masks\spectra_scanning_auto.dat",
             tcbs=[{"low": 5.0, "high": 100000.0, "step": 100.0,
                    "trange": 1, "log": 0}])
 
-    @dae_setter("SANS", "sans")
+    @set_metadata("SANS", "sans")
     def setup_dae_event(self):
         # Normal event mode with full detector binning
         self._generic_scan(
@@ -128,7 +128,7 @@ involves only having two spectra covering the entire main detecor."""
                    "log": 0, "regime": 2}])
         self._set_choppers(self.lrange)
 
-    @dae_setter("SANS", "sans")
+    @set_metadata("SANS", "sans")
     def setup_dae_event_fastsave(self):
         """Event mode with reduced detector histogram binning to decrease
         filesize."""
@@ -154,7 +154,7 @@ involves only having two spectra covering the entire main detecor."""
                    "log": 0, "regime": 3}])
         self._set_choppers(self.lrange)
 
-    @dae_setter("SANS", "sans")
+    @set_metadata("SANS", "sans")
     def setup_dae_histogram(self):
         gen.change_sync('isis')
         self._generic_scan(
@@ -164,7 +164,7 @@ involves only having two spectra covering the entire main detecor."""
                    "trange": 2, "log": 0}])
         self._set_choppers(self.lrange)
 
-    @dae_setter("TRANS", "transmission")
+    @set_metadata("TRANS", "transmission")
     def setup_dae_transmission(self):
         self.send_pv("PARS:SAMPLE:MEAS:TYPE", "transmission")
         gen.change_sync('isis')
@@ -178,7 +178,7 @@ involves only having two spectra covering the entire main detecor."""
               "trange": 2, "log": 0}])
         self._set_choppers(self.lrange)
 
-    @dae_setter("TRANS", "transmission")
+    @set_metadata("TRANS", "transmission")
     def setup_dae_monotest(self):
         """Setup with a mono test?"""
         self._generic_scan(
@@ -192,7 +192,7 @@ involves only having two spectra covering the entire main detecor."""
         self.send_pv("MK3CHOPR_01: CH3: DIR: SP", "CCW")
         gen.cset(InstrumentDiskPhase=77650)
 
-    @dae_setter("SANS", "sans")
+    @set_metadata("SANS", "sans")
     def setup_dae_tshift(self, tlowdet=5.0, thighdet=100000.0, tlowmon=5.0,
                          thighmon=100000.0):
         """Allow m1 to count as normal but to shift the rest of the detectors
@@ -208,7 +208,7 @@ involves only having two spectra covering the entire main detecor."""
                   {"low": tlowmon, "high": thighmon, "step": 20.0, "trange": 1,
                    "log": 0, "regime": 3}])
 
-    @dae_setter("SANS", "sans")
+    @set_metadata("SANS", "sans")
     def setup_dae_diffraction(self):
         """Set the wiring tables for a diffraction measurement"""
         self._generic_scan(
@@ -217,7 +217,7 @@ involves only having two spectra covering the entire main detecor."""
                   {"low": 0.0, "high": 0.0, "step": 0.0,
                    "trange": 2, "log": 0}])
 
-    @dae_setter("SANS", "sans")
+    @set_metadata("SANS", "sans")
     def setup_dae_polarised(self):
         """Set the wiring tables for a polarisation measurement."""
         self._generic_scan(
@@ -225,7 +225,7 @@ involves only having two spectra covering the entire main detecor."""
                   {"low": 0.0, "high": 0.0, "step": 0.0,
                    "trange": 2, "log": 0}])
 
-    @dae_setter("SANS", "sans")
+    @set_metadata("SANS", "sans")
     def setup_dae_bsalignment(self):
         self._generic_scan(
             tcbs=[{"low": 1000.0, "high": 100000.0, "step": 99000.0,
@@ -233,7 +233,7 @@ involves only having two spectra covering the entire main detecor."""
                   {"low": 0.0, "high": 0.0, "step": 0.0,
                    "trange": 2, "log": 0}])
 
-    @dae_setter("TRANS", "transmission")
+    @set_metadata("TRANS", "transmission")
     def setup_dae_monitorsonly(self):
         """Set the wiring tables to record only the monitors."""
         self._generic_scan(
@@ -243,7 +243,7 @@ involves only having two spectra covering the entire main detecor."""
                   {"low": 0.0, "high": 0.0, "step": 0.0,
                    "trange": 2, "log": 0}])
 
-    @dae_setter("SANS", "sans")
+    @set_metadata("SANS", "sans")
     def setup_dae_resonantimaging(self):
         """Set the wiring table for resonant imaging"""
         self._generic_scan(
@@ -256,7 +256,7 @@ involves only having two spectra covering the entire main detecor."""
               "trange": 2, "log": 0}])
 
     @staticmethod
-    @dae_setter("SANS", "sans")
+    @set_metadata("SANS", "sans")
     def setup_dae_resonantimaging_choppers():  # pylint: disable=invalid-name
         """Set the wiring thable for resonant imaging choppers"""
         info("Setting Chopper phases")
@@ -264,7 +264,7 @@ involves only having two spectra covering the entire main detecor."""
         gen.cset(TargetDiskPhase=0)
         gen.cset(InstrumentDiskPhase=0)
 
-    @dae_setter("SANS", "sans")
+    @set_metadata("SANS", "sans")
     def setup_dae_4periods(self):
         """Setup the instrument with four periods."""
         self._generic_scan(
@@ -275,7 +275,7 @@ involves only having two spectra covering the entire main detecor."""
               "trange": 1, "log": 0},
              {"low": 0.0, "high": 0.0, "step": 0.0, "trange": 2, "log": 0}])
 
-    @dae_setter("SESANS", "sesans")
+    @set_metadata("SESANS", "sesans")
     def setup_dae_sesans(self):
         """Setup the instrument for SESANS measurements."""
         self.setup_dae_event()
@@ -318,7 +318,7 @@ involves only having two spectra covering the entire main detecor."""
 
             gtotal = get_total()
 
-    @dae_setter("SEMSANS", "semsans")
+    @set_metadata("SEMSANS", "semsans")
     def setup_dae_alanis(self):
         """Setup the instrument for using the Alanis fibre detector"""
         self._generic_scan(
@@ -332,7 +332,7 @@ involves only having two spectra covering the entire main detecor."""
              {"low": 5.0, "high": 100000.0, "step": 2.0, "trange": 1,
               "log": 0, "regime": 2}])
 
-    @dae_setter("SEMSANS", "semsans")
+    @set_metadata("SEMSANS", "semsans")
     def setup_dae_semsans(self):
         """Setup the instrument for polarised SEMSANS on the fibre detector"""
         self._generic_scan(

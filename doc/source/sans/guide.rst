@@ -44,13 +44,14 @@ instrument.  That class must implement the following abstract methods:
       Power off the detector.
 
 It should be noted that most ``setup_dae_`` functions will benefit
-from the :py:meth:`technique.sans.util.dae_setter` decorator.  This decorator takes two parameters.
-The first is a suffix to be appended to the run title.  This is used
-to distinguish between run types in the journal (e.g. identifying
-where a run is a "SANS" or a "TRANS" run).  The second parameter is a
-similar label for the type of run that will be recorded in the final
-nexus file.  This can eventually be used to automatically generate
-reduction scripts for simple sample hanger measurements.
+from the :py:meth:`technique.sans.util.set_metadata` decorator.  This
+decorator takes two parameters. The first is a suffix to be appended
+to the run title.  This is used to distinguish between run types in
+the journal (e.g. identifying where a run is a "SANS" or a "TRANS" run).
+The second parameter is a similar label for the type of run that will
+be recorded in the final nexus file.  This can eventually be used to
+automatically generate reduction scripts for simple sample hanger
+measurements.
 
 It is also necessary to set the _PV_BASE attribute to the header
 string that occurs at the front of every PV for the instrument.  For
