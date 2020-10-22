@@ -142,7 +142,6 @@ class TestSpectrasWithTimeRange(unittest.TestCase):
         self.setup_mock(g_mock, integrated_spectra={2: None, 3: None})
 
         scan = MockScan()
-
         detector = NormalisedIntensityDetector()
         with detector(scan, save=False) as detector_routine:
 
@@ -168,11 +167,134 @@ class TestSpectrasWithTimeRange(unittest.TestCase):
 
         detector = NormalisedIntensityDetector(spectra_definitions=[create_spectra_definition(monitor_spectra_number_and_name, monitor_t_min, monitor_t_max),
                                                                     create_spectra_definition(detector_spectra_number, detector_t_min, detector_t_max, detector_spectra_name)])
-        with detector(scan, save=False, monitor_number=monitor_spectra_number_and_name, detector_number=detector_spectra_name) as detector_routine:
+        with detector(scan, save=False, mon=monitor_spectra_number_and_name, det=detector_spectra_name) as detector_routine:
 
             acc, result = detector_routine(None, frames=1)
 
         assert_that(result.total, is_(integrated_detector))
+        assert_that(result.count, is_(integrated_monitor))
+
+    def test_GIVEN_pixel_range_defined_WHEN_detect_THEN_correct_pixel_range_summed(self, g_mock):
+        monitor_spectra_number = 2
+        detector_spectra_number = 10
+        integrated_detector = 10
+        integrated_monitor = 20
+        pixel_range = 2
+        self.setup_mock(g_mock, integrated_spectra={2: integrated_monitor,
+                                                    8: integrated_detector,
+                                                    9: integrated_detector,
+                                                    10: integrated_detector,
+                                                    11: integrated_detector,
+                                                    12: integrated_detector,
+                                                    })
+        sum_detector = 5 * integrated_detector  # detector pixel plus 2 pixels either side
+
+        monitor_spectrum = create_spectra_definition(monitor_spectra_number, 10, 100)
+        detector_spectrum = create_spectra_definition(detector_spectra_number, 10, 100)
+
+        scan = MockScan()
+
+        detector = NormalisedIntensityDetector(default_detector=detector_spectra_number,
+                                               default_monitor=monitor_spectra_number,
+                                               spectra_definitions=[monitor_spectrum, detector_spectrum])
+
+        with detector(scan, save=False) as detector_routine:
+
+            acc, result = detector_routine(None, frames=1, det=detector_spectra_number, pixel_range=pixel_range)
+
+        assert_that(result.total, is_(sum_detector))
+        assert_that(result.count, is_(integrated_monitor))
+
+    def test_GIVEN_min_and_max_pixel_defined_WHEN_detect_THEN_result_is_sum_from_min_to_max_pixel(self, g_mock):
+        monitor_spectra_number = 2
+        detector_spectra_number = 10
+        integrated_detector = 10
+        integrated_monitor = 20
+        min_pixel = 8
+        max_pixel = 13
+        self.setup_mock(g_mock, integrated_spectra={2: integrated_monitor,
+                                                    8: integrated_detector,
+                                                    9: integrated_detector,
+                                                    10: integrated_detector,
+                                                    11: integrated_detector,
+                                                    12: integrated_detector,
+                                                    13: integrated_detector,
+                                                    })
+        sum_detector = 6 * integrated_detector  # pixel 8 to pixel 13
+
+        monitor_spectrum = create_spectra_definition(monitor_spectra_number, 10, 100)
+        detector_spectrum = create_spectra_definition(detector_spectra_number, 10, 100)
+
+        scan = MockScan()
+
+        detector = NormalisedIntensityDetector(default_detector=detector_spectra_number,
+                                               default_monitor=monitor_spectra_number,
+                                               spectra_definitions=[monitor_spectrum, detector_spectrum])
+
+        with detector(scan, save=False) as detector_routine:
+
+            acc, result = detector_routine(None, frames=1, det=detector_spectra_number, min_pixel=min_pixel, max_pixel=max_pixel)
+
+        assert_that(result.total, is_(sum_detector))
+        assert_that(result.count, is_(integrated_monitor))
+
+    def test_GIVEN_max_pixel_only_defined_WHEN_detect_THEN_result_is_sum_from_detector_to_max_pixel(self, g_mock):
+        monitor_spectra_number = 2
+        detector_spectra_number = 10
+        integrated_detector = 10
+        integrated_monitor = 20
+        max_pixel = 13
+        self.setup_mock(g_mock, integrated_spectra={2: integrated_monitor,
+                                                    10: integrated_detector,
+                                                    11: integrated_detector,
+                                                    12: integrated_detector,
+                                                    13: integrated_detector,
+                                                    })
+        sum_detector = 4 * integrated_detector  # pixel 10 to pixel 13
+
+        monitor_spectrum = create_spectra_definition(monitor_spectra_number, 10, 100)
+        detector_spectrum = create_spectra_definition(detector_spectra_number, 10, 100)
+
+        scan = MockScan()
+
+        detector = NormalisedIntensityDetector(default_detector=detector_spectra_number,
+                                               default_monitor=monitor_spectra_number,
+                                               spectra_definitions=[monitor_spectrum, detector_spectrum])
+
+        with detector(scan, save=False) as detector_routine:
+
+            acc, result = detector_routine(None, frames=1, det=detector_spectra_number, max_pixel=max_pixel)
+
+        assert_that(result.total, is_(sum_detector))
+        assert_that(result.count, is_(integrated_monitor))
+
+    def test_GIVEN_minimum_defined_WHEN_detect_THEN_result_is_sum_from_min_pixel_to_detector_pixel(self, g_mock):
+        monitor_spectra_number = 2
+        detector_spectra_number = 10
+        integrated_detector = 10
+        integrated_monitor = 20
+        min_pixel = 8
+        self.setup_mock(g_mock, integrated_spectra={2: integrated_monitor,
+                                                    8: integrated_detector,
+                                                    9: integrated_detector,
+                                                    10: integrated_detector,
+                                                    })
+        sum_detector = 3 * integrated_detector  # pixel 8 to pixel 10
+
+        monitor_spectrum = create_spectra_definition(monitor_spectra_number, 10, 100)
+        detector_spectrum = create_spectra_definition(detector_spectra_number, 10, 100)
+
+        scan = MockScan()
+
+        detector = NormalisedIntensityDetector(default_detector=detector_spectra_number,
+                                               default_monitor=monitor_spectra_number,
+                                               spectra_definitions=[monitor_spectrum, detector_spectrum])
+
+        with detector(scan, save=False) as detector_routine:
+
+            acc, result = detector_routine(None, frames=1, det=detector_spectra_number, min_pixel=min_pixel)
+
+        assert_that(result.total, is_(sum_detector))
         assert_that(result.count, is_(integrated_monitor))
 
 

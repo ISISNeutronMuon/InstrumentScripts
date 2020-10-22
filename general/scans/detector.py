@@ -275,7 +275,7 @@ class NormalisedIntensityDetector(DaePeriods):
         >>> scan(...)
 
         or to use specific spectra (these must be called with keywords)
-        >>> scan(... monitor_number=1, detector_number=2)
+        >>> scan(... mon=1, det=2)
 
     """
 
@@ -314,7 +314,7 @@ class NormalisedIntensityDetector(DaePeriods):
         self.monitor = None  # type:SpectraDefinition
         self.detector = None  # type:SpectraDefinition
 
-    def __call__(self, scan, monitor_number=None, detector_number=None, **kwargs):
+    def __call__(self, scan, mon=None, det=None, **kwargs):
         """
         Call detect manger. This is typically done once before a scanning loop
 
@@ -322,9 +322,9 @@ class NormalisedIntensityDetector(DaePeriods):
         ----------
         scan
             scan that is calling this detect routine
-        monitor_number
+        mon
             set the name of the spectra definition to use for the monitor; None use the default
-        detector_number
+        det
             set the name of the spectra definition to use for the detector; None use the default
         kwargs
             arguments to pass to super
@@ -334,9 +334,9 @@ class NormalisedIntensityDetector(DaePeriods):
             self
         """
         super(NormalisedIntensityDetector, self).__call__(scan, **kwargs)
-        monitor_name = monitor_number if monitor_number is not None else self.default_monitor
+        monitor_name = mon if mon is not None else self.default_monitor
         self.monitor = self.spectra_definitions[monitor_name]
-        detector_name = detector_number if detector_number is not None else self.default_detector
+        detector_name = det if det is not None else self.default_detector
         self.detector = self.spectra_definitions[detector_name]
         return self
 
@@ -353,16 +353,25 @@ class NormalisedIntensityDetector(DaePeriods):
         """
         _resume_count_pause(**kwargs)
 
+        det_spectra_range = self._get_detector_spectra_range(**kwargs)
+
         for _ in range(SPECTRA_RETRY_COUNT):  # tries to get a non-None spectrum from the DAE
             monitor_spec_sum = g.integrate_spectrum(self.monitor.spectra_number, g.get_period(),
                                                     self.monitor.t_min, self.monitor.t_max)
-            detector_spec_sum = g.integrate_spectrum(self.detector.spectra_number, g.get_period(),
-                                                     self.detector.t_min, self.detector.t_max)
-
+            detector_spec_sum = 0
+            for spectrum_num in det_spectra_range:
+                det_sum = g.integrate_spectrum(spectrum_num, g.get_period(),
+                                               self.detector.t_min, self.detector.t_max)
+                try:
+                    detector_spec_sum += det_sum
+                except TypeError:
+                    detector_spec_sum = None
+                    break
             if monitor_spec_sum is None or detector_spec_sum is None:
                 print("Spectrum is zero, retrying")
             else:
                 break
+
         else:
             detector_spec_sum = 0
             monitor_spec_sum = 0
@@ -371,3 +380,21 @@ class NormalisedIntensityDetector(DaePeriods):
                                                         detector_spec_sum, monitor_spec_sum))
 
         return acc, Average(detector_spec_sum, monitor_spec_sum)
+
+    def _get_detector_spectra_range(self, **kwargs):
+        """
+        Returns a range of spectrum numbers (=detector pixels) as appropriate for the submitted arguments.
+
+        Args:
+            **kwargs: The keyword arguments
+
+        Returns: The spectra range
+        """
+        if "pixel_range" in kwargs.keys():
+            pixel_range = kwargs.get("pixel_range", 0)
+            return range(max(0, self.detector.spectra_number - pixel_range),
+                         self.detector.spectra_number + pixel_range + 1)
+        else:
+            min_pixel = kwargs.get("min_pixel", self.detector.spectra_number)
+            max_pixel = kwargs.get("max_pixel", self.detector.spectra_number)
+            return range(min_pixel, max_pixel + 1)

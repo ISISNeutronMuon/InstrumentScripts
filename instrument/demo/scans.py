@@ -23,8 +23,8 @@ class DemoDetector(NormalisedIntensityDetector):
     fitting into the window of scanning.
     """
 
-    def __call__(self, scan, monitor_number=None, detector_number=None, **kwargs):
-        super(DemoDetector, self).__call__(scan, monitor_number, detector_number, **kwargs)
+    def __call__(self, scan, mon=None, det=None, **kwargs):
+        super(DemoDetector, self).__call__(scan, mon, det, **kwargs)
 
         points = get_points(None, **kwargs)
         centre = 0.0
@@ -81,7 +81,7 @@ class DemoDefaultScan(Defaults):
         return os.path.join("C:\\", "scripts", "TEST", "{}_{}_{}_{}_{}_{}_{}.dat".format(
             action_title, now.year, now.month, now.day, now.hour, now.minute, now.second))
 
-    def scan(self, motion, start=None, stop=None, count=None, frames=None, detector_number=None, monitor_number=None, **kwargs):
+    def scan(self, motion, start=None, stop=None, count=None, frames=None, det=None, mon=None, **kwargs):
         """
         Scan a motion.
 
@@ -98,9 +98,9 @@ class DemoDefaultScan(Defaults):
         frames
             number of frames to count for; None either use a different measurement method or define the scan don't
             perform it
-        detector_number
+        det
             the detector spectra number; None use the default
-        monitor_number
+        mon
             the monitor spectra number; None use the default
         kwargs
             various other options consistent with the scan library, common options are:
@@ -123,8 +123,8 @@ class DemoDefaultScan(Defaults):
         Scan theta from -0.5 to 0.5 with 11 steps and counting 100 frames using default detector and monitors
         >>> scan("THETA", -0.5, 0.5, 11, frames=100)
         """
-        return super().scan(motion, start=start, stop=stop, count=count, frames=frames, detector_number=detector_number,
-                            monitor_number=monitor_number, **kwargs)
+        return super().scan(motion, start=start, stop=stop, count=count, frames=frames, det=det,
+                            mon=mon, **kwargs)
 
 
 _scan_instance = DemoDefaultScan()

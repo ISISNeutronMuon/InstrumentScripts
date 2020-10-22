@@ -29,7 +29,7 @@ class CrispDefaultScan(Defaults):
     def __init__(self):
         super(CrispDefaultScan, self).__init__()
 
-    def scan(self, motion, start=None, stop=None, count=None, frames=None, detector_number=None, monitor_number=None,
+    def scan(self, motion, start=None, stop=None, count=None, frames=None, det=None, mon=None,
              **kwargs):
         """
         Scan a motion.
@@ -47,9 +47,9 @@ class CrispDefaultScan(Defaults):
         frames
             number of frames to count for; None either use a different measurement method or define the scan don't
             perform it
-        detector_number
+        det
             the detector spectra number; None use the default
-        monitor_number
+        mon
             the monitor spectra number; None use the default
         kwargs
             various other options consistent with the scan library, common options are:
@@ -62,6 +62,12 @@ class CrispDefaultScan(Defaults):
             detector - Choose how to measure the dependent variable in the scan.  A set of these will have already been
                 defined by your instrument scientist.  If you need something ad hoc, then check the documentation on
                 specific_spectra for more details
+            pixel_range - For summing the counts of multiple pixels. pixel_range is the number of pixels to consider
+                either side of the central detector spectrum
+            min_pixel - For summing the counts of multiple pixels. min_pixel is the spectrum number for the lower bound
+                of the range. Overridden by pixel_range
+            max_pixel - For summing the counts of multiple pixels. max_pixel is the spectrum number for the upper bound
+                of the range. Overridden by pixel_range
 
         Returns
         -------
@@ -72,8 +78,8 @@ class CrispDefaultScan(Defaults):
         Scan theta from -0.5 to 0.5 with 11 steps and counting 100 frames using default detector and monitors
         >>> scan("THETA", -0.5, 0.5, 11, frames=100)
         """
-        return super().scan(motion, start=start, stop=stop, count=count, frames=frames, detector_number=detector_number,
-                            monitor_number=monitor_number, **kwargs)
+        return super().scan(motion, start=start, stop=stop, count=count, frames=frames, det=det,
+                            mon=mon, **kwargs)
 
     @staticmethod
     def log_file(info):

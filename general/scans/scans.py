@@ -32,14 +32,6 @@ except ImportError:
     # We must be in a test environment
     from .mocks import g
 
-TIME_KEYS = ["frames", "uamps", "seconds", "minutes", "hours"]
-
-
-def just_times(kwargs):
-    """Filter a dict down to just the waitfor members"""
-    return {x: kwargs[x] for x in kwargs
-            if x in TIME_KEYS}
-
 
 def merge_dicts(x, y):
     """Given two dicts, merge them into a new dict as a shallow copy."""
@@ -177,7 +169,7 @@ class Scan(object):
                     ((label, unit), position) = next(iter(x.items()))
 
                     # perform measurement
-                    acc, value = detect(acc, **just_times(kwargs))
+                    acc, value = detect(acc, **kwargs)
 
                     if isinstance(value, float):
                         value = Average(value)
@@ -446,7 +438,7 @@ class ContinuousScan(Scan):
                                 self.motion.tolerance:
 
                             position = self.motion()
-                            acc, value = detect(acc, **just_times(kwargs))
+                            acc, value = detect(acc, **kwargs)
                             value = Exact(value)
 
                             xs.append(position)
