@@ -353,7 +353,7 @@ class NormalisedIntensityDetector(DaePeriods):
         """
         _resume_count_pause(**kwargs)
 
-        det_spectra_range = self._get_multi_detector_pixel_range(**kwargs)
+        det_spectra_range = self._get_detector_spectra_range(**kwargs)
 
         for _ in range(SPECTRA_RETRY_COUNT):  # tries to get a non-None spectrum from the DAE
             monitor_spec_sum = g.integrate_spectrum(self.monitor.spectra_number, g.get_period(),
@@ -381,7 +381,15 @@ class NormalisedIntensityDetector(DaePeriods):
 
         return acc, Average(detector_spec_sum, monitor_spec_sum)
 
-    def _get_multi_detector_pixel_range(self, **kwargs):
+    def _get_detector_spectra_range(self, **kwargs):
+        """
+        Returns a range of spectrum numbers (=detector pixels) as appropriate for the submitted arguments.
+
+        Args:
+            **kwargs: The keyword arguments
+
+        Returns: The spectra range
+        """
         if "pixel_range" in kwargs.keys():
             pixel_range = kwargs.get("pixel_range", 0)
             return range(max(0, self.detector.spectra_number - pixel_range),

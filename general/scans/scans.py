@@ -32,14 +32,6 @@ except ImportError:
     # We must be in a test environment
     from .mocks import g
 
-TIME_KEYS = ["frames", "uamps", "seconds", "minutes", "hours"]
-
-
-def just_times(kwargs):
-    """Filter a dict down to just the waitfor members"""
-    return {x: kwargs[x] for x in kwargs
-            if x in TIME_KEYS}
-
 
 def merge_dicts(x, y):
     """Given two dicts, merge them into a new dict as a shallow copy."""
