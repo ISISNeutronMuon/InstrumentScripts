@@ -2,7 +2,7 @@ import unittest
 import numpy as np
 from parameterized import parameterized
 
-from ..fit import PeakFit, PolyFit, CentreOfMassFit, Fit, ExactFit
+from general.scans.fit import PeakFit, PolyFit, CentreOfMassFit, Fit, ExactFit
 
 
 class MinimalFit(Fit):

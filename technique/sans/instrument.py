@@ -128,12 +128,15 @@ class ScanningInstrument(object):
                 '8CB', '9CB', '10CB', '11CB', '12CB', '13CB', '14CB',
                 '1CT', '2CT', '3CT', '4CT', '5CT', '6CT', '7CT',
                 '8CT', '9CT', '10CT', '11CT', '12CT', '13CT', '14CT',
+                '1GT', '2GT', '3GT', '4GT', '5GT', '6GT', '7GT',
+                '8GT', '9GT', '10GT', '11GT', '12GT', '13GT', '14GT',
                 '1WB', '2WB', '3WB', '4WB', '5WB', '6WB', '7WB',
-                '8WB', '9WB', '10WB', '11WB', '12WB', '13WB', '14WB',
+                '8WB', '9WB', '10WB', '11WB', '12WB', '13WB', '14WB',                
                 '1WT', '2WT', '3WT', '4WT', '5WT', '6WT', '7WT',
                 '8WT', '9WT', '10WT', '11WT', '12WT', '13WT', '14WT',
                 '1GT', '2GT', '3GT', '4GT', '5GT', '6GT', '7GT', '8GT', '9GT',
-                '10GT', '11GT', '12GT']
+                '10GT', '11GT', '12GT','2GB', '3GB', '4GB', '5GB', '6GB', '7GB',
+                '8GB', '9GB', '10GB', '11GB']
 
     def _attempt_resume(self, title, pos, thick, dae, **kwargs):
         if gen.get_title() != title+self.title_footer:

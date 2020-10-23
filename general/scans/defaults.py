@@ -136,9 +136,7 @@ class Defaults(object):
         stop
           An absolute ending position for the scan
         step
-          The absolute step size.  The final position may be skipped if
-          it is not an integer number of steps from the starting
-          position.
+          The absolute step size.  The final position will be skipped, even if it appears it should fit.
         frames
           How many frames the measurement should be performed for.  If
           set to None or 0, then no automatic plot will be started.

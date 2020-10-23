@@ -29,11 +29,12 @@ class Zoom(ScanningInstrument):
             tcbs=[{"low": 5.0, "high": 100000.0, "step": 200.0,
                    "trange": 1, "log": 0}]):
         base = r"C:\Instrument\Settings\config\NDXZOOM\configurations\tables\\"
-        self._generic_scan(
+        ScanningInstrument._generic_scan(self, 
             base + detector, base + spectra, base + wiring, tcbs)
 
     @set_metadata("SANS", "sans")
     def setup_dae_event(self):
+        print("Setting DAE into event mode")
         self._generic_scan(
             detector=r"detector_1det_1dae3card.dat",
             spectra=r"spec2det_280318_to_test_18_1.txt",
@@ -48,6 +49,7 @@ class Zoom(ScanningInstrument):
 
     @set_metadata("TRANS", "transmission")
     def setup_dae_transmission(self):
+        print("Setting up DAE for trans")
         self._generic_scan(
             spectra=r"spectrum_8mon_1dae3card_00.dat",
             wiring=r"wiring_8mon_1dae3card_00_hist.dat",
