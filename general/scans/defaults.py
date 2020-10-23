@@ -77,8 +77,7 @@ class Defaults(object):
         plt.show()
         return (fig, axis)
 
-    def scan(self, motion, start=None, stop=None, step=None, frames=None,
-             **kwargs):
+    def scan(self, motion, start=None, stop=None, step=None, frames=None, save=False, **kwargs):
         """scan establishes the setup for performing a measurement scan.
 
         Examples
@@ -166,35 +165,44 @@ class Defaults(object):
           A scan object that will run through the requested points.
 
         """
-        if start is not None:
-            kwargs["start"] = start
-        if stop is not None:
-            kwargs["stop"] = stop
-        if step is not None:
-            kwargs["step"] = step
-        if frames is not None:
-            kwargs["frames"] = frames
+        try:
+            if start is not None:
+                kwargs["start"] = start
+            if stop is not None:
+                kwargs["stop"] = stop
+            if step is not None:
+                kwargs["step"] = step
+            if frames is not None:
+                kwargs["frames"] = frames
+            kwargs["save"] = save
 
-        motion = get_motion(motion)
+            motion = get_motion(motion)
 
-        points = get_points(motion(), **kwargs)
+            points = get_points(motion(), **kwargs)
 
-        if len(points) == 0:  # pylint: disable=len-as-condition
-            raise RuntimeError(
-                "Your requested scan contains no points.  Are you "
-                "trying to move a negative distance with positive "
-                "steps?")
+            if len(points) == 0:  # pylint: disable=len-as-condition
+                raise RuntimeError(
+                    "Your requested scan contains no points.  Are you "
+                    "trying to move a negative distance with positive "
+                    "steps?")
 
-        for point in points:
-            motion.require(point)
+            for point in points:
+                motion.require(point)
 
-        scn = SimpleScan(motion, points, self)
-        if any([x in kwargs for x in
-                TIME_KEYS]):
-            if "fit" in kwargs:
-                return scn.fit(**kwargs)
-            return scn.plot(**kwargs)
-        return scn
+            scn = SimpleScan(motion, points, self)
+            if any([x in kwargs for x in
+                    TIME_KEYS]):
+                if "fit" in kwargs:
+                    return scn.fit(**kwargs)
+                return scn.plot(**kwargs)
+            return scn
+        except KeyboardInterrupt:
+            if g.get_runstate() != "SETUP":
+                if save:
+                    g.end()
+                else:
+                    g.abort()
+            raise KeyboardInterrupt
 
     def ascan(self, motion, start, end, intervals, time):
         """A reimplementations of ascan from spec
