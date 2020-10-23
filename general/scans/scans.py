@@ -159,50 +159,48 @@ class Scan(object):
 
         acc = None
         action_remainder = None
-        try:
-            log_filename = self.defaults.log_file(self.log_file_info())
-            print("Writing data to: {}".format(log_filename))
-            with open(log_filename, "w") as logfile, \
-                    detector(self, save=save, **kwargs) as detect:
-                for x in self:
-                    # FIXME: Handle multidimensional plots
-                    ((label, unit), position) = next(iter(x.items()))
+        log_filename = self.defaults.log_file(self.log_file_info())
+        print("Writing data to: {}".format(log_filename))
+        with open(log_filename, "w") as logfile, \
+                detector(self, save=save, **kwargs) as detect:
+            for x in self:
+                # FIXME: Handle multidimensional plots
+                ((label, unit), position) = next(iter(x.items()))
 
-                    # perform measurement
-                    acc, value = detect(acc, **kwargs)
+                # perform measurement
+                acc, value = detect(acc, **kwargs)
 
-                    if isinstance(value, float):
-                        value = Average(value)
-                    if not xs:
-                        logfile.write(
-                            "{} ({})\t{}\tUncertainty\n".format(
-                                label, unit, detector.unit))
-                    if position in xs:
-                        ys[xs.index(position)] += value
-                    else:
-                        xs.append(position)
-                        ys.append(value)
-                    logfile.write("{}\t{}\t{}\n".format(xs[-1], str(ys[-1]),
-                                                        str(ys[-1].err())))
-                    axis.clear()
-                    axis.set_xlabel("{} ({})".format(label, unit))
-                    axis.set_ylabel(detector.unit)
-                    if isinstance(self.min(), tuple):
-                        rng = [1.05 * self.min()[0] - 0.05 * self.max()[0],
-                               1.05 * self.max()[0] - 0.05 * self.min()[0]]
-                    else:
-                        rng = [1.05 * self.min() - 0.05 * self.max(),
-                               1.05 * self.max() - 0.05 * self.min()]
-                    axis.set_xlim(rng[0], rng[1])
-                    rng = _plot_range(ys)
-                    axis.set_ylim(rng[0], rng[1])
-                    ys.plot(axis, xs)
-                    if action:
-                        action_remainder = action(xs, ys,
-                                                  axis, action_remainder)
-                    plt.draw()
-        except KeyboardInterrupt:  # pragma: no cover
-            pass
+                if isinstance(value, float):
+                    value = Average(value)
+                if not xs:
+                    logfile.write(
+                        "{} ({})\t{}\tUncertainty\n".format(
+                            label, unit, detector.unit))
+                if position in xs:
+                    ys[xs.index(position)] += value
+                else:
+                    xs.append(position)
+                    ys.append(value)
+                logfile.write("{}\t{}\t{}\n".format(xs[-1], str(ys[-1]),
+                                                    str(ys[-1].err())))
+                axis.clear()
+                axis.set_xlabel("{} ({})".format(label, unit))
+                axis.set_ylabel(detector.unit)
+                if isinstance(self.min(), tuple):
+                    rng = [1.05 * self.min()[0] - 0.05 * self.max()[0],
+                           1.05 * self.max()[0] - 0.05 * self.min()[0]]
+                else:
+                    rng = [1.05 * self.min() - 0.05 * self.max(),
+                           1.05 * self.max() - 0.05 * self.min()]
+                axis.set_xlim(rng[0], rng[1])
+                rng = _plot_range(ys)
+                axis.set_ylim(rng[0], rng[1])
+                ys.plot(axis, xs)
+                if action:
+                    action_remainder = action(xs, ys,
+                                              axis, action_remainder)
+                plt.draw()
+
         if isinstance(save, str):
             fig.savefig(save)
 
@@ -417,67 +415,63 @@ class ContinuousScan(Scan):
         acc = None
         action_remainder = None
 
-        try:
-            with open(self.defaults.log_file(self.log_file_info()), "w") as logfile, \
-                    detector(self, save=save, **kwargs) as detect:
+        with open(self.defaults.log_file(self.log_file_info()), "w") as logfile, \
+                detector(self, save=save, **kwargs) as detect:
 
-                for move in self:
-                    # Set initial motor position to correct value.
-                    if abs(self.motion() - move.start) > self.motion.tolerance:
-                        self.motion(move.start)
-                        while abs(self.motion() - move.start) > \
-                                self.motion.tolerance:
-                            time.sleep(update_freq)
+            for move in self:
+                # Set initial motor position to correct value.
+                if abs(self.motion() - move.start) > self.motion.tolerance:
+                    self.motion(move.start)
+                    while abs(self.motion() - move.start) > \
+                            self.motion.tolerance:
+                        time.sleep(update_freq)
 
-                    with temporarily_change_motor_speed(self.motion,
-                                                        move.speed):
+                with temporarily_change_motor_speed(self.motion,
+                                                    move.speed):
 
-                        self.motion(move.stop)
+                    self.motion(move.stop)
 
-                        while abs(self.motion() - move.stop) > \
-                                self.motion.tolerance:
+                    while abs(self.motion() - move.stop) > \
+                            self.motion.tolerance:
 
-                            position = self.motion()
-                            acc, value = detect(acc, **kwargs)
-                            value = Exact(value)
+                        position = self.motion()
+                        acc, value = detect(acc, **kwargs)
+                        value = Exact(value)
 
-                            xs.append(position)
-                            ys.append(value)
+                        xs.append(position)
+                        ys.append(value)
 
-                            logfile.write("{}\t{}\n".format(xs[-1],
-                                                            str(ys[-1])))
-                            axis.clear()
+                        logfile.write("{}\t{}\n".format(xs[-1],
+                                                        str(ys[-1])))
+                        axis.clear()
 
-                            if isinstance(self.min(), tuple):
-                                rng = [1.05 * self.min()[0] -
-                                       0.05 * self.max()[0],
+                        if isinstance(self.min(), tuple):
+                            rng = [1.05 * self.min()[0] -
+                                   0.05 * self.max()[0],
 
-                                       1.05 * self.max()[0] -
-                                       0.05 * self.min()[0]]
-                            else:
-                                rng = [1.05 * self.min() - 0.05 * self.max(),
-                                       1.05 * self.max() - 0.05 * self.min()]
-                            axis.set_xlim(rng[0], rng[1])
-                            rng = _plot_range(ys)
-                            axis.set_ylim(rng[0], rng[1])
-                            ys.plot(axis, xs)
-                            if action:
-                                action_remainder = action(xs, ys, axis,
-                                                          action_remainder)
+                                   1.05 * self.max()[0] -
+                                   0.05 * self.min()[0]]
+                        else:
+                            rng = [1.05 * self.min() - 0.05 * self.max(),
+                                   1.05 * self.max() - 0.05 * self.min()]
+                        axis.set_xlim(rng[0], rng[1])
+                        rng = _plot_range(ys)
+                        axis.set_ylim(rng[0], rng[1])
+                        ys.plot(axis, xs)
+                        if action:
+                            action_remainder = action(xs, ys, axis,
+                                                      action_remainder)
 
-                            plt.draw()
+                        plt.draw()
 
-                            # If we plot in a tight loop, matplotlib can't keep
-                            # up. Taking data at 5Hz during the move seems the
-                            # right balance of "continuous" and "pragmatic"
-                            #
-                            # Note: a galil's MAX update frequency is 40ms so
-                            # there is no benefit in making this number smaller
-                            # than 0.04
-                            time.sleep(update_freq)
-
-        except KeyboardInterrupt:  # pragma: no cover
-            pass
+                        # If we plot in a tight loop, matplotlib can't keep
+                        # up. Taking data at 5Hz during the move seems the
+                        # right balance of "continuous" and "pragmatic"
+                        #
+                        # Note: a galil's MAX update frequency is 40ms so
+                        # there is no benefit in making this number smaller
+                        # than 0.04
+                        time.sleep(update_freq)
 
         if save:
             fig.savefig(save)
@@ -642,53 +636,50 @@ class ProductScan(Scan):
             values.append([np.nan] * len(self.inner))
 
         acc = action_remainder = None
-        try:
-            with open(self.defaults.log_file(self.log_file_info()), "w") as logfile, \
-                    detector(self, save) as detect:
-                for x in self:
-                    acc, value = detect(acc, **kwargs)
+        with open(self.defaults.log_file(self.log_file_info()), "w") as logfile, \
+                detector(self, save) as detect:
+            for x in self:
+                acc, value = detect(acc, **kwargs)
 
-                    keys = list(x.keys())
-                    keys[1] = keys[1]
-                    keys[0] = keys[0]
-                    y = x[keys[0]]
-                    x = x[keys[1]]
-                    if isinstance(value, float):
-                        value = Average(value)
-                    if x not in xs:
-                        xs.append(x)
-                    if y not in ys:
-                        ys.append(y)
-                    if isinstance(values[ys.index(y)][xs.index(x)], Monoid):
-                        values[ys.index(y)][xs.index(x)] += value
-                    else:
-                        values[ys.index(y)][xs.index(x)] = value
-                    logfile.write(
-                        "{}\t{}\n".format(xs[-1], str(values[-1])))
-                    axis.clear()
-                    axis.set_xlabel("{} ({})".format(keys[1][0], keys[1][1]))
-                    axis.set_ylabel("{} ({})".format(keys[0][0], keys[0][1]))
-                    miny, minx = self.min()
-                    maxy, maxx = self.max()
-                    rng = [1.05 * minx - 0.05 * maxx,
-                           1.05 * maxx - 0.05 * minx]
-                    axis.set_xlim(rng[0], rng[1])
-                    rng = [1.05 * miny - 0.05 * maxy,
-                           1.05 * maxy - 0.05 * miny]
-                    axis.set_ylim(rng[0], rng[1])
-                    axis.pcolor(
-                        self._estimate_locations(xs, len(self.inner),
-                                                 minx, maxx),
-                        self._estimate_locations(ys, len(self.outer),
-                                                 miny, maxy),
-                        np.array([[float(z) for z in row]
-                                  for row in values]))
-                    if action:
-                        action_remainder = action(xs, values,
-                                                  axis)
-                    plt.draw()
-        except KeyboardInterrupt:
-            pass
+                keys = list(x.keys())
+                keys[1] = keys[1]
+                keys[0] = keys[0]
+                y = x[keys[0]]
+                x = x[keys[1]]
+                if isinstance(value, float):
+                    value = Average(value)
+                if x not in xs:
+                    xs.append(x)
+                if y not in ys:
+                    ys.append(y)
+                if isinstance(values[ys.index(y)][xs.index(x)], Monoid):
+                    values[ys.index(y)][xs.index(x)] += value
+                else:
+                    values[ys.index(y)][xs.index(x)] = value
+                logfile.write(
+                    "{}\t{}\n".format(xs[-1], str(values[-1])))
+                axis.clear()
+                axis.set_xlabel("{} ({})".format(keys[1][0], keys[1][1]))
+                axis.set_ylabel("{} ({})".format(keys[0][0], keys[0][1]))
+                miny, minx = self.min()
+                maxy, maxx = self.max()
+                rng = [1.05 * minx - 0.05 * maxx,
+                       1.05 * maxx - 0.05 * minx]
+                axis.set_xlim(rng[0], rng[1])
+                rng = [1.05 * miny - 0.05 * maxy,
+                       1.05 * maxy - 0.05 * miny]
+                axis.set_ylim(rng[0], rng[1])
+                axis.pcolor(
+                    self._estimate_locations(xs, len(self.inner),
+                                             minx, maxx),
+                    self._estimate_locations(ys, len(self.outer),
+                                             miny, maxy),
+                    np.array([[float(z) for z in row]
+                              for row in values]))
+                if action:
+                    action_remainder = action(xs, values,
+                                              axis)
+                plt.draw()
         if save:
             fig.savefig(save)
 
