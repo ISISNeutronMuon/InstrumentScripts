@@ -219,7 +219,7 @@ def get_motion(motion_or_block_name):
     if isinstance(motion_or_block_name, Motion):
         motion = motion_or_block_name
     elif isinstance(motion_or_block_name, (str, text_type)):
-        motion = BlockMotion(motion_or_block_name, g.get_block_units(motion_or_block_name))
+        motion = BlockMotion(motion_or_block_name, get_units(motion_or_block_name))
     else:
         raise TypeError("Cannot run scan on axis {}. Try a string or a motion object instead.".format(
             motion_or_block_name))
@@ -239,5 +239,16 @@ def get_units(block_name):
     -------
     units of the block
     """
-    print("This method is deprecated and will be removed, please use g.get_block_units(block_name)")
-    return g.get_block_units(block_name)
+    # TODO when genie_python include #5620 remove this or signal as deprecated
+    try:
+        return g.get_block_units(block_name)
+    except AttributeError:
+        pv_name = g.adv.get_pv_from_block(block_name)
+        if "." in pv_name:
+            # Remove any headers
+            pv_name = pv_name.split(".")[0]
+        unit_name = pv_name + ".EGU"
+        # pylint: disable=protected-access
+        if g._genie_api.pv_exists(unit_name):
+            return g.get_pv(unit_name)
+        return ""

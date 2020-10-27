@@ -1,7 +1,7 @@
 import unittest
 from contextlib import contextmanager
 
-from ..scans import SimpleScan, ReplayScan
+from general.scans.scans import SimpleScan, ReplayScan
 from hamcrest import *
 from mock import Mock, patch
 
@@ -80,7 +80,7 @@ def fake_block_server_and_get_pv(block_and_value):
     block_history = []
     with patch("general.scans.motion.g.get_pv") as get_pv, \
             patch("general.scans.motion.g.adv.get_pv_from_block") as get_pv_from_block, \
-            patch("general.scans.motion.g.__api") as api, \
+            patch("general.scans.motion.g._genie_api") as api, \
             patch("general.scans.motion.g.get_blocks") as get_blocks, \
             patch("general.scans.motion.g.cget") as cget, \
             patch("general.scans.motion.g.cset") as cset:
