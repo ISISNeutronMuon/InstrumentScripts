@@ -163,6 +163,7 @@ class Defaults(object):
           A scan object that will run through the requested points.
 
         """
+        num_periods_cache = g.get_number_periods()
         try:
             if start is not None:
                 kwargs["start"] = start
@@ -200,6 +201,7 @@ class Defaults(object):
                     g.end()
                 else:
                     g.abort()
+            g.change_number_soft_periods(num_periods_cache)
             raise KeyboardInterrupt
 
     def ascan(self, motion, start, end, intervals, time):
