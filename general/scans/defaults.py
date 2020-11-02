@@ -189,6 +189,10 @@ class Defaults(object):
             motion.require(point)
 
         scn = SimpleScan(motion, points, self)
+        try:
+            scn.wait_time = kwargs["wait_time"]
+        except KeyError:
+            pass  # we don't need to set the wait time on the scan
         if any([x in kwargs for x in
                 TIME_KEYS]):
             if "fit" in kwargs:

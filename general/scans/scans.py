@@ -306,6 +306,7 @@ class SimpleScan(Scan):
         self.values = values
         self.name = action.title
         self.defaults = defaults
+        self.wait_time = 0
 
     def map(self, func):
         """The map function returns a modified scan that performs the given
@@ -331,6 +332,8 @@ class SimpleScan(Scan):
         for i in self.values:
             self.action(i)
             g.waitfor_move()
+            if self.wait_time > 0.01:
+                g.waitfor_time(seconds=self.wait_time)  # This is a bad fix for the ioc being slow
             dic = OrderedDict()
             dic[(self.name, self.action.unit)] = self.action()
             yield dic

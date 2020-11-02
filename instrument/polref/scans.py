@@ -32,7 +32,12 @@ class PolrefDefaultScan(Defaults):
     _spectra_definitions = [create_spectra_definition(1, 100.0, 50000.0),
                             create_spectra_definition(2, 100.0, 60000.0),
                             create_spectra_definition(3, 3000.0, 70000.0),
-                            create_multi_spectra_definition(280, 2, 3800.0, 90000.0, name="multiple")]
+                            create_spectra_definition(280, 3800.0, 90000.0),
+							create_spectra_definition(335, 3800.0, 90000.0),
+                            create_multi_spectra_definition(280, 2, 3800.0, 90000.0, name="multiple"),
+							create_multi_spectra_definition(335, 2, 3800.0, 90000.0, name="multipleV"),
+                            create_multi_spectra_definition(280, 5, 3800.0, 90000.0, name="multiple_5"),
+							create_multi_spectra_definition(335, 5, 3800.0, 90000.0, name="multiple_5V")]
     detector = NormalisedIntensityDetector(default_monitor=2, default_detector=3,
                                            spectra_definitions=_spectra_definitions)
 

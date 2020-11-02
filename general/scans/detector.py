@@ -378,6 +378,9 @@ class NormalisedIntensityDetector(DaePeriods):
         """
         _resume_count_pause(**kwargs)
 
+        print(self.monitor.spectra_number)
+        print(self.detector.spectra_number)
+
         for _ in range(SPECTRA_RETRY_COUNT):  # tries to get a non-None spectrum from the DAE
             monitor_spec_sum = 0
             for monitor_num in self.monitor.spectra_number:
@@ -385,13 +388,15 @@ class NormalisedIntensityDetector(DaePeriods):
                                                         self.monitor.t_min, self.monitor.t_max)
             detector_spec_sum = 0
             for spectrum_num in self.detector.spectra_number:
-                detector_spec_sum += g.integrate_spectrum(spectrum_num, g.get_period(),
+                det_sum =g.integrate_spectrum(spectrum_num, g.get_period(),
                                                          self.detector.t_min, self.detector.t_max)
+                detector_spec_sum += det_sum
+                print("{}: {}".format(spectrum_num, det_sum))
 
-                if monitor_spec_sum is None or detector_spec_sum is None:
-                    print("Spectrum is zero, retrying")
-                else:
-                    break
+            if monitor_spec_sum is None or detector_spec_sum is None:
+                print("Spectrum is zero, retrying")
+            else:
+                break
         else:
             detector_spec_sum = 0
             monitor_spec_sum = 0
