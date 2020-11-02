@@ -40,8 +40,8 @@ INSTRUMENT_CONSTANTS = {
                 sm_sa=1375.0,
                 incoming_beam_angle=2.3),
     "SURF": InstrumentConstant(
-                s1s2=1448.0,
-                s2sa=247, #389.0,
+                s1s2=1578.5, #1448.0,
+                s2sa=257.3, #247, #389.0,
                 max_theta=1.8,  # usual maximum angle
                 s4max=10.0,  # max s4vg at maxTheta
                 sm_sa=1096, #1088.26,

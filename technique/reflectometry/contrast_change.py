@@ -44,7 +44,7 @@ def contrast_change(valve_position, concentrations, flow, volume=None, seconds=N
         else:
             print("Error concentration not set neither volume or time set!")
             return
-        g.cset("start_timed", 1)
-        g.waitfor_block("pump_is_on", "RUNNING")
+        g.cset("Pump_for_Time", 1)
+        g.waitfor_block("pump_is_on", "Pumping")
         if wait:
-            g.waitfor_block("pump_is_on", "STOPPED")
+            g.waitfor_block("pump_is_on", "Off")
