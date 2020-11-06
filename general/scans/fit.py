@@ -4,6 +4,7 @@ for fitting routines.  It also contains implementations of some common
 fits (i.e. Linear and Gaussian).
 
 """
+import traceback
 from abc import ABCMeta, abstractmethod
 import warnings
 import numpy as np
@@ -98,38 +99,44 @@ class Fit(object):
                 parameters if the fit was performed
 
             """
-            if len(x) < self.degree:
-                return None
-            plot_x = np.linspace(np.min(x), np.max(x), 1000)
-            values = np.array(y.values())
-            errs = np.array(y.err())
-            if len(values.shape) > 1:
-                params = []
-                for value in values:
-                    try:
-                        params.append(self.fit(x, value, errs))
-                    except RuntimeError:
-                        params.append(None)
-                        continue
-                    fity = self.get_y(plot_x, params[-1])
-                    axis.plot(plot_x, fity, "-",
-                              label="{} fit".format(self.title(params[-1])))
-            else:
-                try:
-                    params = self.fit(x, values, errs)
-                except RuntimeError:
+            try:
+                if len(x) < self.degree:
                     return None
-                fity = self.get_y(plot_x, params)
-                chi_sq = self.fit_quality(x, values, errs, params)
-                if old_params is not None:
-                    old_chi = self.fit_quality(x, values, errs, old_params)
-                    if chi_sq > old_chi:
-                        chi_sq = old_chi
-                        params = old_params
-                        fity = self.get_y(plot_x, params)
-                axis.plot(plot_x, fity, "-",
-                          label="{} fit".format(self.title(params)))
-            axis.legend(bbox_to_anchor=(0, 1.02, 1, 0.2), loc="lower left", mode="expand", borderaxespad=0, ncol=3)
+                points_x = np.array(x)
+                plot_x = np.linspace(np.min(points_x), np.max(points_x), 1000)
+                values = np.array(y.values())
+                errs = np.array(y.err())
+
+                if len(values.shape) > 1:
+                    params = []
+                    for value in values:
+                        try:
+                            params.append(self.fit(points_x, value, errs))
+                        except RuntimeError:
+                            params.append(None)
+                            continue
+                        fit_y = self.get_y(plot_x, params[-1])
+                        axis.plot(plot_x, fit_y, "-",
+                                  label="{} fit".format(self.title(params[-1])))
+                else:
+                    try:
+                        params = self.fit(points_x, values, errs)
+                    except RuntimeError:
+                        return None
+                    chi_sq = self.fit_quality(points_x, values, errs, params)
+                    if old_params is not None:
+                        old_chi = self.fit_quality(points_x, values, errs, old_params)
+                        if chi_sq > old_chi:
+                            chi_sq = old_chi
+                            params = old_params
+                    fit_y = self.get_y(plot_x, params)
+                    axis.plot(plot_x, fit_y, "-", label="{} fit".format(self.title(params)))
+
+                axis.legend(bbox_to_anchor=(0, 1.02, 1, 0.2), loc="lower left", mode="expand", borderaxespad=0, ncol=3)
+            except Exception as ex:
+                traceback.print_exc()
+                print("No fit performed because of above error please report it.")
+                params = old_params
             return params
         return action
 

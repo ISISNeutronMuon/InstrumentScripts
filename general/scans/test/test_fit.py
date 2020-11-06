@@ -1,8 +1,11 @@
 import unittest
 import numpy as np
+from mock import Mock
 from parameterized import parameterized
+from hamcrest import *
 
-from general.scans.fit import PeakFit, PolyFit, CentreOfMassFit, Fit, ExactFit
+from general.scans.fit import PeakFit, PolyFit, CentreOfMassFit, Fit, ExactFit, TopHat
+from general.scans.monoid import ListOfMonoids, Average
 
 
 class MinimalFit(Fit):
@@ -45,6 +48,7 @@ class ScansFitTest(unittest.TestCase):
         fit_error = np.sqrt(self.fitter.fit_quality(x, real_y, errs, fit))
 
         self.assertAlmostEqual(fit_error, 10.0)
+
 
 class ScansPolyFitTest(unittest.TestCase):
     """
@@ -134,3 +138,65 @@ class ExactFitTest(unittest.TestCase):
         readable_form = self.fitter.readable(fit)
         self.assertListEqual(readable_form['x'], x)
         self.assertListEqual(readable_form['y'], y)
+
+
+class ErroringFit(Fit):
+
+    def __init__(self, degre, title, expection_to_raise=ValueError):
+        super(ErroringFit, self).__init__(degre, title)
+        self._expection_to_raise = expection_to_raise
+
+    def fit(self, x, y, err):
+        raise self._expection_to_raise("Problems")
+
+    def get_y(self, x, fit):
+        raise self._expection_to_raise("Problems")
+
+    def readable(self, fit):
+        raise self._expection_to_raise("Problems")
+
+
+class FitErrorTests(unittest.TestCase):
+
+    def test_GIVEN_fit_errors_WHEN_fit_action_THEN_fit_does_not_throw_exception_but_returns_old_fit(self):
+        excepted_old_fit = {"fitparam": 1.0}
+        fit = ErroringFit(1, "hi")
+
+        result = fit.fit_plot_action()([1, 2], ListOfMonoids([Average(1,1), Average(2,1)]), None, excepted_old_fit)
+
+        assert_that(result, is_(excepted_old_fit))
+
+    def test_GIVEN_degree_less_than_data_WHEN_fit_action_THEN_fit_returns_none(self):
+
+        degree = 3
+        fit = ErroringFit(degree, "hi")
+
+        result = fit.fit_plot_action()([1]*(degree-1), ListOfMonoids([Average(1,1)]*(degree-1)), None, [])
+
+        assert_that(result, is_(None))
+
+    def test_GIVEN_fit_errors_because_of_bad_fit_WHEN_fit_action_THEN_fit_returns_None(self):
+        fit = ErroringFit(1, "hi", RuntimeError)
+
+        result = fit.fit_plot_action()([1, 2], ListOfMonoids([Average(1,1), Average(2,1)]), None, [])
+
+        assert_that(result, is_(None))
+
+
+class TopHatTests(unittest.TestCase):
+
+    def test_GIVEN_data_WHEN_fit_top_hat_THEN_fit_returns_value(self):
+        expected_background = 0.1
+        expected_height = 2.2
+        background = Average(expected_background)
+        height = Average(expected_height + expected_background)
+        x = [-0.3, -0.2, -0.1, 0, 0.1, 0.2, 0.3]
+        y = ListOfMonoids([background, background, height, height, height, background, background])
+        fit_action = TopHat.fit_plot_action()
+
+        result = TopHat.readable(fit_action(x, y, Mock(), None))
+
+        assert_that(result, has_entry("center", 0.0))
+        assert_that(result, has_entry("background", float(expected_background)))
+        assert_that(result, has_entry("height", float(expected_height)))
+        assert_that(result, has_entry("width", 0.3))
