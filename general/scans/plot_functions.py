@@ -18,10 +18,14 @@ class PlotFunctions:
 
         Parameters
         ----------
-        data_marker_size size of the marker
-        markers list of markers to use in order
-        color_cycle list of colours to use
-        fit_colour colour for a fit to the data
+        data_marker_size
+            size of the marker
+        markers
+            list of markers to use in order
+        color_cycle
+            list of colours to use
+        fit_colour
+            colour for a fit to the data
         """
         self.data_marker_size = data_marker_size
         if color_cycle is None:
@@ -43,8 +47,10 @@ class PlotFunctions:
 
         Parameters
         ----------
-        figure figure to use
-        axis axis to use
+        figure
+            figure to use
+        axis
+            axis to use
         """
         self._fig = figure
         self._axis = axis
@@ -55,8 +61,10 @@ class PlotFunctions:
 
         Parameters
         ----------
-        xs x coordinates list
-        ys y values either a Monoid list or object with values and err attributes containing list of points
+        xs
+            x coordinates list
+        ys
+            y values either a Monoid list or object with values and err attributes containing list of points
 
         """
 
@@ -78,16 +86,16 @@ class PlotFunctions:
 
         Parameters
         ----------
-        points points of data
+        points
+            points of data as a numpy array
 
         Returns
         -------
-        range as a tuple, min and max
+        range as a tuple: min and max
         """
         if not points:
             return -0.05, 0.05
 
-        # points = [float(x) for x in points]
         low = points.min()
         high = points.max()
         if not (np.isfinite(low) and np.isfinite(high)):
@@ -124,16 +132,18 @@ class PlotFunctions:
 
         Parameters
         ----------
-        x_min minimum x value
-        x_max maximum x value
-        x_label label for x axis
-        x_unit unit for x axis
-        y_label label for y axis
-        y_unit unit of y axis
-
-        Returns
-        -------
-
+        x_min
+            minimum x value
+        x_max
+            maximum x value
+        x_label
+            label for x axis
+        x_unit
+            unit for x axis
+        y_label
+            label for y axis
+        y_unit
+            unit of y axis
         """
         self._axis.clear()
         full_x_label = self._create_axis_title(x_label, x_unit)
@@ -155,14 +165,17 @@ class PlotFunctions:
     def _create_axis_title(self, label, unit):
         """
         Create axis title
+
         Parameters
         ----------
-        label label for axis; None for not provided
-        unit unit for axis; None for not provided
+        label
+            label for axis; None for not provided
+        unit
+            unit for axis; None for not provided
 
         Returns
         -------
-        Best axis label dependent on info; None for nothing provided
+        Best axis label dependent on info e.g. label (unit) or unit or  None for nothing provided
         """
         full_label = None
         if label is not None and unit is not None:
@@ -176,16 +189,18 @@ class PlotFunctions:
 
     def draw(self):
         """
-        Darw the plot.
+        Draw the plot.
         """
         plt.draw()
 
     def save(self, save):
         """
-        Save the plot if there is a filename
+        Save plot to a file
+
         Parameters
         ----------
-        save file name to save plot under; None to not save
+        save
+            filename of the file to save the plot to; Nor a string don't save
         """
         if isinstance(save, str):
             self._fig.savefig(save)
@@ -196,9 +211,12 @@ class PlotFunctions:
 
         Parameters
         ----------
-        plot_x x values
-        fit_y y fit values
-        fit_label label for the fit
+        plot_x
+            x values
+        fit_y
+            y fit values
+        fit_label
+            label for the fit
         """
         self._axis.plot(plot_x, fit_y, "-", label=fit_label, color=self.fit_colour)
         self._axis.legend(bbox_to_anchor=(0, 1.02, 1, 0.2), loc="lower left", mode="expand", borderaxespad=0, ncol=3)
@@ -209,8 +227,10 @@ class PlotFunctions:
 
         Parameters
         ----------
-        x_pos position to plot the line
-        fit_label label for the fit line
+        x_pos
+            position to plot the line
+        fit_label
+            label for the fit line
         """
         self._axis.axvline(x=x_pos, color=self.fit_colour)
         self._axis.legend([fit_label], bbox_to_anchor=(0, 1.02, 1, 0.2), loc="lower left", mode="expand",
