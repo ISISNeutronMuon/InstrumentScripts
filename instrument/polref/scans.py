@@ -29,11 +29,14 @@ class PolrefDefaultScan(Defaults):
     """
 
     # spectra definition based on gcl script.
-    _spectra_definitions = [create_spectra_definition(1, 1050.0, 15500.0),
-                            create_spectra_definition(2, 1050.0, 15500.0),
-                            create_spectra_definition(3, 1450.0, 16500.0)]
+    _single_det_spectra = [create_spectra_definition(1, 100.0, 50000.0),  # Chopper pit
+                           create_spectra_definition(2, 100.0, 60000.0),  # Front of Blockhouse
+                           create_spectra_definition(3, 3000.0, 70000.0),  # Before Sample
+                           create_spectra_definition(4, 3000.0, 70000.0)]  # Point detector
+    _multi_det_spectra = [create_spectra_definition(i, 3800.0, 90000.0) for i in range(5, 646)]  # linear detector
+
     detector = NormalisedIntensityDetector(default_monitor=2, default_detector=3,
-                                           spectra_definitions=_spectra_definitions)
+                                           spectra_definitions=_single_det_spectra + _multi_det_spectra)
 
     def __init__(self):
         super(PolrefDefaultScan, self).__init__()
