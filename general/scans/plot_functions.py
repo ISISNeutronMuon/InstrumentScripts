@@ -6,6 +6,15 @@ import matplotlib.pyplot as plt
 import numpy as np
 from general.scans.monoid import MonoidList
 
+# Min and max on graph if there are no points
+DEFAULT_FRACTION_SPACING_TO_ADD = 0.05
+NO_POINTS_MAX_Y = 0.05
+NO_POINTS_MIN_Y = -0.05
+
+# Range if min or max is infinite, if both infinite taken from 0
+INF_POINT_MIN_Y = -1
+INF_POINT_MAX_Y = 1
+
 
 class PlotFunctions:
     """
@@ -68,17 +77,18 @@ class PlotFunctions:
 
         """
 
-        rng = self._plot_range(ys)
-        self._axis.set_ylim(rng[0], rng[1])
+        rng_min, rng_max = self._plot_range(ys)
+        self._axis.set_ylim(rng_min, rng_max)
 
-        if isinstance(ys[0], MonoidList):
-            for y, err, color, marker in zip(ys.values(), ys.err(),
-                                             self.color_cycle, self.data_markers):
-                self._axis.errorbar(xs, y, yerr=err, fmt="", color=color,
-                                    marker=marker, markersize=self.data_marker_size, linestyle="None")
-        else:
-            self._axis.errorbar(xs, ys.values(), yerr=ys.err(), color=self.color_cycle[0],
-                                marker=self.data_markers[0], markersize=self.data_marker_size)
+        if ys is not None and len(ys) > 0:
+            if isinstance(ys[0], MonoidList):
+                for y, err, color, marker in zip(ys.values(), ys.err(),
+                                                 self.color_cycle, self.data_markers):
+                    self._axis.errorbar(xs, y, yerr=err, fmt="", color=color,
+                                        marker=marker, markersize=self.data_marker_size, linestyle="None")
+            else:
+                self._axis.errorbar(xs, ys.values(), yerr=ys.err(), color=self.color_cycle[0],
+                                    marker=self.data_markers[0], markersize=self.data_marker_size)
 
     def _plot_range(self, points):
         """
@@ -94,20 +104,20 @@ class PlotFunctions:
         range as a tuple: min and max
         """
         if not points:
-            return -0.05, 0.05
+            return NO_POINTS_MIN_Y, NO_POINTS_MAX_Y
 
         low = points.min()
         high = points.max()
-        if not (np.isfinite(low) and np.isfinite(high)):
-            return -1, 1
+        if not np.isfinite(low) and not np.isfinite(high):
+            return INF_POINT_MIN_Y, INF_POINT_MAX_Y
         if not np.isfinite(low):
-            low = high - 1
+            low = high + INF_POINT_MIN_Y
         if not np.isfinite(high):
-            high = low + 1
+            high = low + INF_POINT_MAX_Y
 
         return self._add_space_to_range(low, high)
 
-    def _add_space_to_range(self, low, high, fraction_to_add=0.05):
+    def _add_space_to_range(self, low, high, fraction_to_add=DEFAULT_FRACTION_SPACING_TO_ADD):
         """
         Add extra space to a range based on the size of the range
         Parameters
