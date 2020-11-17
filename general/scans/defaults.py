@@ -83,13 +83,13 @@ class Defaults(object):
         Examples
         --------
 
-        >>> scan("translation", -5, 5, 0.1, 50)
+        >>> scan(b.translation, -5, 5, 0.1, 50)
 
         This will run a scan on the translation block from -5 to 5
         (exclusive) in steps of 0.1, measuring for 50 frames at each
         point and taking a plot
 
-        >>> scan("translation", start=-5, stop=5, stride=0.1).plot(frames=50)
+        >>> scan(b.translation, start=-5, stop=5, stride=0.1).plot(frames=50)
 
         This will scan the translation access from -5 to 5 inclusive
         in steps of 0.1.  At each point, the a measurement will be
@@ -97,7 +97,7 @@ class Defaults(object):
 
         As a different example,
 
-        >>> s = scan("coarsez", before=-50, step=5, gaps=20)
+        >>> s = scan(b.coarsez, before=-50, step=5, gaps=20)
 
         This will create a scan on the CoarseZ axis, starting at 50 mm
         below the current position and continuing in 5 mm increments
@@ -112,7 +112,7 @@ class Defaults(object):
         the end of the measurement, the `result` variable will hold
         the position of the observed peak.
 
-        >>> scan("translation", -5, 5, 0.1, 50, detector=specfic_spectra([[3]]))
+        >>> scan(b.translation, -5, 5, 0.1, 50, det=3)
 
         This is similar to our original scan on translation, except
         that the scan will be performed on monitor 3, instead of the
@@ -122,7 +122,7 @@ class Defaults(object):
         The scan function itself has one mandatory parameter `motion`
         but will require another three keyword parameters to define
         the range of the scan.  In the example above, the motion
-        parameter was "TRANSLATION" and the keyword parameters were
+        parameter was "b.translation" and the keyword parameters were
         start, stop, and stride.  Any set of three position parameters
         that uniquely define a range of motions will be accepted.
 
@@ -139,23 +139,22 @@ class Defaults(object):
         frames
           How many frames the measurement should be performed for.  If
           set to None or 0, then no automatic plot will be started.
-        before
-          A relative starting position for the scan.
-        after
-          A relative ending position for the scan
-        count
-          The number of points to measure
-        gaps
-          The number of steps to take
-        stride
-          The approximate step size.  The scan may shrink this step size
-          to ensure that the final point is still included in the scan.
-        detector
-          An optional parameter to choose how to measure the dependent
-          variable in the scan.  A set of these will have already been
-          defined by your instrument scientist.  If you need something
-          ad hoc, then check the documentation on specific_spectra for
-          more details
+        kwargs
+            various other options consistent with the scan library, common options are:
+            fit - produce a fit using this type of fit e.g. Gaussian, CentreOfMass, TopHat
+            before - A relative starting position for the scan.
+            after - A relative ending position for the scan
+            gaps - The number of steps to take
+            stride - The approximate step size.  The scan may shrink this step size to ensure that the final point is
+                still included in the scan.
+            mon - An optional parameter to choose which monitor to use for normalisation
+            det - An optional parameter to choose which detector spectrum to use for counts
+            pixel_range - For summing the counts of multiple pixels. pixel_range is the number of pixels to consider
+                either side of the central detector spectrum
+            min_pixel - For summing the counts of multiple pixels. min_pixel is the spectrum number for the lower bound
+                of the range. Overridden by pixel_range
+            max_pixel - For summing the counts of multiple pixels. max_pixel is the spectrum number for the upper bound
+                of the range. Overridden by pixel_range
 
         Returns
         -------
