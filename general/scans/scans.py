@@ -9,6 +9,9 @@ treated as private.
 
 """
 from __future__ import absolute_import, print_function
+
+from typing import TYPE_CHECKING
+
 from abc import ABCMeta, abstractmethod
 # pylint: disable=no-name-in-module
 from collections import Iterable, OrderedDict
@@ -21,6 +24,8 @@ import six
 from six import add_metaclass
 import matplotlib.pyplot as plt
 
+if TYPE_CHECKING:
+    from .defaults import Defaults
 from .monoid import ListOfMonoids, Monoid, Average, Exact
 from .detector import DetectorManager
 from .fit import Fit, ExactFit
@@ -87,6 +92,7 @@ class Scan(object):
     should never be instantiated directly, but rather by one of its
     subclasses."""
 
+    defaults: 'Defaults'
     defaults = None
 
     def _normalise_detector(self, detector):
@@ -142,17 +148,31 @@ class Scan(object):
         """
         return self + self.reverse
 
-    def plot(self, detector=None, save=None,
-             action=None, **kwargs):
-        """Run over the scan and perform a simple measurement at each position.
+    def plot(self, detector=None, save=None, action=None, **kwargs):
+        """
+        Run over the scan and perform a simple measurement at each position.
         The measurement parameter can be used to set what type of measurement
         is to be taken.  If the save parameter is set to a file name, then the
-        plot will be saved in that file."""
+        plot will be saved in that file.
+
+        Parameters
+        ----------
+        detector: detector or detector manager to use to take the measurement
+        save: name of file to save plot to; None don't save
+        action: extra action to take every measurement, e.g. fit the points and plot then
+        kwargs: extra kw args
+
+        Returns
+        -------
+        result of the last action
+        """
         warnings.simplefilter("ignore", UserWarning)
 
         detector = self._normalise_detector(detector)
 
+        plot_functions = self.defaults.plot_functions
         fig, axis = self.defaults.get_fig()
+        plot_functions.set_figure_and_axis(fig, axis)
 
         xs = []
         ys = ListOfMonoids()
@@ -183,26 +203,14 @@ class Scan(object):
                     ys.append(value)
                 logfile.write("{}\t{}\t{}\n".format(xs[-1], str(ys[-1]),
                                                     str(ys[-1].err())))
-                axis.clear()
-                axis.set_xlabel("{} ({})".format(label, unit))
-                axis.set_ylabel(detector.unit)
-                if isinstance(self.min(), tuple):
-                    rng = [1.05 * self.min()[0] - 0.05 * self.max()[0],
-                           1.05 * self.max()[0] - 0.05 * self.min()[0]]
-                else:
-                    rng = [1.05 * self.min() - 0.05 * self.max(),
-                           1.05 * self.max() - 0.05 * self.min()]
-                axis.set_xlim(rng[0], rng[1])
-                rng = _plot_range(ys)
-                axis.set_ylim(rng[0], rng[1])
-                ys.plot(axis, xs)
-                if action:
-                    action_remainder = action(xs, ys,
-                                              axis, action_remainder)
-                plt.draw()
 
-        if isinstance(save, str):
-            fig.savefig(save)
+                plot_functions.setup_plot(self.min(), self.max(), label, unit, y_unit=detector.unit)
+                plot_functions.plot_data_with_errors(xs, ys)
+                if action:
+                    action_remainder = action(xs, ys, plot_functions, action_remainder)
+                plot_functions.draw()
+
+        plot_functions.save(save)
 
         return action_remainder
 
@@ -408,12 +416,14 @@ class ContinuousScan(Scan):
 
         detector = self._normalise_detector(detector)
         fig, axis = self.defaults.get_fig()
+        plot_functions = self.defaults.plot_functions
+        plot_functions.set_figure_and_axis(fig, axis)
 
         xs = []
         ys = ListOfMonoids()
 
         acc = None
-        action_remainder = None
+        action_remainder = None  # store the result of an action on the points
 
         with open(self.defaults.log_file(self.log_file_info()), "w") as logfile, \
                 detector(self, save=save, **kwargs) as detect:
@@ -443,26 +453,13 @@ class ContinuousScan(Scan):
 
                         logfile.write("{}\t{}\n".format(xs[-1],
                                                         str(ys[-1])))
-                        axis.clear()
 
-                        if isinstance(self.min(), tuple):
-                            rng = [1.05 * self.min()[0] -
-                                   0.05 * self.max()[0],
+                        plot_functions.setup_plot(self.min(), self.max())
+                        plot_functions.plot_data_with_errors(xs, ys)
 
-                                   1.05 * self.max()[0] -
-                                   0.05 * self.min()[0]]
-                        else:
-                            rng = [1.05 * self.min() - 0.05 * self.max(),
-                                   1.05 * self.max() - 0.05 * self.min()]
-                        axis.set_xlim(rng[0], rng[1])
-                        rng = _plot_range(ys)
-                        axis.set_ylim(rng[0], rng[1])
-                        ys.plot(axis, xs)
                         if action:
-                            action_remainder = action(xs, ys, axis,
-                                                      action_remainder)
-
-                        plt.draw()
+                            action_remainder = action(xs, ys, axis, action_remainder)
+                        plot_functions.draw()
 
                         # If we plot in a tight loop, matplotlib can't keep
                         # up. Taking data at 5Hz during the move seems the
@@ -473,8 +470,7 @@ class ContinuousScan(Scan):
                         # than 0.04
                         time.sleep(update_freq)
 
-        if save:
-            fig.savefig(save)
+        plot_functions.save(save)
 
         return action_remainder
 

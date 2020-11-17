@@ -100,6 +100,11 @@ values may be missing so log_file should be prepared to use defaults. An example
     ...    action_name = info.get("action_name", "unknown")
     ...    return os.path.join(r"C:\", "scripts", "{}_{}_{}_{}_{}_{}_{}.dat".format(action_name, now.year, now.month, now.day, now.hour, now.minute, now.second))
 
+plot_functions
+--------------
+
+The `plot_functions` property of the defaults class allows the plot functions to be customised for your instrument. Either override this in you instruments defaults or set propeties of this in the scan function. This will allow you to set colours, marker size and shape for graphs. In the future there may be other options to.
+
 Monoid
 ======
 

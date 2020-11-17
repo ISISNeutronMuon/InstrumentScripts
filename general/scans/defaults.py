@@ -15,6 +15,8 @@ import os
 from six import add_metaclass
 import matplotlib.pyplot as plt
 import numpy as np
+
+from .plot_functions import PlotFunctions
 from .scans import SimpleScan, ReplayScan
 from .monoid import Average
 from .motion import get_motion
@@ -34,6 +36,8 @@ class Defaults(object):
     SINGLE_FIGURE = False
     _fig = None
     _axis = None
+    # default plot functions to use for generating graphs
+    plot_functions = PlotFunctions()
 
     @staticmethod
     @abstractmethod

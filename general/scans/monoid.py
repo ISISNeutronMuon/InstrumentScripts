@@ -10,7 +10,6 @@ information out of a combined measuremnts.
 """
 
 from abc import ABCMeta, abstractmethod
-from matplotlib.pyplot import rcParams
 import numpy as np
 from six import add_metaclass
 
@@ -259,13 +258,6 @@ class ListOfMonoids(list):
     lists of Monoids
     """
 
-    def __init__(self, *args):
-        list.__init__(self, *args)
-        try:
-            self.color_cycle = rcParams["axes.prop_cycle"].by_key()["color"]
-        except KeyError:
-            self.color_cycle = ["k", "b", "g", "r"]
-
     def values(self):
         """
         Get the numerical values from the List
@@ -281,21 +273,6 @@ class ListOfMonoids(list):
         if isinstance(self[0], MonoidList):
             return np.array([y.err() for y in self]).T
         return [y.err() for y in self]
-
-    def plot(self, axis, xs):
-        """
-        Make an errorbar plot of a monoid onto an axis
-        at a given set of x coordinates
-        """
-        markers = "osp+xv^<>"
-        if isinstance(self[0], MonoidList):
-            for y, err, color, marker in zip(self.values(), self.err(),
-                                             self.color_cycle, markers):
-                axis.errorbar(xs, y, yerr=err, fmt="",
-                              color=color, marker=marker,
-                              linestyle="None")
-        else:
-            axis.errorbar(xs, self.values(), yerr=self.err(), fmt="d")
 
     def max(self):
         """
