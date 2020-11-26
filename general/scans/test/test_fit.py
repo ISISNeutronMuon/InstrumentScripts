@@ -4,7 +4,8 @@ from mock import Mock
 from parameterized import parameterized
 from hamcrest import *
 
-from general.scans.fit import PeakFit, PolyFit, CentreOfMassFit, Fit, ExactFit, TopHat
+from general.scans.fit import PeakFit, PolyFit, CentreOfMassFit, Fit, ExactFit, TopHat, GaussianFit, \
+    DampedOscillatorFit, ErfFit, TopHatFit
 from general.scans.monoid import ListOfMonoids, Average
 
 
@@ -29,7 +30,7 @@ class ScansFitTest(unittest.TestCase):
     """
     Tests for the base Fit class
     """
-    # Create a new class which inherits off Fit and call the method on the new class, with the required methods returning None
+    # Create a new class which inherits from Fit and call the method on the new class, with the required methods returning None
     def setUp(self):
         self.fitter = MinimalFit(1, "Minimal")
 
@@ -68,6 +69,16 @@ class ScansPolyFitTest(unittest.TestCase):
         for fit_coefficient, test_coefficient in zip(fit, test_polynomial):
             self.assertAlmostEqual(fit_coefficient, test_coefficient)
 
+    def test_GIVEN_title_prefix_and_number_WHEN_get_title_THEN_title_contains_prefiz_and_number_are_to_4dp(self):
+        params = [2345, 0.12345]
+        expected_title_prefix = "title"
+        expected_title = "{}: $y = 2.3450e+03x^1 + 0.1235$".format(expected_title_prefix)
+
+        pf = PolyFit(2, expected_title_prefix)
+        result = pf.title(params)
+
+        assert_that(result, is_(expected_title))
+
 
 class ScansPeakFitTest(unittest.TestCase):
     """
@@ -89,6 +100,14 @@ class ScansPeakFitTest(unittest.TestCase):
 
         self.assertAlmostEqual(self.fitter.fit(test_x, test_y, 10.0), test_peak_location, delta=1e-5)
 
+    def test_GIVEN_centre_number_WHEN_get_title_THEN_title_contains_number_are_to_4dp(self):
+        params = 0.12345
+        expected_title = "Peak at 0.1235"
+
+        pf = PeakFit(100)
+        result = pf.title(params)
+
+        assert_that(result, is_(expected_title))
 
 class CentreOfMassFitTest(unittest.TestCase):
     """
@@ -119,6 +138,16 @@ class CentreOfMassFitTest(unittest.TestCase):
         fit = self.fitter.fit(x, y, err)
         self.assertEqual(len(fit), 1)
         self.assertIs(fit[0], np.nan)
+
+    def test_GIVEN_fit_parameters_WHEN_get_title_THEN_numbers_are_to_4dp(self):
+
+        params = [0.12345]
+        expected_title = "Centre of mass = 0.1235"
+
+        cmf = CentreOfMassFit()
+        result = cmf.title(params)
+
+        assert_that(result, is_(expected_title))
 
 
 class ExactFitTest(unittest.TestCase):
@@ -200,3 +229,53 @@ class TopHatTests(unittest.TestCase):
         assert_that(result, has_entry("background", float(expected_background)))
         assert_that(result, has_entry("height", float(expected_height)))
         assert_that(result, has_entry("width", 0.3))
+
+    def test_GIVEN_fit_parameters_WHEN_get_title_THEN_numbers_are_to_4dp(self):
+
+        params = ([0.12345, 1.2, 2345, 0.01e-4], np.array([[1, 2, 3,0], [4, 5, 6,0], [5,6,7,8], [8,9,10,11]]))
+
+        expected_title = "Top Hat at 0.1235 of width 1.2000"
+
+        thf = TopHatFit()
+        result = thf.title(params)
+
+        assert_that(result, is_(expected_title))
+
+
+class GaussianFitTests(unittest.TestCase):
+    def test_GIVEN_fit_parameters_WHEN_get_title_THEN_numbers_are_to_4dp(self):
+
+        params = ([0.12345, 1.2, 2345, 0.01e-4], np.array([[1, 2, 3,0], [4, 5, 6,0], [5,6,7,8], [8,9,10,11]]))
+
+        expected_title = "Gaussian Fit: y=2345*exp((x-0.1235)$^2$/1.2000)+1.0000e-06"
+
+        gf = GaussianFit()
+        result = gf.title(params)
+
+        assert_that(result, is_(expected_title))
+
+
+class DampedOscillatorFitTests(unittest.TestCase):
+    def test_GIVEN_fit_parameters_WHEN_get_title_THEN_numbers_are_to_4dp(self):
+
+        params = ([0.12345, 1.2, 2345, 0.01e-4], np.array([[1, 2, 3,0], [4, 5, 6,0], [5,6,7,8], [8,9,10,11]]))
+
+        expected_title = "Damped Oscillator: y=1.2000*exp(-((x-0.1235)/1.0000e-06)$^2$)*cos(2345*(x-0.1235))"
+
+        dof = DampedOscillatorFit()
+        result = dof.title(params)
+
+        assert_that(result, is_(expected_title))
+
+
+class ErfFitTests(unittest.TestCase):
+    def test_GIVEN_fit_parameters_WHEN_get_title_THEN_numbers_are_to_4dp(self):
+
+        params = ([0.12345, 1.2, 2345, 0.01e-4], np.array([[1, 2, 3,0], [4, 5, 6,0], [5,6,7,8], [8,9,10,11]]))
+
+        expected_title = "Edge at 0.1235"
+
+        dof = ErfFit()
+        result = dof.title(params)
+
+        assert_that(result, is_(expected_title))
