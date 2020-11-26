@@ -254,7 +254,7 @@ class PeakFit(Fit):
 
     def title(self, center):
         # pylint: disable=arguments-differ
-        return "Peak at {}".format(center)
+        return "Peak at {}".format(smart_number_format(center))
 
 
 @add_metaclass(ABCMeta)
@@ -559,7 +559,7 @@ class CentreOfMassFit(Fit):
         return np.zeros(len(x))
 
     def title(self, params):
-        return "Centre of mass = {}".format(params[0])
+        return "Centre of mass = {}".format(smart_number_format(params[0]))
 
     def readable(self, fit):
         return {"Centre_of_mass": fit[0]}
@@ -594,12 +594,16 @@ class CentreOfMassFit(Fit):
 
 
 def smart_number_format(x):
-    """Turn numbers into strings with a smart number of digits"""
+    """Turn numbers into strings with a smart number of digits
+    Parameters:
+        x:
+        number to format
+    """
     if abs(x) >= 1000:
-        return "{:.2e}".format(x)
+        return "{:.4e}".format(x)
     if abs(x) < 0.1:
-        return "{:.2e}".format(x)
-    return "{:.3f}".format(x)
+        return "{:.4e}".format(x)
+    return "{:.4f}".format(x)
 
 
 #: A linear regression
