@@ -88,7 +88,7 @@ class PolrefDefaultScan(Defaults):
         Examples
         --------
         Scan theta from -0.5 to 0.5 with 11 steps and counting 100 frames using default detector and monitors
-        >>> scan("THETA", -0.5, 0.5, 11, frames=100)
+        >>> scan(b.THETA, -0.5, 0.5, 11, frames=100)
         """
         return super().scan(motion, start=start, stop=stop, count=count, frames=frames, det=det,
                             mon=mon, **kwargs)
