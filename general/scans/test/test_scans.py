@@ -3,7 +3,7 @@ from contextlib import contextmanager
 
 from general.scans.scans import SimpleScan, ReplayScan
 from hamcrest import *
-from mock import Mock, patch
+from mock import Mock, patch, mock_open
 
 from general.scans.defaults import Defaults
 from general.scans.monoid import Average
@@ -48,10 +48,6 @@ class ScanTests(unittest.TestCase):
 
 
 class TestDefaults(Defaults):
-
-    @staticmethod
-    def log_file(info):
-        return "{}".format(info["action_title"])
 
     @staticmethod
     def detector(acc, **kwargs):
@@ -110,7 +106,8 @@ def fake_block_server_and_get_pv(block_and_value):
 
 class TestScans(unittest.TestCase):
 
-    def test_GIVEN_scan_with_action_WHEN_get_log_file_THEN_log_file_returned_with_action_title(self):
+    @patch("general.scans.defaults.g.get_script_dir", return_value="")
+    def test_GIVEN_scan_with_action_WHEN_get_log_file_THEN_log_file_returned_with_action_title(self, get_script_dir):
 
         myscan = TestDefaults()
         expected_block_name = "block_name"
@@ -118,7 +115,21 @@ class TestScans(unittest.TestCase):
 
         file_name = myscan.log_file(scan.log_file_info())
 
-        assert_that(file_name, is_(expected_block_name))
+        assert_that(file_name, contains_string(expected_block_name))
+
+    def test_GIVEN_scan_with_action_WHEN_get_log_file_THEN_log_file_returned_with_genie_script_dir_path(self):
+
+        myscan = TestDefaults()
+        genie_script_path = "script/path"
+
+        scan = myscan.scan(Motion(Mock(return_value=1), None, "block"), 0, 1, 1)
+
+        with patch("general.scans.defaults.g.get_script_dir") as get_script_dir:
+            get_script_dir.return_value = genie_script_path
+            file_name = myscan.log_file(scan.log_file_info())
+
+        assert_that(file_name, starts_with(genie_script_path))
+
 
     def test_GIVEN_block_name_WHEN_create_scan_THEN_scan_has_block_motion_with_pv_as_action(self):
 
@@ -144,7 +155,8 @@ class TestScans(unittest.TestCase):
 
         assert_that(result, is_(expected_value))
 
-    def test_GIVEN_block_name_WHEN_create_dscan_THEN_scan_sets_blocks_to_points_in_scan(self):
+    @patch("general.scans.defaults.g.get_script_dir", return_value="")
+    def test_GIVEN_block_name_WHEN_create_dscan_THEN_scan_sets_blocks_to_points_in_scan(self, get_script_dir):
 
         myscan = TestDefaults()
         initial_value = 1
@@ -159,7 +171,8 @@ class TestScans(unittest.TestCase):
 
         assert_that(result, contains_exactly(initial_value, float(initial_value), initial_value + after_value, initial_value))
 
-    def test_GIVEN_block_name_WHEN_create_ascan_THEN_scan_block_set_to_last_position(self):
+    @patch("general.scans.defaults.g.get_script_dir", return_value="")
+    def test_GIVEN_block_name_WHEN_create_ascan_THEN_scan_block_set_to_last_position(self, get_script_dir):
 
         myscan = TestDefaults()
         initial_value = 0.1
@@ -173,6 +186,36 @@ class TestScans(unittest.TestCase):
             scan = myscan.ascan(block_name, -1, expected_value, 1, -1)
 
         assert_that(blocks, has_entry(block_name, expected_value))
+
+    @patch("general.scans.defaults.g.get_script_dir")
+    def test_GIVEN_replay_scan_WHEN_request_THEN_data_loaded_from_log_file_dir(self, get_script_dir):
+        expected_script_dir = "scripting\\dir"
+        get_script_dir.return_value = expected_script_dir
+
+        myscan = TestDefaults()
+        with patch("os.listdir") as listdir, \
+            patch("os.path.getctime", return_value=1),\
+                patch("builtins.open", mock_open(read_data='head1\thead2\thead3\n1\t1\t1\n1\t1\t1\n')) as open:
+
+            listdir.return_value = ["file.dat"]
+            myscan.last_scan()
+
+            listdir.assert_called_with(expected_script_dir)
+
+    @patch("general.scans.defaults.g.get_script_dir")
+    def test_GIVEN_replay_scan_WHEN_request_but_no_files_in_dir_THEN_value_error_with_good_issue(self, get_script_dir):
+        expected_script_dir = "scripting\\dir"
+        get_script_dir.return_value = expected_script_dir
+
+        myscan = TestDefaults()
+        with patch("os.listdir") as listdir, \
+            patch("os.path.getctime", return_value=1),\
+                patch("builtins.open", mock_open(read_data='head1\thead2\thead3\n1\t1\t1\n1\t1\t1\n')) as open:
+
+            listdir.return_value = []
+            assert_that(calling(myscan.last_scan),
+                        raises(ValueError, "No previous scans in dir (.*)"))
+
 
 
 if __name__ == '__main__':

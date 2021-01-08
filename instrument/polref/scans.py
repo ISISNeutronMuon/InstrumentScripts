@@ -93,23 +93,6 @@ class PolrefDefaultScan(Defaults):
         return super().scan(motion, start=start, stop=stop, count=count, frames=frames, det=det,
                             mon=mon, **kwargs)
 
-    @staticmethod
-    def log_file(info):
-        """
-        Parameters
-        ----------
-            info
-              dictionary containing useful keys to help form paths. It may contain no keys at all.
-                    possible keys are action_title - the name of the action requested
-        Returns
-        -------
-            Name for the log file
-        """
-        from datetime import datetime
-        now = datetime.now()
-        action_title = info.get("action_title", "unknown")
-        return os.path.join("U:\\", "TEST", "{}_{}_{}_{}_{}_{}_{}.dat".format(
-            action_title, now.year, now.month, now.day, now.hour, now.minute, now.second))
 
 
 _scan_instance = PolrefDefaultScan()

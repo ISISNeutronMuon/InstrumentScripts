@@ -824,33 +824,26 @@ class ReplayScan(Scan):
 
     def plot(self, detector=None, save=None,
              action=None, **kwargs):
-        """Overload the scan method for the replay scan.  Since we aren't
-actually detecting anything, we can run the code much simpler instead
-of trying to fake a detector."""
+        """
+        Overload the scan method for the replay scan.  Since we aren't
+        actually detecting anything, we can run the code much simpler instead
+        of trying to fake a detector."""
+
         action_remainder = None
         xs = self.xs
         ys = ListOfMonoids(self.ys)
 
+        plot_functions = self.defaults.plot_functions
         fig, axis = self.defaults.get_fig()
+        plot_functions.set_figure_and_axis(fig, axis)
 
-        axis.clear()
-        if isinstance(self.min(), tuple):
-            rng = [1.05 * self.min()[0] - 0.05 * self.max()[0],
-                   1.05 * self.max()[0] - 0.05 * self.min()[0]]
-        else:
-            rng = [1.05 * self.min() - 0.05 * self.max(),
-                   1.05 * self.max() - 0.05 * self.min()]
-        axis.set_xlabel(self.axis)
-        axis.set_ylabel(self.result)
-        axis.set_xlim(rng[0], rng[1])
-        rng = _plot_range(ys)
-        axis.set_ylim(rng[0], rng[1])
-        ys.plot(axis, xs)
+        plot_functions.setup_plot(self.min(), self.max(), x_label=self.axis, y_label=self.result)
+        plot_functions.plot_data_with_errors(xs, ys)
+
         if action:
-            action_remainder = action(xs, ys, axis, None)
-        if save:
-            fig.savefig(save)
+            action_remainder = action(xs, ys, plot_functions, None)
 
-        plt.draw()
+        plot_functions.draw()
+        plot_functions.save(save)
 
         return action_remainder
