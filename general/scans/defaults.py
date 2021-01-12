@@ -50,10 +50,11 @@ class Defaults(object):
         """
 
     @staticmethod
-    @abstractmethod
     def log_file(info):
         """
         Returns the name of a unique log file where the scan data can be saved.
+
+        Override to provide a different path
 
         Parameters
         ----------
@@ -64,6 +65,13 @@ class Defaults(object):
         -------
             Name for the log file
         """
+
+        from datetime import datetime
+        now = datetime.now()
+        action_title = info.get("action_title", "unknown")
+        base_dir = g.get_script_dir()
+        return os.path.join(base_dir, "{}_{}_{}_{}_{}_{}_{}.dat".format(
+            action_title, now.year, now.month, now.day, now.hour, now.minute, now.second))
 
     def get_fig(self):
         """
@@ -326,25 +334,35 @@ class Defaults(object):
         finally:
             motion(init)
 
-    def last_scan(self, path=None, axis="replay"):
+    def last_scan(self, path=None, axis="replay", fit=None):
         """Load the last run scan and replay that scan
 
         PARAMETERS
         ----------
         path
-        The log file to replay.  If None, replay the most recent scan
+            The log file to replay.  If None, replay the most recent scan
         axis
-        The label for the x axis
+            The label for the x axis
+        fit
+            produce a fit using this type of fit e.g. Gaussian, CentreOfMass, TopHat
 
         """
         if path is None:
-            path = max([f for f in os.listdir(os.getcwd())
-                        if f[-4:] == ".dat"],
-                       key=os.path.getctime)
+            data_dir = os.path.dirname(self.log_file({}))
+            try:
+                path = max([os.path.join(data_dir, f) for f in os.listdir(data_dir) if f[-4:] == ".dat"],
+                           key=os.path.getctime)
+            except ValueError:
+                raise ValueError("No previous scans in dir ({})".format(data_dir))
+
+        print(f"Loading data from {path}")
         with open(path, "r") as infile:
             base = infile.readline()
             axis = base.split("\t")[0]
             result = base.split("\t")[1]
             xs, ys, errs = np.loadtxt(infile, unpack=True)
             ys = [Average((y / e)**2, y / e**2) for y, e in zip(ys, errs)]
-            return ReplayScan(xs, ys, axis, result, self)
+            scan = ReplayScan(xs, ys, axis, result, self)
+            if fit is not None:
+                return scan.fit(fit=fit)
+            return scan

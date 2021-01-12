@@ -88,7 +88,7 @@ class PlotFunctions:
                                         marker=marker, markersize=self.data_marker_size, linestyle="None")
             else:
                 self._axis.errorbar(xs, ys.values(), yerr=ys.err(), color=self.color_cycle[0],
-                                    marker=self.data_markers[0], markersize=self.data_marker_size)
+                                    marker=self.data_markers[0], markersize=self.data_marker_size, linestyle="None")
 
     def _plot_range(self, points):
         """
