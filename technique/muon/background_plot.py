@@ -147,10 +147,13 @@ class BackgroundPlot(object):
 
             for row in reader:
                 # CSV format is timestamp in first column, then data columns
-                timestamp = row[0]
-                data_points_in_row = row[1:]
-
-                loaded_data_x.append(datetime.fromisoformat(timestamp))
+                try:
+                    timestamp = row[0]
+                    data_points_in_row = row[1:]
+                    loaded_data_x.append(datetime.fromisoformat(timestamp))
+                except (IndexError, ValueError) as e:
+                    print(f'WARNING - Save file may be corrupted: {e}')
+                    continue
 
                 # Split the data up so the nth point in the row gets appended to the nth list in loaded_data
                 for dataset, restored_data_point in zip(loaded_data, data_points_in_row):
