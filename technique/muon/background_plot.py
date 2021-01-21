@@ -145,6 +145,7 @@ class BackgroundPlot(object):
             file_without_header = filter(lambda row: row if not row.startswith('#') else '', csvfile)
             reader = csv.reader(file_without_header)
 
+            data_point_err = []
             for row in reader:
                 # CSV format is timestamp in first column, then data columns
                 try:
@@ -158,11 +159,18 @@ class BackgroundPlot(object):
                 # Split the data up so the nth point in the row gets appended to the nth list in loaded_data
                 for dataset, restored_data_point in zip(loaded_data, data_points_in_row):
                     # Append the new data point from this row onto the correct dataset
-                    try:
-                        data_point = float(restored_data_point)
-                    except ValueError:
-                        data_point = None
-                    dataset.append(data_point)
+
+                    if restored_data_point:
+                        try:
+                            data_point = float(restored_data_point)
+                        except ValueError:
+                            data_point = None
+                            data_point_err.append(restored_data_point)
+                        dataset.append(data_point)
+
+            if data_point_err:
+                print(f'WARNING - Save file may be corrupted: {len(data_point_err)} data points could not be appended '
+                      f'to the dataset: {data_point_err}')
 
         # Add the data points collected since class initialisation
         for dataset, first_point in zip(loaded_data, self.data):
