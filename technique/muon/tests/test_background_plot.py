@@ -60,7 +60,7 @@ class TestLoadDataFromSave(unittest.TestCase):
         calls = [call(x) for x in expected_warnings]
 
         # Act
-        self.background_plot.load_data_from_save()\
+        self.background_plot.load_data_from_save()
 
         # Assert
         m_print.assert_has_calls(calls, any_order=False)
