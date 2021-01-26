@@ -9,58 +9,62 @@ import unittest
 import six.moves
 from technique.muon.background_plot import BackgroundPlot
 if six.PY3:
-    from unittest.mock import patch, call
+    from unittest.mock import patch, mock_open
 else:
-    from mock import patch, call
+    from mock import patch, mock_open
 
 THIS_DIR = os.path.dirname(os.path.abspath(__file__))
+
+CORRECT_DATA = "2021-01-15 15:27:59.567993,1.1,1.0,1.0,37.698516011455354,17845047296.0"
+
+DATA_WITH_EMPTY_FIELDS = '2021-01-15 15:27:59.567993,,1.0,,37.698516011455354,17845047296.0'
+
+WRONG_DATE_FORMAT = "20-21-01-15 15:27:595.6567993,1.1,1.0,1.0,37.698516011455354,17845047296.0"
+
+CORRUPT_DATA_POINT = "2021-01-15 15:27:59.567993,1a.1,1.0,1.0,37.698516xxxcz011455354,17845047296.0"
 
 
 class TestLoadDataFromSave(unittest.TestCase):
 
     def setUp(self):
         self.background_plot = BackgroundPlot(interval=None, ioc_number=1)
-
-    def tearDown(self):
-        pass
-
-    @patch('builtins.print')
-    def test_GIVEN_corrupted_file_WHEN_load_data_THEN_display_warnings_and_no_exception(self, m_print):
-        pass
-        # Arrange
-        self.background_plot.data = [[None], [1.0], [None], [26.405517959396146], [17315086336.0]]
+        self.background_plot.data = [[1.0], [2.0], [3.0], [4.0], [5.0]]
         self.background_plot.data_x = [datetime.datetime(2021, 1, 21, 14, 49, 50, 653244)]
-        self.background_plot._save_file = os.path.join(THIS_DIR, 'data', 'corrupted_plot_data_01.csv')
 
-        expected_warnings = [
-            "WARNING - Save file may be corrupted: list index out of range",
-            "WARNING - Save file may be corrupted: Invalid isoformat string: 'asad'",
-            "WARNING - Save file may be corrupted: list index out of range",
-            "WARNING - Save file may be corrupted: Invalid isoformat string: '2021-01-1asd5 16:38:16.251768'",
-            "WARNING - Save file may be corrupted: list index out of range",
-            "WARNING - Save file may be corrupted: list index out of range",
-            "WARNING - Save file may be corrupted: list index out of range",
-            "WARNING - Save file may be corrupted: Invalid isoformat string: '202123808283406'",
-            "WARNING - Save file may be corrupted: Invalid isoformat string: '2021-01-15 16:41715'",
-            "WARNING - Save file may be corrupted: Invalid isoformat string: '2021-01-15 153728.0'",
-            "WARNING - Save file may be corrupted: Invalid isoformat string: ''",
-            "WARNING - Save file may be corrupted: Invalid isoformat string: '2021-01-15 16:18005667840.0'",
-            "WARNING - Save file may be corrupted: Invalid isoformat string: '2021-01-15 6666666668'",
-            "WARNING - Save file may be corrupted: list index out of range",
-            "WARNING - Save file may be corrupted: Invalid isoformat string: '2139hdia'",
-            "WARNING - Save file may be corrupted: Invalid isoformat string: 'ndasdsda'",
-            "WARNING - Save file may be corrupted: Invalid isoformat string: '2021-01-15 16:43:52.24725'",
-            "WARNING - Save file may be corrupted: Invalid isoformat string: '2'",
-            "WARNING - Save file may be corrupted: Invalid isoformat string: '2021-01-15 16:52:15.4546720'",
-            "WARNING - Save file may be corrupted: Invalid isoformat string: '2021-01-15 16:55:32.763520.0'",
-            "WARNING - Save file may be corrupted: 3 data points could not be appended to the dataset: "
-            "['17745444sad21312asczx864.0', '17989844992.02021-01-15 16:55:08.764338', '23.6595523165011.0']"
-        ]
-
-        calls = [call(x) for x in expected_warnings]
-
+    @patch("builtins.open", new_callable=mock_open, read_data=CORRECT_DATA)
+    @patch('builtins.print')
+    def test_GIVEN_correct_data_WHEN_load_data_THEN_no_warnings_or_exception(self, m_print, m_file):
         # Act
         self.background_plot.load_data_from_save()
 
         # Assert
-        m_print.assert_has_calls(calls, any_order=False)
+        m_print.assert_not_called()
+
+    @patch("builtins.open", new_callable=mock_open, read_data=DATA_WITH_EMPTY_FIELDS)
+    @patch('builtins.print')
+    def test_GIVEN_empty_fields_WHEN_appending_data_point_THEN_no_warnings_or_exception(self, m_print, m_file):
+        # Act
+        self.background_plot.load_data_from_save()
+
+        # Assert
+        m_print.assert_not_called()
+
+    @patch("builtins.open", new_callable=mock_open, read_data=WRONG_DATE_FORMAT)
+    @patch('builtins.print')
+    def test_GIVEN_wrong_date_format_WHEN_load_data_THEN_display_warnings_and_no_exception(self, m_print, m_file):
+        # Act
+        self.background_plot.load_data_from_save()
+
+        # Assert
+        m_print.assert_called_with("WARNING - Save file may be corrupted: Invalid isoformat string: "
+                                   "'20-21-01-15 15:27:595.6567993'")
+
+    @patch("builtins.open", new_callable=mock_open, read_data=CORRUPT_DATA_POINT)
+    @patch('builtins.print')
+    def test_GIVEN_corrupt_data_point_WHEN_load_data_THEN_display_warnings_and_no_exception(self, m_print, m_file):
+        # Act
+        self.background_plot.load_data_from_save()
+
+        # Assert
+        m_print.assert_called_with("WARNING - Save file may be corrupted: 2 data points could not be appended "
+                                   "to the dataset: ['1a.1', '37.698516xxxcz011455354']")

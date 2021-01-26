@@ -137,7 +137,7 @@ class BackgroundPlot(object):
         """
         # Copy nested list structure from first point
         # Each list will contain data for one axis (a 'dataset')
-        loaded_data = [list() for x in range(len(self.data))]
+        loaded_data = [list() for _ in range(len(self.data))]
         loaded_data_x = []
 
         with open(self._save_file, 'r') as csvfile:
@@ -176,7 +176,6 @@ class BackgroundPlot(object):
         for dataset, first_point in zip(loaded_data, self.data):
             dataset.extend(first_point)
         loaded_data_x.extend(self.data_x)
-
         self.data = loaded_data
         self.data_x = loaded_data_x
 
