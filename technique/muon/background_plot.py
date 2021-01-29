@@ -137,7 +137,7 @@ class BackgroundPlot(object):
         """
         # Copy nested list structure from first point
         # Each list will contain data for one axis (a 'dataset')
-        loaded_data = [list() for x in range(len(self.data))]
+        loaded_data = [list() for _ in range(len(self.data))]
         loaded_data_x = []
 
         with open(self._save_file, 'r') as csvfile:
@@ -145,23 +145,37 @@ class BackgroundPlot(object):
             file_without_header = filter(lambda row: row if not row.startswith('#') else '', csvfile)
             reader = csv.reader(file_without_header)
 
+            data_point_err = []
             for row in reader:
                 # CSV format is timestamp in first column, then data columns
-                timestamp = row[0]
-                data_points_in_row = row[1:]
-
-                loaded_data_x.append(datetime.fromisoformat(timestamp))
+                try:
+                    timestamp = row[0]
+                    data_points_in_row = row[1:]
+                    loaded_data_x.append(datetime.fromisoformat(timestamp))
+                except (IndexError, ValueError) as e:
+                    print(f'WARNING - Save file may be corrupted: {e}')
+                    continue
 
                 # Split the data up so the nth point in the row gets appended to the nth list in loaded_data
                 for dataset, restored_data_point in zip(loaded_data, data_points_in_row):
                     # Append the new data point from this row onto the correct dataset
-                    dataset.append(float(restored_data_point))
+
+                    if restored_data_point:
+                        try:
+                            data_point = float(restored_data_point)
+                        except ValueError:
+                            data_point = None
+                            data_point_err.append(restored_data_point)
+                        dataset.append(data_point)
+
+            if data_point_err:
+                print(f'WARNING - Save file may be corrupted: {len(data_point_err)} data points could not be appended '
+                      f'to the dataset: {data_point_err}')
 
         # Add the data points collected since class initialisation
         for dataset, first_point in zip(loaded_data, self.data):
             dataset.extend(first_point)
         loaded_data_x.extend(self.data_x)
-
         self.data = loaded_data
         self.data_x = loaded_data_x
 
@@ -333,7 +347,7 @@ class BackgroundBlockPlot(BackgroundPlot):
         Parameters
         ----------
         block_and_name_list: list[tuple(str, str)]
-            List of blocks and there names on the legend
+            List of blocks and their names on the legend
 
         y_axis_label: str
             y axis label
@@ -342,7 +356,7 @@ class BackgroundBlockPlot(BackgroundPlot):
             interval at which block should be plotted in seconds
 
         ioc_number: int
-            The number of the BGRSCRPT IOC which has spawned this class.        
+            The number of the BGRSCRPT IOC which has spawned this class.
         """
         super(BackgroundBlockPlot, self).__init__(interval, "{} Plot".format(y_axis_label), ioc_number=ioc_number)
         self._run_state_pv = g.prefix_pv_name(DAE_PVS_LOOKUP["runstate"])
@@ -464,7 +478,12 @@ class BackgroundBlockPlot(BackgroundPlot):
             saved_run_number, saved_dataset_dims = self._read_header()
 
             # Check the parameters in file match current dataset
-            run_numbers_match = int(saved_run_number) == int(self.current_run_number)
+            try:
+                run_numbers_match = int(saved_run_number) == int(self.current_run_number)
+            except ValueError as e:
+                print(f'ValueError: {e}. run_numbers_match set to False.')
+                run_numbers_match = False
+
             data_dimensions_match = saved_dataset_dims == current_dataset_dims
 
         except FileNotFoundError:
@@ -506,6 +525,7 @@ class BackgroundBlockPlot(BackgroundPlot):
         """
         Starts a new data file with custom header
         """
+        print('Start new data file with custom header')
         with open(self._save_file, 'w') as csvfile:
             csvfile.write("# run_number:{}\n".format(self.current_run_number))
             # Save axis names for human readability
