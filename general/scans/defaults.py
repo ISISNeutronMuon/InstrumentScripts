@@ -73,9 +73,9 @@ class Defaults(object):
         return os.path.join(base_dir, "{}_{}_{}_{}_{}_{}_{}.dat".format(
             action_title, now.year, now.month, now.day, now.hour, now.minute, now.second))
 
-    def get_fig(self):
+    def create_fig(self):
         """
-        Get a figure for the next scan.  The default method is to
+        Create a figure for the next scan.  The default method is to
         create a new figure for each scan, but this can be overridden
         to re-use the same figure, if the instrument scientist
         chooses.
@@ -83,11 +83,14 @@ class Defaults(object):
         if self.SINGLE_FIGURE:
             if not self._fig or not self._axis:
                 self._fig, self._axis = plt.subplots()
-                plt.show()
-            return (self._fig, self._axis)
-        fig, axis = plt.subplots()
-        plt.show()
-        return (fig, axis)
+        else:
+            self._fig, self._axis = plt.subplots()
+
+    def get_fig(self):
+        """
+        Get the figure for the next scan.
+        """
+        return (self._fig, self._axis)
 
     def scan(self, motion, start=None, stop=None, step=None, frames=None, save=False, **kwargs):
         """scan establishes the setup for performing a measurement scan.
@@ -174,6 +177,8 @@ class Defaults(object):
           A scan object that will run through the requested points.
 
         """
+        self.create_fig()
+        plt.show()
         num_periods_cache = g.get_number_periods()
         try:
             if start is not None:
