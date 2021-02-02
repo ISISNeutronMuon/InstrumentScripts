@@ -273,14 +273,14 @@ def auto_height(laser_block: str, fine_height_block: str, target: float = 0.0, m
 
         Moves HEIGHT2 by (target - KEYENCE), but only if that value is < 3.0
     """
-    current_laser_offset = g.cget(laser_block)
+    current_laser_offset = g.cget(laser_block)["value"]
 
     difference = target - current_laser_offset
-    current_height = g.cget(fine_height_block)
+    current_height = g.cget(fine_height_block)["value"]
 
     target_height = current_height + difference
 
-    print("Target for fine height axis: {}".format(target_height))
+    print("Target for fine height axis: {} (current {})".format(target_height, current_height))
 
     if max_move_distance is None:
         g.cset(fine_height_block, target_height)
