@@ -255,6 +255,42 @@ def slit_check(theta, footprint, resolution):
     print("s2vg={}".format(s2))
 
 
+def auto_height(laser_block: str, fine_height_block: str, target: float = 0.0, max_move_distance: float = None):
+    """
+    Moves the sample fine height axis so that it is centred on the beam, based on the readout of a laser height gun.
+
+    Args:
+        laser_block: The block for the laser offset from centre
+        fine_height_block: The block for the sample fine height
+        target: The target laser offset
+        max_move_distance: Do not move if difference between current and target height is above this threshold.
+            None for no limit
+        >>> auto_height(b.KEYENCE, b.HEIGHT2)
+
+        Moves HEIGHT2 by (KEYENCE * (-1))
+
+        >>> auto_height(b.KEYENCE, b.HEIGHT2, target=0.5, limit=3.0)
+
+        Moves HEIGHT2 by (target - KEYENCE), but only if that value is < 3.0
+    """
+    current_laser_offset = g.cget(laser_block)
+
+    difference = target - current_laser_offset
+    current_height = g.cget(fine_height_block)
+
+    target_height = current_height + difference
+
+    print("Target for fine height axis: {}".format(target_height))
+
+    if max_move_distance is None:
+        g.cset(fine_height_block, target_height)
+    else:
+        if abs(target_height - current_height) < 3.0:
+            g.cset(fine_height_block, target_height)
+        else:
+            print("Difference between current and target position too large - no move")
+
+
 class _Movement(object):
     """
     Encapsulate instrument changes
