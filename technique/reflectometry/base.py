@@ -297,7 +297,15 @@ def auto_height(laser_block: str, fine_height_block: str, target: float = 0.0, c
         print(error_msg)
         g.alerts.send(error_msg)
         if not continue_if_NaN:
-            input("Press enter to continue...")
+            while True:
+                response = input("Continue execution? [Y/N]\n").upper()
+                if response == "Y":
+                    break
+                elif response == "N":
+                    raise KeyboardInterrupt
+                else:
+                    print("Please type in 'Y' or 'N' as a response.")
+
 
 
 class _Movement(object):
