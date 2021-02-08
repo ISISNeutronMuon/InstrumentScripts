@@ -255,7 +255,7 @@ def slit_check(theta, footprint, resolution):
     print("s2vg={}".format(s2))
 
 
-def auto_height(laser_block: str, fine_height_block: str, target: float = 0.0, max_move_distance: float = None):
+def auto_height(laser_block: str, fine_height_block: str, target: float = 0.0, continue_if_NaN: bool=False):
     """
     Moves the sample fine height axis so that it is centred on the beam, based on the readout of a laser height gun.
 
@@ -263,37 +263,41 @@ def auto_height(laser_block: str, fine_height_block: str, target: float = 0.0, m
         laser_block: The block for the laser offset from centre
         fine_height_block: The block for the sample fine height
         target: The target laser offset
-        max_move_distance: Do not move if difference between current and target height is above this threshold.
-            None for no limit
+        continue_if_NaN: Defines what to do in case of invalid values. If True, ignore errors and continue execution.
+            If False, break and wait for user input. (default: False)
+        
         >>> auto_height(b.KEYENCE, b.HEIGHT2)
 
         Moves HEIGHT2 by (KEYENCE * (-1))
 
-        >>> auto_height(b.KEYENCE, b.HEIGHT2, target=0.5, limit=3.0)
+        >>> auto_height(b.KEYENCE, b.HEIGHT2, target=0.5, continue_if_NaN=True)
 
-        Moves HEIGHT2 by (target - KEYENCE), but only if that value is < 3.0
+        Moves HEIGHT2 by (target - b.KEYENCE) and does not interrupt script execution if an invalid value is read.
     """
     try:
         current_laser_offset = g.cget(laser_block)["value"]
-
         difference = target - current_laser_offset
-        current_height = g.cget(fine_height_block)["value"]
 
+        current_height = g.cget(fine_height_block)["value"]
         target_height = current_height + difference
 
         print("Target for fine height axis: {} (current {})".format(target_height, current_height))
-
-        if max_move_distance is None:
-            g.cset(fine_height_block, target_height)
-        else:
-            if abs(target_height - current_height) < 3.0:
-                g.cset(fine_height_block, target_height)
-            else:
-                print("Difference between current and target position too large - no move")
+        g.cset(fine_height_block, target_height)
+        alarm_lists = g.check_alarms(fine_height_block)
+        if any(fine_height_block in alarm_list for alarm_list in alarm_lists):
+            error_msg = "ERROR: cannot set auto height - target outside of range for fine height axis?"
+            print(error_msg)
+            g.alerts.send(error_msg)
+            input("Press enter to continue...")
+            
+        g.waitfor_move()
 
     except TypeError:
-        print("Error setting auto height - Invalid block value")
-
+        error_msg = "ERROR: cannot set auto height - Invalid block value"
+        print(error_msg)
+        g.alerts.send(error_msg)
+        if not continue_if_NaN:
+            input("Press enter to continue...")
 
 
 class _Movement(object):
