@@ -40,7 +40,7 @@ def run_angle(sample, angle, count_uamps=None, count_seconds=None, count_frames=
         fine_height_block: The block for the sample fine height
         auto_height_target: The target value for laser offset if using auto height
         continue_on_error: If True, continue script on error; If False, interrupt and prompt the user on error
-        dry_run: If True just print what will happen; If False, run the experiment
+        dry_run: If True just print what would happen; If False, run the experiment
 
     Examples:
         The simplest scan is:
@@ -128,7 +128,7 @@ def transmission(sample, title, s1vg, s2vg, s3vg=None, s4vg=None,
         height_offset: Height offset from normal to set the sample to (offset is in negative direction)
         smangle: super mirror angle, place in the beam, if set to 0 remove from the beam; None don't move super mirror
         mode: mode to run in; None don't change mode
-        dry_run: If True just print what will happen; If False, run the transmission
+        dry_run: If True just print what would happen; If False, run the transmission
     Examples:
         The simplest transmission is:
 

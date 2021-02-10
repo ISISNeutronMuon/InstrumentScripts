@@ -5,7 +5,6 @@ from genie_python import genie as g
 
 
 def alert_on_error(error_msg: str, prompt_user: bool):
-    print(error_msg)
     """
     Sends a given error message as an alert an optionally interrupts execution to prompt the user whether the script
     should continue being executed.
@@ -14,6 +13,7 @@ def alert_on_error(error_msg: str, prompt_user: bool):
         error_msg: The message for the error to alert users to.
         prompt_user: If false, continue script. If True, prompt user to either stop or continue script.
     """
+    print(error_msg)
     g.alerts.send(error_msg)
     if prompt_user:
         while True:
