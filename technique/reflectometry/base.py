@@ -11,7 +11,7 @@ from math import tan, radians, sin
 from six.moves import input
 from genie_python import genie as g
 
-from general.utilities.io import alert_on_error
+import general.utilities.io
 from .sample import Sample
 from .instrument_constants import get_instrument_constants
 
@@ -92,7 +92,7 @@ def run_angle(sample, angle, count_uamps=None, count_seconds=None, count_frames=
         movement.set_height_offset(sample.height)
     else:
         auto_height(laser_offset_block, fine_height_block, target=auto_height_target,
-                    continue_if_NaN=continue_on_error, dry_run=dry_run)
+                    continue_if_nan=continue_on_error, dry_run=dry_run)
 
     movement.set_slit_gaps(angle, constants, s1vg, s2vg, s3vg, s4vg, sample)
     movement.wait_for_move()
@@ -262,7 +262,7 @@ def slit_check(theta, footprint, resolution):
     print("s2vg={}".format(s2))
 
 
-def auto_height(laser_offset_block: str, fine_height_block: str, target: float = 0.0, continue_if_NaN: bool=False,
+def auto_height(laser_offset_block: str, fine_height_block: str, target: float = 0.0, continue_if_nan: bool = False,
                 dry_run: bool = False):
     """
     Moves the sample fine height axis so that it is centred on the beam, based on the readout of a laser height gun.
@@ -271,7 +271,7 @@ def auto_height(laser_offset_block: str, fine_height_block: str, target: float =
         laser_offset_block: The name of the block for the laser offset from centre
         fine_height_block: The name of the block for the sample fine height axis
         target: The target laser offset
-        continue_if_NaN: Defines what to do in case of invalid values. If True, ignore errors and continue execution.
+        continue_if_nan: Defines what to do in case of invalid values. If True, ignore errors and continue execution.
             If False, break and wait for user input. (default: False)
         dry_run: If True just print what is going to happen; If False, set the auto height
         
@@ -279,7 +279,7 @@ def auto_height(laser_offset_block: str, fine_height_block: str, target: float =
 
         Moves HEIGHT2 by (KEYENCE * (-1))
 
-        >>> auto_height(b.KEYENCE, b.HEIGHT2, target=0.5, continue_if_NaN=True)
+        >>> auto_height(b.KEYENCE, b.HEIGHT2, target=0.5, continue_if_nan=True)
 
         Moves HEIGHT2 by (target - b.KEYENCE) and does not interrupt script execution if an invalid value is read.
     """
@@ -290,8 +290,8 @@ def auto_height(laser_offset_block: str, fine_height_block: str, target: float =
             _auto_height_check_alarms(fine_height_block)
             g.waitfor_move()
     except TypeError as e:
-        prompt_user = not (continue_if_NaN or dry_run)
-        alert_on_error("ERROR: cannot set auto height (invalid block value): {}".format(e), prompt_user)
+        prompt_user = not (continue_if_nan or dry_run)
+        general.utilities.io.alert_on_error("ERROR: cannot set auto height (invalid block value): {}".format(e), prompt_user)
 
 
 def _auto_height_check_alarms(fine_height_block):
@@ -303,7 +303,8 @@ def _auto_height_check_alarms(fine_height_block):
     """
     alarm_lists = g.check_alarms(fine_height_block)
     if any(fine_height_block in alarm_list for alarm_list in alarm_lists):
-        alert_on_error("ERROR: cannot set auto height (target outside of range for fine height axis?)", True)
+        general.utilities.io.alert_on_error(
+            "ERROR: cannot set auto height (target outside of range for fine height axis?)", True)
 
 
 def _calculate_target_auto_height(laser_offset_block, fine_height_block, target):
