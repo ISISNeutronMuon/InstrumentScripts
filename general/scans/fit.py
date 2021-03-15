@@ -8,6 +8,7 @@ import traceback
 from abc import ABCMeta, abstractmethod
 import warnings
 import numpy as np
+from scipy.stats import linregress
 from six import add_metaclass
 from scipy.special import erf  # pylint: disable=no-name-in-module
 
@@ -497,6 +498,50 @@ class TopHatFit(CurveFit):
         return "Top Hat at {center:} of width {width:}".format(**params)
 
 
+class SlitScanFit(CurveFit):
+    """
+    Scan slit fit finder. Scan slit is a linear ramp starting from a centre position with background
+
+    if x<c:
+        y=background
+    else
+        y=background + m*(x-c)
+    """
+
+    def __init__(self):
+        super(SlitScanFit, self).__init__(3, "Slit Scan")
+
+    @staticmethod
+    def _model(xs, *args):
+        centre, gradient, background = args
+        return [background + 0.0 if x < centre else gradient*(x-centre) for x in xs]
+
+    @staticmethod
+    def guess(x, y):
+        background = np.min(y)
+        threshold = (np.max(y) - background) * 0.01 + background
+        x_values = x[y > threshold]
+        y_values = y[y > threshold] - background
+        slope, intercept, _, _, _ = linregress(x_values, y_values)
+        return [-intercept/slope, slope, background]
+
+    def readable(self, fit):
+        err = np.sqrt(fit[1])
+        fit = fit[0]
+        return {"center": fit[0], "center_err": err[0, 0],
+                "gradient": fit[1], "gradient_err": err[1, 1],
+                "background": fit[2], "background_err": err[2, 2]}
+
+    def title(self, fit):
+        # pylint: disable=arguments-differ
+        params = self.readable(fit)
+        for k in params:
+            if isinstance(params[k], float):
+                params[k] = smart_number_format(params[k])
+        return "Slit Scan Fit: y={{{gradient:}(x-{center:}) E x>{center:}}} + {background}".format(**params)
+
+
+
 class CentreOfMassFit(Fit):
     """
     A fit that calculates the 'centre of mass' of a peak over a background.
@@ -622,5 +667,7 @@ ExactPoints = ExactFit()
 
 CentreOfMass = CentreOfMassFit()
 
+SlitScan = SlitScanFit()
+
 __all__ = ["PolyFit", "Linear", "Gaussian", "DampedOscillator", "PeakFit",
-           "Erf", "TopHat", "ExactPoints", "CentreOfMass"]
+           "Erf", "TopHat", "ExactPoints", "CentreOfMass", "SlitScan"]
