@@ -5,7 +5,7 @@ from parameterized import parameterized
 from hamcrest import *
 
 from general.scans.fit import PeakFit, PolyFit, CentreOfMassFit, Fit, ExactFit, TopHat, GaussianFit, \
-    DampedOscillatorFit, ErfFit, TopHatFit
+    DampedOscillatorFit, ErfFit, TopHatFit, SlitScanFit
 from general.scans.monoid import ListOfMonoids, Average
 
 
@@ -279,3 +279,60 @@ class ErfFitTests(unittest.TestCase):
         result = dof.title(params)
 
         assert_that(result, is_(expected_title))
+
+
+class SlitScanFitTests(unittest.TestCase):
+    def test_GIVEN_fit_parameters_WHEN_get_title_THEN_numbers_are_to_4dp(self):
+
+        params = ([0.12345, 1.2, 2345], np.array([[1, 2, 3, 0], [4, 5, 6, 0], [5, 6, 7, 8]]))
+
+        expected_title = "Slit Scan Fit: y={1.2000(x-0.1235) E x>0.1235} + 2345"
+
+        ssf = SlitScanFit()
+        result = ssf.title(params)
+
+        assert_that(result, is_(expected_title))
+
+    def test_GIVEN_data_WHEN_guess_THEN_background_returned_as_lowest_value(self):
+        expected_min = 0.01
+        x = np.array([1, 2, 3, 4])
+        y = np.array([0.9, 6, expected_min, 1])
+
+        ssf = SlitScanFit()
+        result = ssf.guess(x, y)
+
+        assert_that(result[2], is_(expected_min))
+
+    def test_GIVEN_data_WHEN_guess_THEN_center_and_gradient_returned(self):
+        expected_background = 0.01
+        expected_gradient = 2
+        expected_centre = 1
+
+        def val(x):
+            return expected_background + 0 if x < expected_centre else expected_gradient * (x - expected_centre)
+
+        x_values = np.array([-1, 0, 1, 2, 3, 4])
+        y_values = np.array([val(x_value) for x_value in x_values])
+
+        ssf = SlitScanFit()
+        result = ssf.guess(x_values, y_values)
+
+        assert_that(result[0], is_(expected_centre), "centre")
+        assert_that(result[1], is_(expected_gradient), "gradient")
+
+    def test_GIVEN_fit_WHEN_get_y_THEN_values_returned(self):
+        background = 0.01
+        gradient = 2
+        centre = 1
+
+        def val(x):
+            return background + 0 if x < centre else gradient * (x - centre)
+
+        x_values = np.array([-1, 0, 1, 2, 3, 4])
+        expected_value = [float(val(x_value)) for x_value in x_values]
+
+        ssf = SlitScanFit()
+        result = ssf.get_y(x_values, [[centre, gradient, background], ])
+
+        for index, (actual, expected) in enumerate(zip(result, expected_value)):
+            assert_that(actual, close_to(expected, 1e-6), f"item {index}")
