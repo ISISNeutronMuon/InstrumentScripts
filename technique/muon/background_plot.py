@@ -1,7 +1,6 @@
 """
 Create a background plot. Which is a matplotlib figure that runs on the secondary plot
 """
-import csv
 import os
 import matplotlib
 matplotlib.use('module://genie_python.matplotlib_backend.ibex_web_backend')
@@ -10,13 +9,14 @@ from datetime import datetime, timedelta
 
 from genie_python.genie_dae import DAE_PVS_LOOKUP
 from matplotlib import pyplot
-from matplotlib.animation import FuncAnimation
 from random import randrange
 from functools import partial
 from genie_python import genie as g
 from genie_python.genie_cachannel_wrapper import CaChannelWrapper, CaChannelException, UnableToConnectToPVException
 from genie_python.matplotlib_backend.ibex_web_backend import set_up_plot_default, SECONDARY_WEB_PORT
 from requests import head, ConnectionError
+from time import sleep
+import threading
 
 # Default Figure name for the plot
 DEFAULT_FIGURE_NAME = "Background Plot"
@@ -28,7 +28,7 @@ BLOCK_PREFIX = "CS:SB:"
 SAVE_FILE = os.path.join(r"C:\\", "Instrument", "var", "tmp", "background_plot_data_{ioc_number:02d}.csv")
 
 
-class BackgroundPlot(object):
+class BackgroundPlot(threading.Thread):
     """
     Create a background plot of some points which update
     """
@@ -39,8 +39,6 @@ class BackgroundPlot(object):
 
         set_up_plot_default(is_primary=False, should_open_ibex_window_on_show=False)
 
-        # Animation object which updates the plot
-        self._animation = None
         # x data for the plot, date time objects
         self.data_x = None
         # point data dictionary of arrays for each point
@@ -95,11 +93,17 @@ class BackgroundPlot(object):
         else:
             self.start_new_data_file()
 
-        self._animation = FuncAnimation(self.figure, partial(self._update, self), interval=self._interval*1000)
-
         pyplot.show()
-
         print("Background plot: Started")
+
+        while True:
+            try:
+                self.update()
+            except Exception as ex:
+                print("Update plot failed with {}".format(ex))
+            self.figure.canvas.draw()
+            self.figure.canvas.flush_events()
+            sleep(self._interval)
 
     def set_up_plot(self):
         """
@@ -143,10 +147,10 @@ class BackgroundPlot(object):
         with open(self._save_file, 'r') as csvfile:
             # Ignore header lines starting with #
             file_without_header = filter(lambda row: row if not row.startswith('#') else '', csvfile)
-            reader = csv.reader(file_without_header)
 
             data_point_err = []
-            for row in reader:
+            for row in file_without_header:
+                row = row.split(",")
                 # CSV format is timestamp in first column, then data columns
                 try:
                     timestamp = row[0]
@@ -159,14 +163,15 @@ class BackgroundPlot(object):
                 # Split the data up so the nth point in the row gets appended to the nth list in loaded_data
                 for dataset, restored_data_point in zip(loaded_data, data_points_in_row):
                     # Append the new data point from this row onto the correct dataset
-
-                    if restored_data_point:
+                    if not restored_data_point or "None" in restored_data_point:
+                        data_point = None
+                    else:
                         try:
                             data_point = float(restored_data_point)
                         except ValueError:
                             data_point = None
                             data_point_err.append(restored_data_point)
-                        dataset.append(data_point)
+                    dataset.append(data_point)
 
             if data_point_err:
                 print(f'WARNING - Save file may be corrupted: {len(data_point_err)} data points could not be appended '
@@ -179,32 +184,12 @@ class BackgroundPlot(object):
         self.data = loaded_data
         self.data_x = loaded_data_x
 
-    def _update(self, frame, *fargs):
-        """
-        Update the plot, call update but catches any exceptions and prints them for the user to see
-
-        Parameters
-        ----------
-        frame: int
-            frame number of the animation (not typically needed)
-        *fargs:
-            any user arguments that should be passed to the animation
-        """
-        try:
-            self.update(frame, *fargs)
-        except Exception as ex:
-            print("Update plot failed with {}".format(ex))
-
-    def update(self, frame, *fargs):
+    def update(self):
         """
         Update the plot with a data point and redraw the figure. used as the function in matplotlib's FuncAnimation.
 
         Parameters
         ----------
-        frame: int
-            frame of the animation to plot
-        fargs:
-            other argument from the user (usually empty)
 
         Returns
         -------
@@ -231,9 +216,9 @@ class BackgroundPlot(object):
         Args:
             points: list containing data points to save. First value is timestamp
         """
-        with open(self._save_file, 'a', newline='') as csvfile:
-            csvwriter = csv.writer(csvfile, delimiter=',')
-            csvwriter.writerow(points)
+
+        with open(self._save_file, 'a') as csvfile:
+            csvfile.write(",".join(str(x) for x in points) + "\n")
 
     def update_data(self):
         """
@@ -258,7 +243,8 @@ class BackgroundPlot(object):
         for data_set, line in zip(self.data, self.lines):
             line.set_data(self.data_x, data_set)
         self.figure.gca().relim()
-        self.figure.gca().set_xlim(left=self.data_x[0], right=self.data_x[-1] + timedelta(seconds=0.5))
+        additional_to_right = (self.data_x[-1] - self.data_x[0])/20
+        self.figure.gca().set_xlim(left=self.data_x[0], right=self.data_x[-1] + additional_to_right)
         self.figure.gca().autoscale_view()
 
         return self.lines
@@ -485,7 +471,6 @@ class BackgroundBlockPlot(BackgroundPlot):
                 run_numbers_match = False
 
             data_dimensions_match = saved_dataset_dims == current_dataset_dims
-
         except FileNotFoundError:
             valid_file_found = False
         else:
