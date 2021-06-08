@@ -18,7 +18,7 @@ from .instrument_constants import get_instrument_constants
 
 def run_angle(sample, angle, count_uamps=None, count_seconds=None, count_frames=None, s1vg=None, s2vg=None, s3vg=None,
               s4vg=None, smangle=None, mode=None, do_auto_height=False, laser_offset_block=None, fine_height_block=None,
-              auto_height_target=0.0, continue_on_error=False, dry_run=False):
+              auto_height_target=0.0, continue_on_error=False, dry_run=False, include_gaps_in_title=True):
     """
     Move to a given theta and smangle with slits set. If a current, time or frame count are given then take a
     measurement.
@@ -41,6 +41,7 @@ def run_angle(sample, angle, count_uamps=None, count_seconds=None, count_frames=
         auto_height_target: The target value for laser offset if using auto height
         continue_on_error: If True, continue script on error; If False, interrupt and prompt the user on error
         dry_run: If True just print what would happen; If False, run the experiment
+        include_gaps_in_title: Whether current slit gap sizes should be appended to the run title or not
 
     Examples:
         The simplest scan is:
@@ -96,7 +97,7 @@ def run_angle(sample, angle, count_uamps=None, count_seconds=None, count_frames=
 
     movement.set_slit_gaps(angle, constants, s1vg, s2vg, s3vg, s4vg, sample)
     movement.wait_for_move()
-    movement.update_title(sample.title, sample.subtitle, angle, smangle, add_current_gaps=True)
+    movement.update_title(sample.title, sample.subtitle, angle, smangle, add_current_gaps=include_gaps_in_title)
 
     # count
     if count_seconds is None and count_uamps is None and count_frames is None:
@@ -105,10 +106,9 @@ def run_angle(sample, angle, count_uamps=None, count_seconds=None, count_frames=
         movement.count_for(count_uamps, count_seconds, count_frames)
 
 
-def transmission(sample, title, s1vg, s2vg, s3vg=None, s4vg=None,
-                 count_seconds=None, count_uamps=None, count_frames=None,
-                 s1hg=None, s2hg=None, s3hg=None, s4hg=None,
-                 height_offset=5, smangle=None, mode=None, dry_run=False):
+def transmission(sample, title, s1vg, s2vg, s3vg=None, s4vg=None, count_seconds=None, count_uamps=None,
+                 count_frames=None, s1hg=None, s2hg=None, s3hg=None, s4hg=None, height_offset=5, smangle=None,
+                 mode=None, dry_run=False, include_gaps_in_title=True):
     """
     Perform a transmission
     Args:
@@ -129,6 +129,8 @@ def transmission(sample, title, s1vg, s2vg, s3vg=None, s4vg=None,
         smangle: super mirror angle, place in the beam, if set to 0 remove from the beam; None don't move super mirror
         mode: mode to run in; None don't change mode
         dry_run: If True just print what would happen; If False, run the transmission
+        include_gaps_in_title: Whether current slit gap sizes should be appended to the run title or not
+
     Examples:
         The simplest transmission is:
 
@@ -182,7 +184,7 @@ def transmission(sample, title, s1vg, s2vg, s3vg=None, s4vg=None,
         movement.set_slit_gaps(0.0, constants, s1vg, s2vg, s3vg, s4vg, sample)
         movement.wait_for_move()
 
-        movement.update_title(title, "", None, smangle, add_current_gaps=True)
+        movement.update_title(title, "", None, smangle, add_current_gaps=include_gaps_in_title)
         movement.count_for(count_uamps, count_seconds, count_frames)
 
         # Horizontal gaps and height reset by with reset_gaps_and_sample_height
