@@ -422,7 +422,10 @@ class _Movement(object):
         """
         print("Sample: height offset from beam={}".format(height_offset))
         if not self.dry_run:
-            g.cset("SAMPLEOFFSET", height_offset)
+            if g._genie_api.get_instrument_full_name() == "NDXINTER":
+                g.cset("HEIGHT", height_offset)
+            else:
+                g.cset("SAMPLEOFFSET", height_offset)
 
     def set_height2_offset(self, height, constants):
         """
@@ -433,7 +436,10 @@ class _Movement(object):
         if constants.has_height2:
             print("Sample: height2 offset from beam={}".format(height))
             if not self.dry_run:
-                g.cset("HEIGHT2_OFFSET", height)
+                if g._genie_api.get_instrument_full_name() == "NDXINTER":
+                    g.cset("HEIGHT2", height)
+                else:
+                    g.cset("HEIGHT2_OFFSET", height)
         elif height != 0:
             print("ERROR: Height 2 off set is being ignored")
 
