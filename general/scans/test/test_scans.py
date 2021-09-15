@@ -1,5 +1,8 @@
+import pdb
+import shutil
 import unittest
 from contextlib import contextmanager
+from unittest.mock import MagicMock
 
 from general.scans.scans import SimpleScan, ReplayScan
 from hamcrest import *
@@ -8,6 +11,10 @@ from mock import Mock, patch, mock_open
 from general.scans.defaults import Defaults
 from general.scans.monoid import Average
 from general.scans.motion import Motion
+import os
+
+from parameterized import parameterized
+
 
 def test_map_function(x):
     return 2.0 * x
@@ -116,6 +123,35 @@ class TestScans(unittest.TestCase):
         file_name = myscan.log_file(scan.log_file_info())
 
         assert_that(file_name, contains_string(expected_block_name))
+
+    @parameterized.expand(['y', 'n'])
+    def test_GIVEN_scan_writes_non_existing_folder_WHEN_change_log_file_THEN_create_new_folder(self, user_input):
+        myscan = TestDefaults()
+        genie_script = "C:\\scripts\\Dir_That_Does_Not_Exist"
+        log_file = "Test.dat"
+        shutil.rmtree(genie_script) # Delete the directory after it created for test
+
+        initial_value = 0.1
+        expected_value = 1
+        block_name = "block_name"
+
+        blocks = {block_name: initial_value}
+        # Setting the non-existing log file to save scans
+        myscan.log_file = MagicMock(return_value=os.path.join(genie_script, log_file))
+
+        # Starting scan
+        with fake_block_server_and_get_pv(blocks), \
+                patch("general.scans.motion.g.get_runstate")as get_runstate,\
+                patch('general.scans.scans.get_input', return_value=user_input) as get_input:
+            get_runstate.return_value = "SETUP"
+            scan = myscan.ascan(block_name, -1, expected_value, 1, -1)
+
+        # Checking if path is created
+        path_exists = os.path.isdir(genie_script)
+        if user_input == 'y':
+            assert_that(path_exists, "Path doesn't exist")
+        else:
+            assert_that(not path_exists, "Path exists")
 
     def test_GIVEN_scan_with_action_WHEN_get_log_file_THEN_log_file_returned_with_genie_script_dir_path(self):
 
