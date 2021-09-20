@@ -188,11 +188,11 @@ class Scan(object):
         action_remainder = None
         log_filename = self.defaults.log_file(self.log_file_info())
 
-        p = Path(log_filename)
-        log_path = p.parent
+        path = Path(log_filename)
+        log_path = path.parent
 
         path_exists = os.path.isdir(log_path)
-
+        
         if path_exists:
             print("Writing data to: {}".format(log_path))
             with open(log_filename, "w") as logfile, \
