@@ -76,6 +76,9 @@ class Sans2d(ScanningInstrument):
           The aperture size.  e.g. "Small" or "Medium"
           A blank string (the default value) results in
           the aperture not being changed."""
+        if not size:
+            # Empty string means keep the current position
+            return
         size = size.upper()
         if size not in ["SMALL", "MEDIUM", "LARGE", "XLARGE"]
             raise RuntimeError("Unknown slit size: {}".format(size))
