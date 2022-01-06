@@ -5,6 +5,7 @@ from technique.sans.instrument import ScanningInstrument
 from technique.sans.util import set_metadata  # noqa: F401
 from general.scans.util import local_wrapper
 from genie_python import genie as g
+from general.utilities.io import alert_on_error
 
 
 class Sans2d(ScanningInstrument):
@@ -83,10 +84,10 @@ class Sans2d(ScanningInstrument):
         return True
 
     def _detector_turn_on(self, delay=True):
-        raise NotImplementedError("Detector toggling is not supported Sans2d")
+        alert_on_error("SANS2D Detectors must be turned on manually", False)
 
     def _detector_turn_off(self, delay=True):
-        raise NotImplementedError("Detector toggling is not supported on Sans2d")
+        alert_on_error("SANS2D Detectors must be turned off manually", False)
 
     def _configure_sans_custom(self):
         # move the transmission monitor out
