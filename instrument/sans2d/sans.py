@@ -24,29 +24,41 @@ class Sans2d(ScanningInstrument):
         raise NotImplementedError(
             "Neutron reflectivity scanning tables not yet set")
 
+    def _generic_scan(
+            self,
+            detector, spectra,
+            wiring, tcbs=[{"low": 5.5, "high":50.0, "step": 44.5, "log": 0, "trange":1, "regime":1},
+                          {"low": 50.0, "high":2500.0, "step": 50.0, "log": 0, "trange":2, "regime":1}
+                          {"low": 2500.0, "high":14000.0, "step": 0.02, "log": 1, "trange":3, "regime":1}
+                          {"low": 14000.0, "high":99750.0, "step": 250.0, "log": 0, "trange":4, "regime":1}
+                          {"low": 99750.0, "high":100005.0, "step": 255.0, "log": 0, "trange":5, "regime":1}
+                          {"low": 5.5, "high":100005.0, "step": 5.0, "log": 0, "trange":1, "regime":2}
+                          {"low": 0.0, "high":0.0, "step": 0.0, "log": 0, "trange":2, "regime":2}
+                          {"low": 0.0, "high":0.0, "step": 0.0, "log": 0, "trange":3, "regime":2}
+                          {"low": 0.0, "high":0.0, "step": 0.0, "log": 0, "trange":4, "regime":2}
+                          {"low": 0.0, "high":0.0, "step": 0.0, "log": 0, "trange":5, "regime":2}]):
+        base = r"C:\Instrument\Settings\config\NDXSANS2D\configurations\tables\\"
+        ScanningInstrument._generic_scan(self,
+            base + detector, base + spectra, base + wiring, tcbs)
+
     @set_metadata("SANS", "sans")
     def setup_dae_event(self):
         self._generic_scan(
             detector=r"detector_gastubes_01.dat",
             spectra=r"spectrum_gastubes_01.dat",
-            wiring=r"wiring_gastubes_01_event.dat",
-            tcbs=[])
+            wiring=r"wiring_gastubes_01_event.dat")
 
     @set_metadata("SANS", "sans")
     def setup_dae_histogram(self):
-        self._generic_scan(
-            detector=r"wiring_gastubes_02_hist.dat",
-            spectra=r"spectrum_gastubes_02.dat",
-            wiring=r"detector_gastubes_02.dat",
-            tcbs=[])
+        raise NotImplementedError(
+            "Neutron reflectivity scanning tables not yet set")
 
     @set_metadata("TRANS", "transmission")
     def setup_dae_transmission(self):
         self._generic_scan(
             spectra=r"spectra_trans8.dat",
             wiring=r"wiring_trans8.dat",
-            detector=r"detector_trans8.dat",
-            tcbs=[])
+            detector=r"detector_trans8.dat")
 
     @set_metadata("SANS", "sans")
     def setup_dae_bsalignment(self):
