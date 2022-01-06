@@ -76,9 +76,11 @@ class Sans2d(ScanningInstrument):
           The aperture size.  e.g. "Small" or "Medium"
           A blank string (the default value) results in
           the aperture not being changed."""
-        if size == "":
-            pass
+        size = size.upper()
+        if size not in ["SMALL", "MEDIUM", "LARGE", "XLARGE"]
+            raise RuntimeError("Unknown slit size: {}".format(size))
         gen.set_pv("LKUP:SCRAPER:POSN:SP", size, is_local=True)
+        gen.waitfor_move()
 
     def _detector_is_on(self):
         return True
