@@ -83,7 +83,12 @@ class Sans2d(ScanningInstrument):
         gen.waitfor_move()
 
     def _detector_is_on(self):
-        return True
+        """Is the detector currently on?"""
+        voltage_status = all([
+            self.get_pv(
+                "CAEN:hv0:1:{}:status".format(x)).lower() == "on"
+            for x in range(10)])
+        return voltage_status
 
     def _detector_turn_on(self, delay=True):
         alert_on_error("SANS2D Detectors must be turned on manually", False)
