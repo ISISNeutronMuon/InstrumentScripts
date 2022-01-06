@@ -90,12 +90,22 @@ class Sans2d(ScanningInstrument):
         alert_on_error("SANS2D Detectors must be turned off manually", False)
 
     def _configure_sans_custom(self):
+        # close the fast shutter
+        gen.set_pv("FINS_VAC:SHUTTER:STATUS:SP", "CLOSE")
         # move the transmission monitor out
         gen.set_pv("FINS_VAC:MONITOR3:STATUS:SP", "OUT", is_local=True)
+        # Adjust Aperture 6
+        # gen.set_pv("LKUP:SCRAPER:POSITIONS", unknown)
+        gen.waitfor_move()
 
     def _configure_trans_custom(self):
+        # close the fast shutter
+        gen.set_pv("FINS_VAC:SHUTTER:STATUS:SP", "CLOSE")
         # move the transmission monitor in
         gen.set_pv("FINS_VAC:MONITOR3:STATUS:SP", "IN", is_local=True)
+        # Adjust Aperture 6
+        # gen.set_pv("LKUP:SCRAPER:POSITIONS", unknown)
+        gen.waitfor_move()
 
 
 obj = Sans2d()
