@@ -104,8 +104,7 @@ class Sans2d(ScanningInstrument):
         gen.set_pv("FINS_VAC:SHUTTER:STATUS:SP", "CLOSE")
         # move the transmission monitor out
         gen.set_pv("FINS_VAC:MONITOR3:STATUS:SP", "OUT", is_local=True)
-        # Adjust Aperture 6
-        # gen.set_pv("LKUP:SCRAPER:POSITIONS", unknown)
+
         gen.waitfor_move()
 
     def _configure_trans_custom(self):
@@ -113,8 +112,7 @@ class Sans2d(ScanningInstrument):
         gen.set_pv("FINS_VAC:SHUTTER:STATUS:SP", "CLOSE")
         # move the transmission monitor in
         gen.set_pv("FINS_VAC:MONITOR3:STATUS:SP", "IN", is_local=True)
-        # Adjust Aperture 6
-        # gen.set_pv("LKUP:SCRAPER:POSITIONS", unknown)
+
         gen.waitfor_move()
 
 
