@@ -29,14 +29,14 @@ class Sans2d(ScanningInstrument):
             self,
             detector, spectra,
             wiring, tcbs=[{"low": 5.5, "high":50.0, "step": 44.5, "log": 0, "trange":1, "regime":1},
-                          {"low": 50.0, "high":2500.0, "step": 50.0, "log": 0, "trange":2, "regime":1}
-                          {"low": 2500.0, "high":14000.0, "step": 0.02, "log": 1, "trange":3, "regime":1}
-                          {"low": 14000.0, "high":99750.0, "step": 250.0, "log": 0, "trange":4, "regime":1}
-                          {"low": 99750.0, "high":100005.0, "step": 255.0, "log": 0, "trange":5, "regime":1}
-                          {"low": 5.5, "high":100005.0, "step": 5.0, "log": 0, "trange":1, "regime":2}
-                          {"low": 0.0, "high":0.0, "step": 0.0, "log": 0, "trange":2, "regime":2}
-                          {"low": 0.0, "high":0.0, "step": 0.0, "log": 0, "trange":3, "regime":2}
-                          {"low": 0.0, "high":0.0, "step": 0.0, "log": 0, "trange":4, "regime":2}
+                          {"low": 50.0, "high":2500.0, "step": 50.0, "log": 0, "trange":2, "regime":1},
+                          {"low": 2500.0, "high":14000.0, "step": 0.02, "log": 1, "trange":3, "regime":1},
+                          {"low": 14000.0, "high":99750.0, "step": 250.0, "log": 0, "trange":4, "regime":1},
+                          {"low": 99750.0, "high":100005.0, "step": 255.0, "log": 0, "trange":5, "regime":1},
+                          {"low": 5.5, "high":100005.0, "step": 5.0, "log": 0, "trange":1, "regime":2},
+                          {"low": 0.0, "high":0.0, "step": 0.0, "log": 0, "trange":2, "regime":2},
+                          {"low": 0.0, "high":0.0, "step": 0.0, "log": 0, "trange":3, "regime":2},
+                          {"low": 0.0, "high":0.0, "step": 0.0, "log": 0, "trange":4, "regime":2},
                           {"low": 0.0, "high":0.0, "step": 0.0, "log": 0, "trange":5, "regime":2}]):
         base = r"C:\Instrument\Settings\config\NDXSANS2D\configurations\tables\\"
         ScanningInstrument._generic_scan(self,
@@ -80,7 +80,7 @@ class Sans2d(ScanningInstrument):
             # Empty string means keep the current position
             return
         size = size.upper()
-        if size not in ["SMALL", "MEDIUM", "LARGE", "XLARGE"]
+        if size not in ["SMALL", "MEDIUM", "LARGE", "XLARGE"]:
             raise RuntimeError("Unknown slit size: {}".format(size))
         gen.set_pv("LKUP:SCRAPER:POSN:SP", size, is_local=True)
         gen.waitfor_move()
@@ -100,16 +100,12 @@ class Sans2d(ScanningInstrument):
         alert_on_error("SANS2D Detectors must be turned off manually", False)
 
     def _configure_sans_custom(self):
-        # close the fast shutter
-        gen.set_pv("FINS_VAC:SHUTTER:STATUS:SP", "CLOSE")
         # move the transmission monitor out
         gen.set_pv("FINS_VAC:MONITOR3:STATUS:SP", "OUT", is_local=True)
 
         gen.waitfor_move()
 
     def _configure_trans_custom(self):
-        # close the fast shutter
-        gen.set_pv("FINS_VAC:SHUTTER:STATUS:SP", "CLOSE")
         # move the transmission monitor in
         gen.set_pv("FINS_VAC:MONITOR3:STATUS:SP", "IN", is_local=True)
 

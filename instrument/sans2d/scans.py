@@ -26,10 +26,10 @@ class Sans2d(Defaults):
         default_monitor=DEFAULT_MONITOR,
         default_detector=DEFAULT_DETECTOR,
         spectra_definitions=[
-            create_spectra_definition(1, 7000.0, 74000.0, "monitor1"),
-            create_spectra_definition(2, 7000.0, 74000.0, "monitor2"),
-            create_spectra_definition(3, 7000.0, 74000.0, "monitor3"),
-            create_spectra_definition(4, 7000.0, 74000.0, "monitor4"),
+            create_spectra_definition(1, 7000.0, 74000.0),# "monitor1"),
+            create_spectra_definition(2, 7000.0, 74000.0),# "monitor2"),
+            create_spectra_definition(3, 7000.0, 74000.0),# "monitor3"),
+            create_spectra_definition(4, 7000.0, 74000.0),# "monitor4"), optional name field causing errors
             # Unused monitors for scanning
             # create_spectra_definition(5, 7000.0, 74000.0, "monitor5"),
             # create_spectra_definition(6, 7000.0, 74000.0, "monitor6"),
