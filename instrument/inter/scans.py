@@ -29,10 +29,12 @@ class InterDefaultScan(Defaults):
     """
 
     # spectra definition based on gcl script.
-    _spectra_definitions = [create_spectra_definition(1, 1050.0, 15500.0),
-                            create_spectra_definition(2, 1050.0, 15500.0),
-                            create_spectra_definition(3, 1450.0, 16500.0)]
-    detector = NormalisedIntensityDetector(default_monitor=2, default_detector=3,
+    _spectra_definitions = [create_spectra_definition(1, 6410.0, 60000.0),
+                            create_spectra_definition(2, 6410.0, 60000.0),
+                            create_spectra_definition(3, 6410.0, 60000.0),
+                            create_spectra_definition(4, 9600.0, 40000.0),
+                            create_spectra_definition(82, 9600.0, 40000.0)]
+    detector = NormalisedIntensityDetector(default_monitor=3, default_detector=4,
                                            spectra_definitions=_spectra_definitions)
 
     def __init__(self):
