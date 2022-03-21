@@ -6,11 +6,65 @@ from technique.sans.util import set_metadata  # noqa: F401
 from general.scans.util import local_wrapper
 from genie_python import genie as g
 from general.utilities.io import alert_on_error
+from logging import warning
 
 
 class Sans2d(ScanningInstrument):
     """This class handles the SANS2D beamline"""
     _PV_BASE = g.my_pv_prefix
+    _poslist = ['AB', 'BB', 'CB', 'DB', 'EB', 'FB', 'GB', 'HB', 'IB', 'JB',
+                'KB', 'LB', 'MB', 'NB', 'OB', 'PB', 'QB', 'RB', 'SB', 'TB',
+                'AT', 'BT', 'CT', 'DT', 'ET', 'FT', 'GT', 'HT', 'IT', 'JT',
+                'KT', 'LT', 'MT', 'NT', 'OT', 'PT', 'QT', 'RT', 'ST', 'TT',
+                '1CB', '2CB', '3CB', '4CB', '5CB', '6CB', '7CB','8CB', '9CB',
+                '10CB', '11CB', '12CB', '13CB', '14CB','15CB', '16CB', '17CB', '18CB',
+                '1CT', '2CT', '3CT', '4CT', '5CT', '6CT', '7CT','8CT', '9CT',
+                '10CT', '11CT', '12CT', '13CT', '14CT','15CT', '16CT', '17CT', '18CT',
+                '1GT', '2GT', '3GT', '4GT', '5GT', '6GT', '7GT',
+                '8GT', '9GT', '10GT', '11GT', '12GT', '13GT', '14GT',
+                '1WB', '2WB', '3WB', '4WB', '5WB', '6WB', '7WB',
+                '8WB', '9WB', '10WB', '11WB', '12WB', '13WB', '14WB',
+                '1WT', '2WT', '3WT', '4WT', '5WT', '6WT', '7WT',
+                '8WT', '9WT', '10WT', '11WT', '12WT', '13WT', '14WT',
+                '1GT', '2GT', '3GT', '4GT', '5GT', '6GT', '7GT', '8GT', '9GT',
+                '10GT', '11GT', '12GT',
+                '1GB', '2GB', '3GB', '4GB', '5GB', '6GB', '7GB', '8GB', '9GB',
+                '10GB', '11GB', '12GB',
+                '8WBL', '9WBL', '10WBL', '11WBL', '12WBL', '13WBL', '14WBL',
+                'ATrod', 'BTrod', 'CTrod', 'DTrod', 'ETrod', 'FTrod', 'GTrod', 'HTrod', 'ITrod', 'JTrod',
+                'KTrod', 'LTrod', 'MTrod', 'NTrod', 'OTrod', 'PTrod', 'QTrod', 'RTrod', 'STrod', 'TTrod',
+                'ABrod', 'BBrod', 'CBrod', 'DBrod', 'EBrod', 'FBrod', 'GBrod', 'HBrod', 'IBrod', 'JBrod',
+                'KBrod', 'LBrod', 'MBrod', 'NBrod', 'OBrod', 'PBrod', 'QBrod', 'RBrod', 'SBrod', 'TBrod',
+                '1CBrod', '2CBrod', '3CBrod', '4CBrod', '5CBrod', '6CBrod', '7CBrod',
+                '8CBrod', '9CBrod', '10CBrod', '11CBrod', '12CBrod', '13CBrod', '14CBrod',
+                '15CBrod', '16CBrod', '17CBrod', '18CBrod',
+                '1CTrod', '2CTrod', '3CTrod', '4CTrod', '5CTrod', '6CTrod', '7CTrod',
+                '8CTrod', '9CTrod', '10CTrod', '11CTrod', '12CTrod', '13CTrod', '14CTrod',
+                '15CTrod', '16CTrod', '17CTrod', '18CTrod',
+                '1WBrod', '2WBrod', '3WBrod', '4WBrod', '5WBrod', '6WBrod', '7WBrod',
+                '8WBrod', '9WBrod', '10WBrod', '11WBrod', '12WBrod', '13WBrod', '14WBrod',
+                '1WTrod', '2WTrod', '3WTrod', '4WTrod', '5WTrod', '6WTrod', '7WTrod',
+                '8WTrod', '9WTrod', '10WTrod', '11WTrod', '12WTrod', '13WTrod', '14WTrod',
+                '1RR', '2RR', '3RR', '4RR', '5RR', '6RR', '7RR',
+                '1W7', '2W7', '3W7', '4W7', '5W7', '6W7', '7W7',
+                'XSF',
+                'ASFT', 'BSFT', 'CSFT', 'DSFT', 'ESFT', 'FSFT', 'GSFT', 'HSFT', 'ISFT', 'JSFT',
+                '1SFA', '2SFA', '3SFA', '4SFA', '5SFA', '6SFA', '7SFA',
+                ]
+
+    def check_move_pos(self, pos):
+        """Check whether the position is valid and return True or False
+
+        Parameters
+        ----------
+        pos : str
+          The sample changer position
+
+        """
+        if pos not in self._poslist:
+            warning("Error in script, position {} does not exist".format(pos))
+            return False
+        return True
 
     @set_metadata("SCAN", "scan")
     def setup_dae_scanning(self):

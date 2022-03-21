@@ -6,6 +6,7 @@ contained in this module
 """
 from __future__ import print_function
 from datetime import datetime
+import os
 from general.scans.defaults import Defaults
 from general.scans.detector import NormalisedIntensityDetector, create_spectra_definition
 from general.scans.util import local_wrapper
@@ -40,7 +41,7 @@ class Sans2d(Defaults):
         # Override scan so that we can do setup first
 
         # The name of this keyword arg must match __call__ in NormalisedIntensityDetector
-        det = kwargs.get("detector_number", DEFAULT_DETECTOR)
+        det = kwargs.get("det", DEFAULT_DETECTOR)
 
         if det == 3:
             Sans2d_sans().setup_trans()
@@ -56,7 +57,41 @@ class Sans2d(Defaults):
                 spectra="spectra_trans8.dat",
             )
 
-        return super().scan(motion, start, stop, step, frames, **kwargs)
+        save = kwargs.get("save")
+        # Changing Scan().plot() to allow custom log names would be very involved, so a workaround:
+        if save:
+            # First find the newest dat file in U:/
+            base_dir = "U:/"
+            prev_newest_log = max([os.path.join(base_dir,log_name)
+                             for log_name in os.listdir(base_dir)
+                             if log_name.endswith('.dat')])
+
+            # Then run the scan as normal, which hopefully will add a new log file
+            result = super().scan(motion, start, stop, step, frames, **kwargs)
+
+            # Make sure our file will stay as a dat, and add a _ at the start
+            save = '_' + save
+            if not save.endswith(".dat"):
+                save += ".dat"
+
+            # Find the newest dat again
+            newest_log = max([os.path.join(base_dir,log_name)
+                              for log_name in os.listdir(base_dir)
+                              if log_name.endswith('.dat')])
+
+            # Make the new file name, the old scan file + desired name
+            desired_name = os.path.join(base_dir, newest_log[:-4]+save)
+
+            # Only if a new file has been made, rename the file
+            if prev_newest_log != newest_log:
+                os.rename(newest_log, desired_name)
+
+            # And return
+            return result
+
+        # If no save name was requested, carry on as normal
+        else:
+            return super().scan(motion, start, stop, step, frames, **kwargs)
 
     @staticmethod
     def log_file(info):
