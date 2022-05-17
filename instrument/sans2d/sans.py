@@ -4,12 +4,11 @@ from technique.sans.instrument import ScanningInstrument
 # pylint: disable=unused-import
 from technique.sans.util import set_metadata  # noqa: F401
 from general.scans.util import local_wrapper
-from genie_python import genie as g
+from logging import warning
 
 
 class Sans2d(ScanningInstrument):
     """This class handles the SANS2D beamline"""
-    _PV_BASE = g.my_pv_prefix
 
     @set_metadata("SCAN", "scan")
     def setup_dae_scanning(self):
@@ -35,42 +34,44 @@ class Sans2d(ScanningInstrument):
     @set_metadata("SANS", "sans")
     def setup_dae_histogram(self):
         self._generic_scan(
-            detector=r"wiring_gastubes_02_hist.dat",
+            detector=r"detector_gastubes_02.dat",
             spectra=r"spectrum_gastubes_02.dat",
-            wiring=r"detector_gastubes_02.dat",
+            wiring=r"wiring_gastubes_02_hist.dat",
             tcbs=[])
 
     @set_metadata("TRANS", "transmission")
     def setup_dae_transmission(self):
         self._generic_scan(
+            detector=r"detector_trans8.dat",
             spectra=r"spectra_trans8.dat",
             wiring=r"wiring_trans8.dat",
-            detector=r"detector_trans8.dat",
             tcbs=[])
 
     @set_metadata("SANS", "sans")
     def setup_dae_bsalignment(self):
         raise NotImplementedError("Beam Stop Alignment tables not yet set")
 
-    @staticmethod
-    def set_aperture(size):
+
+    def set_aperture(self, size):
         """
         Set the beam aperture to the desired size.
 
         Parameters
         ----------
         size : str
-          The aperture size.  e.g. "Small" or "Medium"
-          A blank string (the default value) results in
-          the aperture not being changed."""
-        if size == "":
+          The aperture size. The options (case insensitive) are:
+          small, medium, large and xl
+          Any other options are ignored"""
+
+        if not size.upper() in ["SMALL", "MEDIUM", "LARGE", "XL"]:
             pass
         gen.set_pv("LKUP:SCRAPER:POSN:SP", size, is_local=True)
 
     def _detector_is_on(self):
+        warning("_detector_is_on assumes detector is on")
         return True
 
-    def _detector_turn_on(self, delay=True):
+    def _detector_turn_on(delay=True):
         raise NotImplementedError("Detector toggling is not supported Sans2d")
 
     def _detector_turn_off(self, delay=True):

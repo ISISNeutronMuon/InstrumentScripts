@@ -8,13 +8,8 @@ from general.scans.util import local_wrapper
 
 
 class LOQ(ScanningInstrument):
-    """This class handles the LOQ beamline"""
-
-    _PV_BASE = "IN:LOQ:"
-
-    def __init__(self):
-        ScanningInstrument.__init__(self)
-        self.setup_sans = self.setup_dae_histogram
+    """This class handles the LOQ beamline,  it is an extension
+    of the Scanning instrument class."""
 
     _poslist = ['AB', 'BB', 'CB', 'DB', 'EB', 'FB', 'GB', 'HB', 'IB', 'JB',
                 'KB', 'LB', 'MB', 'NB', 'OB', 'PB', 'QB', 'RB', 'SB', 'TB',
@@ -26,6 +21,10 @@ class LOQ(ScanningInstrument):
                 'W9B', 'W10B', 'W11B', 'W12B', 'W13B', 'W14B', 'W15B', 'W16B',
                 'DLS2', 'DLS3', 'DLS4', 'DLS5', 'DLS6', 'FIVE', 'SIX', 'SEVEN', 'EIGHT']
 
+    def __init__(self):
+        ScanningInstrument.__init__(self)
+        self.setup_sans = self.setup_dae_histogram
+
     def _generic_scan(  # pylint: disable=dangerous-default-value
             self,
             detector=r"detector35576_M4.dat",
@@ -33,7 +32,6 @@ class LOQ(ScanningInstrument):
             wiring=r"wiring35576_M4.dat",
             tcbs=[{"low": 3500.0, "high": 43500.0, "step": 0.025,
                    "log": True}]):
-        base = r"C:\Instrument\Settings\config\NDXLOQ\configurations\tables\\"
         gen.change_start()
         for trange in range(1, 6):
             gen.change_tcb(low=0, high=0, step=0, log=0,
@@ -43,7 +41,7 @@ class LOQ(ScanningInstrument):
                        trange=1, regime=2)
         gen.change_finish()
         ScanningInstrument._generic_scan(
-            self, base + detector, base + spectra, base + wiring, tcbs)
+            self, detector, spectra, wiring, tcbs)
 
     @set_metadata("SANS/TRANS", "sans")
     def setup_dae_event(self):
@@ -151,14 +149,10 @@ class LOQ(ScanningInstrument):
     def set_aperture(size):
         if size == "":
             pass
-        elif size.upper() == "SMALL":
-            gen.cset(Aperture_2="SMALL")
-        elif size.upper() == "MEDIUM":
-            gen.cset(Aperture_2="MEDIUM")
-        elif size.upper() == "LARGE":
-            gen.cset(Aperture_2="LARGE")
+        elif size.upper() in ["SMALL", "MEDIUM", "LARGE"]:
+            gen.cset(Aperture_2=size.upper())
         else:
-            raise RuntimeError("Slit size {} is undefined".format(size))
+            raise RuntimeError(f"Slit size {size} is undefined")
 
     def _detector_is_on(self):
         """Is the detector currently on?"""
@@ -181,12 +175,12 @@ class LOQ(ScanningInstrument):
         gen.waitfor_move()
 
     def _configure_trans_custom(self):
-        gen.cset(Aperture_2="SMALL")
+        self.set_aperture("SMALL")
         gen.cset(Tx_Mon="IN")
         gen.waitfor_move()
 
     # pylint: disable=invalid-name
-    def J1(self, temperature_1, temperature_2):
+    def run_off_julabo_1(self, temperature_1, temperature_2):
         """Run off Julabo 1"""
         self.send_pv("JULABO_01:MODE:SP", "OFF")
         sleep(1)
@@ -208,7 +202,7 @@ class LOQ(ScanningInstrument):
         gen.waitfor_move()
 
     @staticmethod
-    def J2(temperature_1, temperature_2):
+    def run_off_julabo_2(temperature_1, temperature_2):
         """Run off Julabo 2"""
         gen.cset(Julabo_1_Circulator="OFF")
         sleep(1)

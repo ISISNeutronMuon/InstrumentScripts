@@ -17,14 +17,16 @@ def sleep(seconds):
 
 
 class Larmor(ScanningInstrument):  # pylint: disable=too-many-public-methods
-    """This class handles the Larmor beamline"""
+    """This class handles the Larmor beamline, it is an extension
+    of the Scanning instrument class.
+    """
 
-    step = 100.0
-    lrange = "0.9-13.25"
-    _PV_BASE = "IN:LARMOR:"
+    _tables_path = r"C:\Instrument\Settings\Tables\\"
 
+    _step = 100.0
+    _lrange = "0.9-13.25"
     # change the default for Edler June 2019
-    # lrange = "0.65-12.95"
+    # _lrange = "0.65-12.95"
 
     @property
     def TIMINGS(self):
@@ -34,29 +36,21 @@ class Larmor(ScanningInstrument):  # pylint: disable=too-many-public-methods
 
     def get_lrange(self):
         """Return the current wavelength range"""
-        return self.lrange
+        return self._lrange
 
     def set_lrange(self, lrange):
         """Set the current wavelength range"""
         self._dae_mode = ""
-        self.lrange = lrange
+        self._lrange = lrange
 
     def get_tof_step(self):
         """Get the current TOF step for the tcb"""
-        return self.step
+        return self._step
 
     def set_tof_step(self, step):
         """Set the current TOF step for the tcb"""
         self._dae_mode = ""
-        self.step = step
-
-    def _generic_scan(  # pylint: disable=dangerous-default-value
-            self,
-            detector=r"C:\Instrument\Settings\Tables\detector.dat",
-            spectra=r"C:\Instrument\Settings\Tables\spectra_1To1.dat",
-            wiring=r"C:\Instrument\Settings\Tables\wiring.dat",
-            tcbs=[]):
-        ScanningInstrument._generic_scan(self, detector, spectra, wiring, tcbs)
+        self._step = step
 
     @staticmethod
     def _set_choppers(lrange):
@@ -66,12 +60,10 @@ class Larmor(ScanningInstrument):  # pylint: disable=too-many-public-methods
         # setting phase to 48.4ms does not stop the fast flash
         # Setting the T0 phase to 0 (50ms) does
         if lrange == "0.9-13.25":
-            # This is for 0.9-13.25
             gen.cset(T0Phase=0)
             gen.cset(TargetDiskPhase=2750)
             gen.cset(InstrumentDiskPhase=2450)
         elif lrange == "0.65-12.95":
-            # This is for 0.65-12.95
             gen.cset(TargetDiskPhase=1900)
             gen.cset(InstrumentDiskPhase=1600)
         else:
@@ -79,24 +71,32 @@ class Larmor(ScanningInstrument):  # pylint: disable=too-many-public-methods
                 "The only known lranges for the chopper "
                 "are '0.9-13.25' and '0.65-12.95'")
 
+    def _generic_scan(  # pylint: disable=dangerous-default-value
+            self,
+            detector=r"detector.dat",
+            spectra=r"spectra_1To1.dat",
+            wiring=r"wiring.dat",
+            tcbs=[]):
+        ScanningInstrument._generic_scan(self, detector, spectra, wiring, tcbs)
+
     @set_metadata("SCAN", "scan")
     def setup_dae_scanning(self):
         self._generic_scan(
-            spectra=r"C:\Instrument\Settings\Tables\spectra_scanning_80.dat",
+            spectra=r"spectra_scanning_80.dat",
             tcbs=[{"low": 5.0, "high": 100000.0, "step": 100.0,
                    "trange": 1, "log": 0}])
 
     @set_metadata("SCAN", "scan")
-    def setup_dae_scanning12(self):  # pylint: disable=no-self-use
+    def setup_dae_scanning12(self):
         """Set the wiring tables for performing a scan where the entire main
 detector is contained in only two channels."""
         self._generic_scan(
-            spectra=r"C:\Instrument\Settings\Tables\spectra_scanning_12.dat",
+            spectra=r"spectra_scanning_12.dat",
             tcbs=[{"low": 5.0, "high": 100000.0, "step": 100.0,
                    "trange": 1, "log": 0}])
 
     @set_metadata("SCAN", "scan")
-    def setup_dae_echoscan(self):  # pylint: disable=no-self-use
+    def setup_dae_echoscan(self):
         """Set the wiring tables for performing a spin echo tuning scan.  This
 involves only having two spectra covering the entire main detecor."""
         self.setup_dae_scanning12()
@@ -104,7 +104,7 @@ involves only having two spectra covering the entire main detecor."""
     @set_metadata("SCAN", "scan")
     def setup_dae_nr(self):
         self._generic_scan(
-            spectra=r"C:\Instrument\Settings\Tables\spectra_nrscanning.dat",
+            spectra=r"spectra_nrscanning.dat",
             tcbs=[{"low": 5.0, "high": 100000.0, "step": 100.0,
                    "trange": 1, "log": 0}])
 
@@ -119,24 +119,22 @@ involves only having two spectra covering the entire main detecor."""
     def setup_dae_event(self):
         # Normal event mode with full detector binning
         self._generic_scan(
-            wiring=r"C:\Instrument\Settings\Tables\wiring_event.dat",
-            tcbs=[{"low": 5.0, "high": 100000.0, "step": self.step,
+            wiring=r"wiring_event.dat",
+            tcbs=[{"low": 5.0, "high": 100000.0, "step": self._step,
                    "trange": 1, "log": 0},
                   {"low": 0.0, "high": 0.0, "step": 0.0,
                    "trange": 2, "log": 0},
                   {"low": 5.0, "high": 100000.0, "step": 2.0, "trange": 1,
                    "log": 0, "regime": 2}])
-        self._set_choppers(self.lrange)
+        self._set_choppers(self._lrange)
 
     @set_metadata("SANS", "sans")
     def setup_dae_event_fastsave(self):
         """Event mode with reduced detector histogram binning to decrease
         filesize."""
-        # Event mode with reduced detector histogram binning to
-        # decrease filesize
-        # This currently breaks mantid nexus read
+        # This currently breaks mantid nexus read (as of 19/10/2018)
         self._generic_scan(
-            wiring=r"C:\Instrument\Settings\Tables\wiring_event_fastsave.dat",
+            wiring=r"wiring_event_fastsave.dat",
             # change to log binning to reduce number of detector bins
             # by a factor of 10 to decrease write time
             tcbs=[{"low": 5.0, "high": 100000.0, "step": 0.1,
@@ -148,11 +146,11 @@ involves only having two spectra covering the entire main detecor."""
                   # 3rd time regime for monitors to allow flexible
                   # binning of detector to reduce file size and
                   # decrease file write time
-                  {"low": 5.0, "high": 100000.0, "step": self.step,
+                  {"low": 5.0, "high": 100000.0, "step": self._step,
                    "trange": 1, "log": 0, "regime": 3},
                   {"low": 0.0, "high": 0.0, "step": 0.0, "trange": 2,
                    "log": 0, "regime": 3}])
-        self._set_choppers(self.lrange)
+        self._set_choppers(self._lrange)
 
     @set_metadata("SANS", "sans")
     def setup_dae_histogram(self):
@@ -162,21 +160,21 @@ involves only having two spectra covering the entire main detecor."""
                    "trange": 1, "log": 0},
                   {"low": 0.0, "high": 0.0, "step": 0.0,
                    "trange": 2, "log": 0}])
-        self._set_choppers(self.lrange)
+        self._set_choppers(self._lrange)
 
     @set_metadata("TRANS", "transmission")
     def setup_dae_transmission(self):
         self.send_pv("PARS:SAMPLE:MEAS:TYPE", "transmission")
         gen.change_sync('isis')
         self._generic_scan(
-            r"C:\Instrument\Settings\Tables\detector_monitors_only.dat",
-            r"C:\Instrument\Settings\Tables\spectra_monitors_only.dat",
-            r"C:\Instrument\Settings\Tables\wiring_monitors_only.dat",
+            r"detector_monitors_only.dat",
+            r"spectra_monitors_only.dat",
+            r"wiring_monitors_only.dat",
             [{"low": 5.0, "high": 100000.0, "step": 100.0,
               "trange": 1, "log": 0},
              {"low": 0.0, "high": 0.0, "step": 0.0,
               "trange": 2, "log": 0}])
-        self._set_choppers(self.lrange)
+        self._set_choppers(self._lrange)
 
     @set_metadata("TRANS", "transmission")
     def setup_dae_monotest(self):
@@ -200,7 +198,7 @@ involves only having two spectra covering the entire main detecor."""
 
         """
         self._generic_scan(
-            wiring=r"C:\Instrument\Settings\Tables\wiring_tshift.dat",
+            wiring=r"wiring_tshift.dat",
             tcbs=[{"low": tlowdet, "high": thighdet, "step": 100.0,
                    "trange": 1, "log": 0},
                   {"low": 0.0, "high": 0.0, "step": 0.0,
@@ -237,7 +235,7 @@ involves only having two spectra covering the entire main detecor."""
     def setup_dae_monitorsonly(self):
         """Set the wiring tables to record only the monitors."""
         self._generic_scan(
-            spectra=r"C:\Instrument\Settings\Tables\spectra_phase1.dat",
+            spectra=r"spectra_phase1.dat",
             tcbs=[{"low": 5.0, "high": 100000.0, "step": 20.0,
                    "trange": 1, "log": 0},
                   {"low": 0.0, "high": 0.0, "step": 0.0,
@@ -247,9 +245,9 @@ involves only having two spectra covering the entire main detecor."""
     def setup_dae_resonantimaging(self):
         """Set the wiring table for resonant imaging"""
         self._generic_scan(
-            r"C:\Instrument\Settings\Tables\detector_monitors_only.dat",
-            r"C:\Instrument\Settings\Tables\spectra_monitors_only.dat",
-            r"C:\Instrument\Settings\Tables\wiring_monitors_only.dat",
+            r"detector_monitors_only.dat",
+            r"spectra_monitors_only.dat",
+            r"wiring_monitors_only.dat",
             [{"low": 5.0, "high": 1500.0, "step": 0.256,
               "trange": 1, "log": 0},
              {"low": 1500.0, "high": 100000.0, "step": 100.0,
@@ -268,9 +266,9 @@ involves only having two spectra covering the entire main detecor."""
     def setup_dae_4periods(self):
         """Setup the instrument with four periods."""
         self._generic_scan(
-            r"C:\Instrument\Settings\Tables\detector.dat",
-            r"C:\Instrument\Settings\Tables\spectra_4To1.dat",
-            r"C:\Instrument\Settings\Tables\wiring.dat",
+            r"detector.dat",
+            r"spectra_4To1.dat",
+            r"wiring.dat",
             [{"low": 5.0, "high": 100000.0, "step": 100.0,
               "trange": 1, "log": 0},
              {"low": 0.0, "high": 0.0, "step": 0.0, "trange": 2, "log": 0}])
@@ -280,6 +278,34 @@ involves only having two spectra covering the entire main detecor."""
         """Setup the instrument for SESANS measurements."""
         self.setup_dae_event()
 
+    @set_metadata("SEMSANS", "semsans")
+    def setup_dae_alanis(self):
+        """Setup the instrument for using the Alanis fibre detector"""
+        self._generic_scan(
+            r"Alanis_Detector.dat",
+            r"Alanis_Spectra.dat",
+            r"Alanis_Wiring.dat",
+            [{"low": 5.0, "high": 100000.0, "step": self._step,
+              "trange": 1, "log": 0},
+             {"low": 0.0, "high": 0.0, "step": 0.0,
+              "trange": 2, "log": 0},
+             {"low": 5.0, "high": 100000.0, "step": 2.0, "trange": 1,
+              "log": 0, "regime": 2}])
+
+    @set_metadata("SEMSANS", "semsans")
+    def setup_dae_semsans(self):
+        """Setup the instrument for polarised SEMSANS on the fibre detector"""
+        self._generic_scan(
+            r"Alanis_Detector.dat",
+            r"Alanis_Spectra.dat",
+            r"Alanis_Wiring.dat",
+            [{"low": 5.0, "high": 100000.0, "step": self._step,
+              "trange": 1, "log": 0},
+             {"low": 0.0, "high": 0.0, "step": 0.0,
+              "trange": 2, "log": 0},
+             {"low": 5.0, "high": 100000.0, "step": 2.0, "trange": 1,
+              "log": 0, "regime": 2}])
+
     @staticmethod
     def _begin_sesans():
         """Initialise a SESANS run"""
@@ -287,8 +313,7 @@ involves only having two spectra covering the entire main detecor."""
         gen.begin(paused=1)
 
     @staticmethod
-    def _waitfor_sesans(u=600, d=600,
-                        **kwargs):  # pylint: disable=invalid-name
+    def _waitfor_sesans(u=600, d=600, **kwargs):  # pylint: disable=invalid-name
         """Perform a SESANS run"""
         if "uamps" in kwargs:
             get_total = gen.get_uamps
@@ -318,49 +343,26 @@ involves only having two spectra covering the entire main detecor."""
 
             gtotal = get_total()
 
-    @set_metadata("SEMSANS", "semsans")
-    def setup_dae_alanis(self):
-        """Setup the instrument for using the Alanis fibre detector"""
-        self._generic_scan(
-            r"C:\Instrument\Settings\Tables\Alanis_Detector.dat",
-            r"C:\Instrument\Settings\Tables\Alanis_Spectra.dat",
-            r"C:\Instrument\Settings\Tables\Alanis_Wiring.dat",
-            [{"low": 5.0, "high": 100000.0, "step": self.step,
-              "trange": 1, "log": 0},
-             {"low": 0.0, "high": 0.0, "step": 0.0,
-              "trange": 2, "log": 0},
-             {"low": 5.0, "high": 100000.0, "step": 2.0, "trange": 1,
-              "log": 0, "regime": 2}])
-
-    @set_metadata("SEMSANS", "semsans")
-    def setup_dae_semsans(self):
-        """Setup the instrument for polarised SEMSANS on the fibre detector"""
-        self._generic_scan(
-            r"C:\Instrument\Settings\Tables\Alanis_Detector.dat",
-            r"C:\Instrument\Settings\Tables\Alanis_Spectra.dat",
-            r"C:\Instrument\Settings\Tables\Alanis_Wiring.dat",
-            [{"low": 5.0, "high": 100000.0, "step": self.step,
-              "trange": 1, "log": 0},
-             {"low": 0.0, "high": 0.0, "step": 0.0,
-              "trange": 2, "log": 0},
-             {"low": 5.0, "high": 100000.0, "step": 2.0, "trange": 1,
-              "log": 0, "regime": 2}])
-
     @staticmethod
     def _begin_semsans():
         """Initialise a SEMSANS run"""
         Larmor._begin_sesans()
 
     @staticmethod
-    def _waitfor_semsans(u=600, d=600,
-                         **kwargs):  # pylint: disable=invalid-name
+    def _waitfor_semsans(u=600, d=600, **kwargs):  # pylint: disable=invalid-name
         """Perform a SESANS run"""
         Larmor._waitfor_sesans(u, d, **kwargs)
 
     @staticmethod
     def set_aperture(size):
-        if size.upper() == "MEDIUM":
+        if size.upper() == "SMALL":
+            # gen.cset(a1hgap=, a1vgap=, s1hgap=, s1vgap=)
+            pass
+        elif size.upper() == "MEDIUM":
             gen.cset(a1hgap=20.0, a1vgap=20.0, s1hgap=14.0, s1vgap=14.0)
+        elif size.upper() == "LARGE":
+            # gen.cset(a1hgap=, a1vgap=, s1hgap=, s1vgap=)
+            pass
 
     def _configure_sans_custom(self):
         # move the transmission monitor out
@@ -372,11 +374,11 @@ involves only having two spectra covering the entire main detecor."""
 
     def _detector_is_on(self):
         """Is the detector currently on?"""
-        voltage_status = all([
+        voltage_status = [
             self.get_pv(
-                "CAEN:hv0:0:{}:status".format(x)).lower() == "on"
-            for x in [8, 9, 10, 11]])
-        return voltage_status
+                f"CAEN:hv0:0:{x}:status").lower() == "on"
+            for x in [8, 9, 10, 11]]
+        return all(voltage_status)
 
     def _detector_turn_on(self, delay=True):
         self.send_pv("CAEN:hv0:0:8:pwonoff", "On")
@@ -398,28 +400,28 @@ involves only having two spectra covering the entire main detecor."""
 
     # Instrument Specific Scripts
     @staticmethod
-    def FOMin():  # pylint: disable=invalid-name
+    def frame_overload_mirror_in():  # pylint: disable=invalid-name
         """Put the frame overload mirror into the beam."""
         # gen.cset(pol_trans=0, pol_arc=-1.6)
         # Convert to angle instead of mm
         gen.cset(pol_trans=0, pol_arc=-0.084)
 
     @staticmethod
-    def ShortPolariserin():  # pylint: disable=invalid-name
+    def short_polariser_in():  # pylint: disable=invalid-name
         """Put the short polariser for long wavelength into the beam."""
         # gen.cset(pol_trans=-100, pol_arc=-1.3)
         # Convert to angle instead of mm
         gen.cset(pol_trans=-100, pol_arc=-0.069)
 
     @staticmethod
-    def LongPolariserin():  # pylint: disable=invalid-name
+    def long_polariser_in():  # pylint: disable=invalid-name
         """Put the long polariser for short wavelengths into the beam."""
         # gen.cset(pol_trans=100, pol_arc=-1.3)
         # Convert to angle instead of mm
         gen.cset(pol_trans=100, pol_arc=-0.069)
 
     @staticmethod
-    def BSInOut(In=True):  # pylint: disable=invalid-name
+    def beam_stop_in_out(In=True):  # pylint: disable=invalid-name
         """Move the Beam Stop in and out of the beam.
 
         Parameters
@@ -448,42 +450,43 @@ involves only having two spectra covering the entire main detecor."""
         self.send_pv(slit + "JE:MTR.VAL", "20")
         gen.waitfor_move()
 
-    def homecoarsejaws(self):
+    def home_coarse_jaws(self):
         """Rehome coarse jaws."""
         info("Homing Coarse Jaws")
         gen.cset(cjhgap=40, cjvgap=40)
         gen.waitfor_move()
         self._generic_home_slit("MOT:JAWS1:")
 
-    def homea1(self):
+    def home_a1(self):
         """Rehome aperture 1."""
         info("Homing a1")
         gen.cset(a1hgap=40, a1vgap=40)
         self._generic_home_slit("MOT:JAWS2:")
         gen.waitfor_move()
 
-    def homes1(self):
+    def home_s1(self):
         """Rehome slit1."""
         info("Homing s1")
         gen.cset(s1hgap=40, s1vgap=40)
         gen.waitfor_move()
         self._generic_home_slit("MOT:JAWS3:")
 
+    #TODO delete? not needed since 2018 maybe
     @staticmethod
-    def homes2():
+    def home_s2():
         """Rehome slit2.  This is currentl a no-op."""
         info("Homing s2")
 
-    def movebench(self, angle=0.0, delaydet=True):
+    def move_bench(self, angle=0.0, delaydet=True):
         """Safely move the downstream arm"""
         info("Turning Detector Off")
         self.detector_on(False, delay=delaydet)
-        self.rotatebench(angle)
+        self.rotate_bench(angle)
         # turn the detector back on
         info("Turning Detector Back on")
         self.detector_on(True, delay=delaydet)
 
-    def rotatebench(self, angle=0.0):
+    def rotate_bench(self, angle=0.0):
         """Move the downstream arm"""
         if self.detector_on():
             info("The detector is not turned off")

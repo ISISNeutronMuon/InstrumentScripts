@@ -4,10 +4,17 @@ from technique.sans.instrument import ScanningInstrument
 from technique.sans.util import set_metadata  # noqa: F401
 from general.scans.util import local_wrapper
 
-
 class Zoom(ScanningInstrument):
-    """This class handles the Zoom beamline"""
-    _PV_BASE = "IN:ZOOM:"
+    """This class handles the Zoom beamline, it is an extension
+    of the Scanning instrument class."""
+
+    def _generic_scan(  # pylint: disable=dangerous-default-value
+            self,
+            detector, spectra,
+            wiring=r"detector_1det_1dae3card.dat",
+            tcbs=[{"low": 5.0, "high": 100000.0, "step": 200.0,
+                   "trange": 1, "log": 0}]):
+        ScanningInstrument._generic_scan(self, detector, spectra, wiring, tcbs)
 
     @set_metadata("SCAN", "scan")
     def setup_dae_scanning(self):
@@ -21,16 +28,6 @@ class Zoom(ScanningInstrument):
     def setup_dae_nrscanning(self):
         raise NotImplementedError(
             "Neutron reflectivity scanning tables not yet set")
-
-    def _generic_scan(  # pylint: disable=dangerous-default-value
-            self,
-            detector, spectra,
-            wiring=r"detector_1det_1dae3card.dat",
-            tcbs=[{"low": 5.0, "high": 100000.0, "step": 200.0,
-                   "trange": 1, "log": 0}]):
-        base = r"C:\Instrument\Settings\config\NDXZOOM\configurations\tables\\"
-        ScanningInstrument._generic_scan(self, 
-            base + detector, base + spectra, base + wiring, tcbs)
 
     @set_metadata("SANS", "sans")
     def setup_dae_event(self):
@@ -51,30 +48,27 @@ class Zoom(ScanningInstrument):
     def setup_dae_transmission(self):
         print("Setting up DAE for trans")
         self._generic_scan(
+            detector=r"detector_8mon_1dae3card_00.dat",
             spectra=r"spectrum_8mon_1dae3card_00.dat",
-            wiring=r"wiring_8mon_1dae3card_00_hist.dat",
-            detector=r"detector_8mon_1dae3card_00.dat")
+            wiring=r"wiring_8mon_1dae3card_00_hist.dat")
 
     @set_metadata("SANS", "sans")
     def setup_dae_bsalignment(self):
         raise NotImplementedError("Beam Stop Alignment tables not yet set")
 
-    @staticmethod
-    def set_aperture(size):
-        if size.upper() == "MEDIUM":
-            # change the line below to match ZOOM motors
-            # gen.cset(a1hgap=20.0, a1vgap=20.0, s1hgap=14.0, s1vgap=14.0)
-            pass
+    def set_aperture(self, size):
+        pass
 
     def _detector_is_on(self):
         """Is the detector currently on?"""
-        voltage_status = all([
+        voltage_status = [
             self.get_pv(
-                "CAEN:hv0:4:{}:status".format(x)).lower() == "on"
-            for x in range(8)])
-        return voltage_status
+                f"CAEN:hv0:4:{x}:status").lower() == "on"
+            for x in range(8)]
+        return all(voltage_status)
 
-    def _detector_turn_on(self, delay=True):
+    @staticmethod
+    def _detector_turn_on(delay=True):
         raise NotImplementedError("Detector toggling is not supported Zoom")
         # for x in range(8):
         #     self.send_pv("CAEN:hv0:4:{}:pwonoff".format(x), "On")
