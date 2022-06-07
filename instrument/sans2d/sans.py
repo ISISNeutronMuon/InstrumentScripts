@@ -49,7 +49,8 @@ class Sans2d(ScanningInstrument):
                 '1W7', '2W7', '3W7', '4W7', '5W7', '6W7', '7W7',
                 'XSF',
                 'ASFT', 'BSFT', 'CSFT', 'DSFT', 'ESFT', 'FSFT', 'GSFT', 'HSFT', 'ISFT', 'JSFT',
-                '1SFA', '2SFA', '3SFA', '4SFA', '5SFA', '6SFA', '7SFA',
+                '1SFA', '2SFA', '3SFA', '4SFA', '5SFA', '6SFA', '7SFA', 
+                'DLS2',  'DLS3',  'DLS4',  'DLS5',  'DLS6',
                 ]
 
     def check_move_pos(self, pos):
