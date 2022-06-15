@@ -7,12 +7,12 @@ from mock import Mock
 from .genie import SwitchGenie, mock_gen
 
 
-def set_metadata(title_suffix, measurement_type):
+def dae_setter(suffix, measurement_type):
     """Declare that a method should add metadata to the title and journal
 
     Parameters
     ==========
-    title_suffix : str
+    suffix : str
       The footer to be put on all run titles in this mode
     measurement_type : str
       The default measurement_type to be recorded in the journal
@@ -22,22 +22,35 @@ def set_metadata(title_suffix, measurement_type):
     A decorator for setting the dae mode
 
     This decorator was designed to work on subclasses of the
-    :py:class:`src.Instrument.ScanningInstrument` class.  The
-    decorator will add the suffix to the end of the title and
-    the measurement type into the journal.
+    :py:class:`src.Instrument.ScanningInstrument` class. The
+    following functionality is added into the class
+
+    1. If the wiring tables are already in the correct state, the function
+       returns immediately without taking any other actions
+    2. If the wiring tables are in a different state, the change to the wiring
+       tables is printed to the prompt before performing the actual change
+
+
+    #1 of the above is the most important, as it allows the wiring
+    tables to be set on any function call without worrying about
+    wasting time reloading an existing configuration
 
     Please note that this decorator assumes that the title of the
-    method begins with "setup_dae", followed by the type of request.
+    method begins with "setup_dae", followed by the new of the state
+    of the wiring table.
     """
     def decorator(inner):
         """The actual decorator with the given parameters"""
         @wraps(inner)
         def wrapper(self, *args, **kwargs):
+            """Memoize the dae mode"""
             request = inner.__name__[10:]
+            if request == self._dae_mode:  # pylint: disable=protected-access
+                return
             inner(self, *args, **kwargs)
-            info("Setup {} for {}".format(type(self).__name__,
-                                          request.replace("_", " ")))
-            self.title_footer = "_" + title_suffix
+            info(f"Setup {type(self).__name__} for {request.replace('_', ' ')}")
+            self._dae_mode = request  # pylint: disable=protected-access
+            self.title_footer = "_" + suffix
             self.measurement_type = measurement_type
         return wrapper
     return decorator

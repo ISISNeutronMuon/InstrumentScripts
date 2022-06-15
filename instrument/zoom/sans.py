@@ -1,7 +1,7 @@
 """This is the instrument implementation for the Zoom beamline."""
 from technique.sans.instrument import ScanningInstrument
 # pylint: disable=unused-import
-from technique.sans.util import set_metadata  # noqa: F401
+from technique.sans.util import dae_setter  # noqa: F401
 from general.scans.util import local_wrapper
 
 class Zoom(ScanningInstrument):
@@ -16,20 +16,7 @@ class Zoom(ScanningInstrument):
                    "trange": 1, "log": 0}]):
         ScanningInstrument._generic_scan(self, detector, spectra, wiring, tcbs)
 
-    @set_metadata("SCAN", "scan")
-    def setup_dae_scanning(self):
-        raise NotImplementedError("Scanning tables not yet set")
-
-    @set_metadata("SCAN", "scan")
-    def setup_dae_nr(self):
-        raise NotImplementedError("Neutron reflectivity tables not yet set")
-
-    @set_metadata("SCAN", "scan")
-    def setup_dae_nrscanning(self):
-        raise NotImplementedError(
-            "Neutron reflectivity scanning tables not yet set")
-
-    @set_metadata("SANS", "sans")
+    @dae_setter("SANS", "sans")
     def setup_dae_event(self):
         print("Setting DAE into event mode")
         self._generic_scan(
@@ -37,24 +24,20 @@ class Zoom(ScanningInstrument):
             spectra=r"spec2det_280318_to_test_18_1.txt",
             wiring=r"wiring1det_event_200218.dat")
 
-    @set_metadata("SANS", "sans")
+    @dae_setter("SANS", "sans")
     def setup_dae_histogram(self):
         self._generic_scan(
             detector=r"detector_1det_1dae3card.dat",
             spectra=r"spec2det_130218.txt",
             wiring=r"wiring1det_histogram_200218.dat")
 
-    @set_metadata("TRANS", "transmission")
+    @dae_setter("TRANS", "transmission")
     def setup_dae_transmission(self):
         print("Setting up DAE for trans")
         self._generic_scan(
             detector=r"detector_8mon_1dae3card_00.dat",
             spectra=r"spectrum_8mon_1dae3card_00.dat",
             wiring=r"wiring_8mon_1dae3card_00_hist.dat")
-
-    @set_metadata("SANS", "sans")
-    def setup_dae_bsalignment(self):
-        raise NotImplementedError("Beam Stop Alignment tables not yet set")
 
     def set_aperture(self, size):
         pass
@@ -67,8 +50,7 @@ class Zoom(ScanningInstrument):
             for x in range(8)]
         return all(voltage_status)
 
-    @staticmethod
-    def _detector_turn_on(delay=True):
+    def _detector_turn_on(self, delay=True):
         raise NotImplementedError("Detector toggling is not supported Zoom")
         # for x in range(8):
         #     self.send_pv("CAEN:hv0:4:{}:pwonoff".format(x), "On")

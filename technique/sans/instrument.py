@@ -36,15 +36,24 @@ class ScanningInstrument(object):
     and overriding of any methods that need instrument specific
     implementations.
 
-    If you would like to create custom implementions of
+    If you would like to create custom implementations of
     begin/waitfor/end function beyond calling gen.begin you can
-    deffine custom function within the instruments script files.
-    The functions should e
+    define custom function within the instruments script files.
+
+    The functions should names should end with name of the dae_mode
+    that these custom implementation is used for. For example if
+    you want a custom begin/waitfor/end for setup_dae_transmission
+    then the functions begin_transmission, waitfor_transmission,
+    end_transmission. If you wish to create a new dae_mode then
+    follow the patteren of other dae_mode, the you must tag the
+    dae mode with the decorator @dae_setter (see dae_setter) for
+    more deatails.
 
     Attributes
     ----------
     title_footer : str
-        Footer appended to the experiment title
+        Footer appended to the experiment title. This is set through
+        dae_setter a function called when setting the dae_mode
     """
 
     # Property to indicate if a custom dae mode is being uses.
@@ -57,7 +66,7 @@ class ScanningInstrument(object):
     # Gets the instruments prefix to be used with all pv commands
     _PV_BASE = gen.my_pv_prefix
     # Methods to ignore in method_iterator
-    _block_accessors = ["changer_pos", "method_iterator"]
+    _block_accessors = ["changer_pos_dls", "changer_pos", "method_iterator"]
 
     _tables_path = r""
 
@@ -79,7 +88,10 @@ class ScanningInstrument(object):
                 '10GT', '11GT', '12GT', '2GB', '3GB', '4GB', '5GB', '6GB', '7GB',
                 '8GB', '9GB', '10GB', '11GB']
 
+    _poslist_dls = []
+
     def __init__(self):
+        self._poslist = self.get_pv("LKUP:SAMPLE:POSITIONS").split()
         self.setup_sans = self.setup_dae_event
         self.setup_trans = self.setup_dae_transmission
 
@@ -448,8 +460,22 @@ class ScanningInstrument(object):
 
         """
         if pos.upper() not in self._poslist:
+            warning(f"Error in script, position {pos} does not exist")
             return False
         return True
+
+
+    def check_move_pos_dls(self, pos):
+        """CCheck whether the position is valid for the DSL sample
+         changer and return True or False
+
+        Parameters
+        ----------
+        pos : str
+          The sample changer position
+
+        """
+        NotImplementedError("DSL sample change is unsupported on this instrument")
 
     @property
     def changer_pos(self):
@@ -458,19 +484,33 @@ class ScanningInstrument(object):
 
     @changer_pos.setter
     def changer_pos(self, pos):  # pylint: disable=no-self-use
-        """Set the current sample changer position
+        """Set the current dls sample changer position
 
         Parameters
         ----------
         pos : str
-          The new sample changer position
+          The new dls sample changer position
         """
         return gen.cset(SamplePos=pos)
 
-    def _setup_measurement(self, trans, blank):
-        """Perform all the software setup for a measurement
+    @property
+    def changer_pos_dls(self):
+        """Get the current sample changer position"""
+        return gen.cget("Position")["value"]
 
-        It will set the measurement type then sets the up the
+    @changer_pos_dls.setter
+    def changer_pos_dls(self, pos):  # pylint: disable=no-self-use
+        """Set the current dls sample changer position
+
+        Parameters
+        ----------
+        pos : str
+          The new dls sample changer position
+        """
+        return gen.cset(Position=pos)
+
+    def _setup_measurement_software(self, trans, blank):
+        """It will set the measurement type then sets the up the
         current dae for trans/sans measurement
 
         Parameters
@@ -492,15 +532,17 @@ class ScanningInstrument(object):
                 self.measurement_type = "blank"
             self.setup_sans()
 
-    def measure(self, title, pos=None, thickness=1.0, trans=False,
-                dae=None, blank=False, aperture="", **kwargs):
-        """Take a sample measurement.
+    def measure(self, title, position=None, thickness=1.0, trans=False,
+                dae=None, blank=False, aperture="", time=None,
+                period=None, dls_sample_changer=False, **kwargs):
+        """Take a sample measurement. If no timing parameter is provided
+        then no measuremnt occurs but expirment setup does happend
 
         Parameters
         ----------
         title : str
           The title for the measurement. This is the only required parameter.
-        pos : str or func
+        position : str or func
           The sample position. This can be a string with the name of
           a sample position, or it can be a function which moves the
           detector into the desired position. If left undefined, the
@@ -531,16 +573,25 @@ class ScanningInstrument(object):
           changed from default value for trans/sans.
         blank : bool
           If this sample should be considered a blank/can/solvent measurement
+        time : int
+            The number of seconds for the expiment to run.
+            To run for different units of time you can inclued parameters from
+            the TIMEING propertry this includes uamps, frames, and hours
+            However, these will be ignored if time argument is provided.
+        period : int
+            The period to collect the dae data
+        dls_sample_changer : bool
+            If you are currently using the dls sample changer
         **kwargs
           This is a general term for all other arrangements but in
           this case there are some specific thing you can pass:
 
+          If given a time duration from the TIMEING propertry you can have
+          more control over the time frame of the run Otions . However, these will
+          be ignored if time is provided.
+
           If given a block name, it will move that block to the given
           position.
-
-          If given a time duration, then that will be the
-          duration of the run. You can parse multiple times
-          but only the first will be used.
 
         Examples
         ----------
@@ -558,107 +609,144 @@ class ScanningInstrument(object):
         2 mm thick deuterium sample for 10 µA hours of proton
         current. (approx 15 minutes).
         """
-        self._measure(title, pos=pos, thickness=thickness, trans=trans,
-                      dae=dae, blank=blank, aperture=aperture, _custom=True, **kwargs)
+        self._measure(title, position=position, thickness=thickness, trans=trans,
+                      dae=dae, blank=blank, aperture=aperture, time=time,
+                      period=period, _custom=True, dls_sample_changer=dls_sample_changer, **kwargs)
 
-    def _measure(self, title, pos=None, thickness=1.0, trans=False,
-                 dae=None, blank=False, aperture="", _custom=True, **kwargs):
-        """
-        The _measure function that can be used with _custom to indicated
-        if it is a normal measure call or from the do_sans/do_trans wrapper
-        where some setup has already been done
-        """
-        if gen.get_runstate() != "SETUP":  # pragma: no cover
-            self._attempt_resume(title, pos, thickness, dae, **kwargs)
-            return
-
+    def _setup(self, title, position=None, thickness=1.0, trans=False,
+               dae=None, blank=False, aperture="", period=None,
+               _custom=True, dls_sample_changer=False, **kwargs):
+        # Check detector for sans
         if not self.detector_lock() and not self.detector_on() and not trans:
             raise RuntimeError(
                 "The detector is off. Either turn on the detector or "
                 "use the detector_lock(True) to indicate that the detector "
                 "is off intentionally")
+        # If not called from do_sans/trans do so extra set up
         if _custom:
             self.set_default_dae(dae, trans)
-            self._setup_measurement(trans, blank)
+            self._setup_measurement_software(trans, blank)
         self.measurement_label = title
+        gen.change(title=title + self.title_footer)
         self.set_aperture(aperture)
-        if pos:
-            if isinstance(pos, str):
-                if self.check_move_pos(pos):
-                    info(f"Moving to sample changer position {pos}")
-                    self.changer_pos = pos
-                else:
-                    raise RuntimeError(
-                        f"Position {pos} does not exist")
-            elif callable(pos):
-                info(f"Moving to position {pos.__name__}")
-                pos()
-            else:
-                raise TypeError(f"Cannot understand position {pos}")
+        if position:
+            self._set_sample_position(position, dls_sample_changer)
+        # Check for extra blocks to be at set positions
         for arg, val in sorted(kwargs.items()):
             if arg in self.TIMINGS:
                 continue
             info(f"Moving {arg} to {val}")
             gen.cset(arg, val)
-        times = self.sanitised_timings(kwargs)
         gen.waitfor_move()
         gen.change_sample_par("Thick", thickness)
         info("Using the following Sample Parameters")
         self.print_sample_pars()
+        if period:
+            gen.change_period(period)
 
-        gen.change(title=title + self.title_footer)
+    def _set_sample_position(self, position, dls_sample_changer=False):
+        if isinstance(position, str):
+            if dls_sample_changer and self.check_move_pos_dls(position):
+                info(f"Moving to dls sample changer position {position}")
+                self.changer_pos_dls = position
+            elif self.check_move_pos(position):
+                info(f"Moving to sample changer position {position}")
+                self.changer_pos = position
+            else:
+                raise RuntimeError(
+                    f"Position {position} does not exist")
+        elif callable(position):
+            info(f"Moving to position {position.__name__}")
+            position()
+        else:
+            raise TypeError(f"Cannot understand position {position}")
 
-        self._begin()
+    def _do_measure(self, title, time=None, **kwargs):
+        if time:
+            times = {"seconds": time}
+        else:
+            times = self.sanitised_timings(kwargs)
+
         unit, time = _get_times(times)
         info(f"Measuring {title + self.title_footer} for {time} {unit}")
+        self._begin()
         self._waitfor(**times)
         self._end()
 
-    def do_sans(self, title=None, pos=None, thickness=1.0, dae=None, blank=False,
-                aperture="", **kwargs):
+    def _measure(self, title=None, position=None, thickness=1.0, trans=False,
+                 dae=None, blank=False, aperture="", period=None,
+                 time=None, _custom=True, **kwargs):
+
+        self._setup(title=title, position=position, thickness=thickness, trans=trans,
+                    dae=dae, blank=blank, aperture=aperture, period=period,
+                    _custom=_custom, **kwargs)
+
+        # If a time frame given start the experiment
+        if time or self.sanitised_timings(kwargs):
+            self._do_measure(time=time, **kwargs)
+
+    def do_sans(self, title="", position=None, thickness=1.0, dae=None, blank=False,
+                aperture="", period=None, time=None, dls_sample_changer=False, **kwargs):
         """A wrapper around ``measure`` which ensures that the instrument is
-        in sans mode before running the measurement if a title is given. It ensures that the
-        instrument is set up correctly by running the _configure_sans_custom command that
-        is instrument specific.
+        in sans mode before running the measurement if a title is given.
+        It ensures that the instrument is set up correctly by running the
+        _configure_sans_custom command that is instrument specific.
+
+        Typically, _configure_sans_custom sets up the aperture and appropriate
+        monitor. You can override the aperture by setting the aperture parameter,
+        similarly you can override specific motors as decide in the measure
+        documentation.
 
         Look at the documentation for ``measure`` to see the full set
         of parameters accepted. """
-        self._configure_sans_custom()
-        self.set_default_dae(mode=dae, trans=False)
-        self._setup_measurement(trans=False, blank=blank)
-        info("Set up instrument for sans measurement")
 
-        if not title:
+        if gen.get_runstate() != "SETUP":  # pragma: no cover
+            self._attempt_resume(title, position, thickness, dae, **kwargs)
             return
+
+        info("Set up instrument for sans measurement")
+        self._configure_sans_custom()
+        gen.waitfor_move()
+        self.set_default_dae(mode=dae, trans=False)
+        self._setup_measurement_software(trans=False, blank=blank)
 
         if "trans" in kwargs:
             del kwargs["trans"]
-        self._measure(title, trans=False, pos=pos, thickness=thickness,
-                      dae=dae, blank=blank, aperture=aperture, _custom=False,
-                      **kwargs)
+        self._measure(title + "_SANS", trans=False, position=position, thickness=thickness,
+                      dae=dae, blank=blank, aperture=aperture, period=period,
+                      time=time, _custom=False, dls_sample_changer=dls_sample_changer, **kwargs)
 
-    def do_trans(self, title=None, pos=None, thickness=1.0, dae=None, blank=False,
-                 aperture="", **kwargs):
+    def do_trans(self, title="", position=None, thickness=1.0, dae=None, blank=False,
+                 aperture="", period=None, time=None, dls_sample_changer=False, **kwargs):
         """A wrapper around ``measure`` which ensures that the instrument is
          in transition mode before running the measurement if a title is given. It ensures that the
          instrument is set up correctly by running the _configure_trans_custom command that
          is instrument specific.
 
+        Typically, _configure_trans_custom sets up the aperture and appropriate
+        monitor. You can override the aperture by setting the aperture parameter,
+        similarly you can override specific motors as decide in the measure
+        documentation.
+
+
         Look at the documentation for ``measure`` to see the full set
         of parameters accepted. """
-        self._configure_trans_custom()
-        self.set_default_dae(mode=dae, trans=True)
-        self._setup_measurement(trans=True, blank=blank)
-        info("Set up instrument for trans measurement")
 
-        if not title:
+        if gen.get_runstate() != "SETUP":  # pragma: no cover
+            self._attempt_resume(title, position, thickness, dae, **kwargs)
             return
+
+        info("Set up instrument for trans measurement")
+        self._configure_trans_custom()
+        gen.waitfor_move()
+        self.set_default_dae(mode=dae, trans=True)
+        self._setup_measurement_software(trans=True, blank=blank)
 
         if "trans" in kwargs:
             del kwargs["trans"]
-        self._measure(title, trans=True, pos=pos, thickness=thickness,
-                      dae=dae, blank=blank, aperture=aperture, _custom=False,
-                      **kwargs)
+        self._measure(title + "_TRANS", trans=True, position=position, thickness=thickness,
+                      dae=dae, blank=blank, aperture=aperture, period=period,
+                      time=time, _custom=False, dls_sample_changer=dls_sample_changer, **kwargs)
 
     def measure_file(self, file_path, forever=False):
         """Perform a series of measurements based on a spreadsheet
@@ -746,26 +834,26 @@ class ScanningInstrument(object):
                 if "trans" in row:
                     del row["trans"]
 
-                out.write(f'    {header}("{title}", ')
+                out.write(f'    {header}(title="{title}", ')
 
                 if "pos" in row:
-                    out.write(f'"{row["pos"]}", ')
+                    out.write(f'pos="{row["pos"]}", ')
                     del row["pos"]
 
-                row = {k: row[k] for k in row if row[k].strip() != ""}
-                for k in row.keys():
-                    if row[k].upper() == "TRUE":
-                        row[k] = True
-                    elif row[k].upper() == "FALSE":
-                        row[k] = False
+                row = {key: row[key] for key in row if row[key].strip() != ""}
+                for key in row.keys():
+                    if row[key].upper() == "TRUE":
+                        row[key] = True
+                    elif row[key].upper() == "FALSE":
+                        row[key] = False
                     else:
                         try:
-                            row[k] = ast.literal_eval(row[k])
+                            row[key] = ast.literal_eval(row[key])
                         except ValueError:
-                            row[k] = "\"" + row[k] + "\""
+                            row[key] = "\"" + row[key] + "\""
                             continue
-                params = ", ".join([k + "=" + str(v)
-                                    for (k, v) in sorted(row.items())])
+                params = ", ".join([key + "=" + str(value)
+                                    for (key, value) in sorted(row.items())])
                 out.write(f'{params})\n')
 
     @staticmethod
@@ -799,7 +887,6 @@ class ScanningInstrument(object):
         """
         return gen.set_pv(self._PV_BASE + name, value)
 
-
     @property
     def tables_path(self):
         """Path to folder containing the detector/wiring/spectra
@@ -813,20 +900,6 @@ class ScanningInstrument(object):
         self._tables_path = r"" + new_path
 
     @abstractmethod
-    def setup_dae_scanning(self):  # pragma: no cover
-        """Set the wiring tables for a scan"""
-
-    @abstractmethod
-    def setup_dae_nr(self):  # pragma: no cover
-        """Set the wiring tables for a neutron
-        reflectivity measurement"""
-
-    @abstractmethod
-    def setup_dae_nrscanning(self):  # pragma: no cover
-        """Set the wiring tables for performing
-        scans during neutron reflectivity"""
-
-    @abstractmethod
     def setup_dae_event(self):  # pragma: no cover
         """Set the wiring tables for event mode"""
 
@@ -837,10 +910,6 @@ class ScanningInstrument(object):
     @abstractmethod
     def setup_dae_transmission(self):  # pragma: no cover
         """Set the wiring tables for a transmission measurement"""
-
-    @abstractmethod
-    def setup_dae_bsalignment(self):  # pragma: no cover
-        """Configure wiring tables for beamstop alignment."""
 
     @abstractmethod
     def _configure_sans_custom(self):
@@ -856,10 +925,8 @@ class ScanningInstrument(object):
         from the beam).
         """
 
-    # I dont see why this should be static
-    @staticmethod
     @abstractmethod
-    def _detector_is_on():  # pragma: no cover
+    def _detector_is_on(self):  # pragma: no cover
         """Determine the current state of the detector.
 
         Returns
@@ -869,9 +936,8 @@ class ScanningInstrument(object):
 
         """
 
-    @staticmethod
     @abstractmethod
-    def _detector_turn_on(delay=True):  # pragma: no cover
+    def _detector_turn_on(self, delay=True):  # pragma: no cover
         """Power on the detector
 
         Parameters
@@ -880,9 +946,8 @@ class ScanningInstrument(object):
           Wait for the detector to warm up before continuing
         """
 
-    @staticmethod
     @abstractmethod
-    def _detector_turn_off(delay=True):  # pragma: no cover
+    def _detector_turn_off(self, delay=True):  # pragma: no cover
         """Remove detector power
 
         Parameters

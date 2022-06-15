@@ -3,7 +3,7 @@ from logging import info
 from technique.sans.instrument import ScanningInstrument
 from technique.sans.genie import gen
 # pylint: disable=unused-import
-from technique.sans.util import set_metadata, user_script  # noqa: F401
+from technique.sans.util import dae_setter, user_script  # noqa: F401
 from general.scans.util import local_wrapper
 from .util import flipper1
 
@@ -75,18 +75,18 @@ class Larmor(ScanningInstrument):  # pylint: disable=too-many-public-methods
             self,
             detector=r"detector.dat",
             spectra=r"spectra_1To1.dat",
-            wiring=r"wiring.dat",
+            wiring=r"wiring_dae3.dat",
             tcbs=[]):
         ScanningInstrument._generic_scan(self, detector, spectra, wiring, tcbs)
 
-    @set_metadata("SCAN", "scan")
+    @dae_setter("SCAN", "scan")
     def setup_dae_scanning(self):
         self._generic_scan(
             spectra=r"spectra_scanning_80.dat",
             tcbs=[{"low": 5.0, "high": 100000.0, "step": 100.0,
                    "trange": 1, "log": 0}])
 
-    @set_metadata("SCAN", "scan")
+    @dae_setter("SCAN", "scan")
     def setup_dae_scanning12(self):
         """Set the wiring tables for performing a scan where the entire main
 detector is contained in only two channels."""
@@ -95,31 +95,49 @@ detector is contained in only two channels."""
             tcbs=[{"low": 5.0, "high": 100000.0, "step": 100.0,
                    "trange": 1, "log": 0}])
 
-    @set_metadata("SCAN", "scan")
-    def setup_dae_echoscan(self):
+    @dae_setter("SCAN", "scan")
+    def setup_dae_scanningAlanis(self):  # pylint: disable=no-self-use
+        """Set the wiring tables for performing a scan where the entire main
+            detector is contained in channel 11 and the Alanis Detector is in channel 12."""
+        self._generic_scan(
+            spectra=r"C:\Instrument\Settings\config\NDXLARMOR\configurations\tables\spectra_scanning_Alanis.dat",
+            tcbs=[{"low": 5.0, "high": 100000.0, "step": 100.0,
+                   "trange": 1, "log": 0}])
+
+    @dae_setter("SCAN", "scan")
+    def setup_dae_scanning11(self):  # pylint: disable=no-self-use
+        """Set the wiring tables for performing a scan where the entire main
+        detector is contained in only one channel now we are using dae 3."""
+        self._generic_scan(
+            spectra=r"C:\Instrument\Settings\config\NDXLARMOR\configurations\tables\spectra_scanning_11.dat",
+            tcbs=[{"low": 5.0, "high": 100000.0, "step": 100.0,
+                   "trange": 1, "log": 0}])
+
+    @dae_setter("SCAN", "scan")
+    def setup_dae_echoscan(self):  # pylint: disable=no-self-use
         """Set the wiring tables for performing a spin echo tuning scan.  This
 involves only having two spectra covering the entire main detecor."""
         self.setup_dae_scanning12()
 
-    @set_metadata("SCAN", "scan")
+    @dae_setter("SCAN", "scan")
     def setup_dae_nr(self):
         self._generic_scan(
             spectra=r"spectra_nrscanning.dat",
             tcbs=[{"low": 5.0, "high": 100000.0, "step": 100.0,
                    "trange": 1, "log": 0}])
 
-    @set_metadata("SCAN", "scan")
+    @dae_setter("SCAN", "scan")
     def setup_dae_nrscanning(self):
         self._generic_scan(
             spectra=r"U:\Users\Masks\spectra_scanning_auto.dat",
             tcbs=[{"low": 5.0, "high": 100000.0, "step": 100.0,
                    "trange": 1, "log": 0}])
 
-    @set_metadata("SANS", "sans")
+    @dae_setter("SANS", "sans")
     def setup_dae_event(self):
         # Normal event mode with full detector binning
         self._generic_scan(
-            wiring=r"wiring_event.dat",
+            wiring=r"wiring_dae3_event.dat",
             tcbs=[{"low": 5.0, "high": 100000.0, "step": self._step,
                    "trange": 1, "log": 0},
                   {"low": 0.0, "high": 0.0, "step": 0.0,
@@ -128,11 +146,13 @@ involves only having two spectra covering the entire main detecor."""
                    "log": 0, "regime": 2}])
         self._set_choppers(self._lrange)
 
-    @set_metadata("SANS", "sans")
+    @dae_setter("SANS", "sans")
     def setup_dae_event_fastsave(self):
         """Event mode with reduced detector histogram binning to decrease
         filesize."""
-        # This currently breaks mantid nexus read (as of 19/10/2018)
+        # Event mode with reduced detector histogram binning to
+        # decrease filesize
+        # This currently breaks mantid nexus read
         self._generic_scan(
             wiring=r"wiring_event_fastsave.dat",
             # change to log binning to reduce number of detector bins
@@ -152,7 +172,7 @@ involves only having two spectra covering the entire main detecor."""
                    "log": 0, "regime": 3}])
         self._set_choppers(self._lrange)
 
-    @set_metadata("SANS", "sans")
+    @dae_setter("SANS", "sans")
     def setup_dae_histogram(self):
         gen.change_sync('isis')
         self._generic_scan(
@@ -162,21 +182,21 @@ involves only having two spectra covering the entire main detecor."""
                    "trange": 2, "log": 0}])
         self._set_choppers(self._lrange)
 
-    @set_metadata("TRANS", "transmission")
+    @dae_setter("TRANS", "transmission")
     def setup_dae_transmission(self):
         self.send_pv("PARS:SAMPLE:MEAS:TYPE", "transmission")
         gen.change_sync('isis')
         self._generic_scan(
             r"detector_monitors_only.dat",
             r"spectra_monitors_only.dat",
-            r"wiring_monitors_only.dat",
+            r"wiring_dae3_monitors_only.dat",
             [{"low": 5.0, "high": 100000.0, "step": 100.0,
               "trange": 1, "log": 0},
              {"low": 0.0, "high": 0.0, "step": 0.0,
               "trange": 2, "log": 0}])
         self._set_choppers(self._lrange)
 
-    @set_metadata("TRANS", "transmission")
+    @dae_setter("TRANS", "transmission")
     def setup_dae_monotest(self):
         """Setup with a mono test?"""
         self._generic_scan(
@@ -190,7 +210,7 @@ involves only having two spectra covering the entire main detecor."""
         self.send_pv("MK3CHOPR_01: CH3: DIR: SP", "CCW")
         gen.cset(InstrumentDiskPhase=77650)
 
-    @set_metadata("SANS", "sans")
+    @dae_setter("SANS", "sans")
     def setup_dae_tshift(self, tlowdet=5.0, thighdet=100000.0, tlowmon=5.0,
                          thighmon=100000.0):
         """Allow m1 to count as normal but to shift the rest of the detectors
@@ -206,7 +226,7 @@ involves only having two spectra covering the entire main detecor."""
                   {"low": tlowmon, "high": thighmon, "step": 20.0, "trange": 1,
                    "log": 0, "regime": 3}])
 
-    @set_metadata("SANS", "sans")
+    @dae_setter("SANS", "sans")
     def setup_dae_diffraction(self):
         """Set the wiring tables for a diffraction measurement"""
         self._generic_scan(
@@ -215,7 +235,7 @@ involves only having two spectra covering the entire main detecor."""
                   {"low": 0.0, "high": 0.0, "step": 0.0,
                    "trange": 2, "log": 0}])
 
-    @set_metadata("SANS", "sans")
+    @dae_setter("SANS", "sans")
     def setup_dae_polarised(self):
         """Set the wiring tables for a polarisation measurement."""
         self._generic_scan(
@@ -223,7 +243,7 @@ involves only having two spectra covering the entire main detecor."""
                   {"low": 0.0, "high": 0.0, "step": 0.0,
                    "trange": 2, "log": 0}])
 
-    @set_metadata("SANS", "sans")
+    @dae_setter("SANS", "sans")
     def setup_dae_bsalignment(self):
         self._generic_scan(
             tcbs=[{"low": 1000.0, "high": 100000.0, "step": 99000.0,
@@ -231,7 +251,7 @@ involves only having two spectra covering the entire main detecor."""
                   {"low": 0.0, "high": 0.0, "step": 0.0,
                    "trange": 2, "log": 0}])
 
-    @set_metadata("TRANS", "transmission")
+    @dae_setter("TRANS", "transmission")
     def setup_dae_monitorsonly(self):
         """Set the wiring tables to record only the monitors."""
         self._generic_scan(
@@ -241,7 +261,7 @@ involves only having two spectra covering the entire main detecor."""
                   {"low": 0.0, "high": 0.0, "step": 0.0,
                    "trange": 2, "log": 0}])
 
-    @set_metadata("SANS", "sans")
+    @dae_setter("SANS", "sans")
     def setup_dae_resonantimaging(self):
         """Set the wiring table for resonant imaging"""
         self._generic_scan(
@@ -254,7 +274,7 @@ involves only having two spectra covering the entire main detecor."""
               "trange": 2, "log": 0}])
 
     @staticmethod
-    @set_metadata("SANS", "sans")
+    @dae_setter("SANS", "sans")
     def setup_dae_resonantimaging_choppers():  # pylint: disable=invalid-name
         """Set the wiring thable for resonant imaging choppers"""
         info("Setting Chopper phases")
@@ -262,7 +282,7 @@ involves only having two spectra covering the entire main detecor."""
         gen.cset(TargetDiskPhase=0)
         gen.cset(InstrumentDiskPhase=0)
 
-    @set_metadata("SANS", "sans")
+    @dae_setter("SANS", "sans")
     def setup_dae_4periods(self):
         """Setup the instrument with four periods."""
         self._generic_scan(
@@ -273,38 +293,13 @@ involves only having two spectra covering the entire main detecor."""
               "trange": 1, "log": 0},
              {"low": 0.0, "high": 0.0, "step": 0.0, "trange": 2, "log": 0}])
 
-    @set_metadata("SESANS", "sesans")
+    @dae_setter("SESANS", "sesans")
     def setup_dae_sesans(self):
         """Setup the instrument for SESANS measurements."""
-        self.setup_dae_event()
+        # self.setup_dae_event()
+        self.setup_dae_alanis()
 
-    @set_metadata("SEMSANS", "semsans")
-    def setup_dae_alanis(self):
-        """Setup the instrument for using the Alanis fibre detector"""
-        self._generic_scan(
-            r"Alanis_Detector.dat",
-            r"Alanis_Spectra.dat",
-            r"Alanis_Wiring.dat",
-            [{"low": 5.0, "high": 100000.0, "step": self._step,
-              "trange": 1, "log": 0},
-             {"low": 0.0, "high": 0.0, "step": 0.0,
-              "trange": 2, "log": 0},
-             {"low": 5.0, "high": 100000.0, "step": 2.0, "trange": 1,
-              "log": 0, "regime": 2}])
 
-    @set_metadata("SEMSANS", "semsans")
-    def setup_dae_semsans(self):
-        """Setup the instrument for polarised SEMSANS on the fibre detector"""
-        self._generic_scan(
-            r"Alanis_Detector.dat",
-            r"Alanis_Spectra.dat",
-            r"Alanis_Wiring.dat",
-            [{"low": 5.0, "high": 100000.0, "step": self._step,
-              "trange": 1, "log": 0},
-             {"low": 0.0, "high": 0.0, "step": 0.0,
-              "trange": 2, "log": 0},
-             {"low": 5.0, "high": 100000.0, "step": 2.0, "trange": 1,
-              "log": 0, "regime": 2}])
 
     @staticmethod
     def _begin_sesans():
@@ -318,30 +313,78 @@ involves only having two spectra covering the entire main detecor."""
         if "uamps" in kwargs:
             get_total = gen.get_uamps
             key = "uamps"
+        elif "seconds" in kwargs:
+            get_total = gen.get_uamps
+            key = "seconds"
         else:
             get_total = gen.get_frames
             key = "frames"
         gfrm = gen.get_frames()
         gtotal = get_total()
 
+        if key == "seconds":
+            gtotal=gen.get_pv("IN:LARMOR:DAE:RUNDURATION")
+            u=u/10
+            d=d/10
+
         while gtotal < kwargs[key]:
             gen.change(period=1)
             info("Flipper On")
             flipper1(1)
-            gfrm = gen.get_frames()
-            gen.resume()
-            gen.waitfor(frames=gfrm + u)
-            gen.pause()
+            if key == "seconds":
+                gen.resume()
+                ttime=gen.get_pv("IN:LARMOR:DAE:RUNDURATION")
+                gen.waitfor(seconds=(gtotal+u)-ttime)
+                gen.pause()
+            else:
+                gfrm = gen.get_frames()
+                gen.resume()
+                gen.waitfor(frames=gfrm + u)
+                gen.pause()
 
             gen.change(period=2)
             info("Flipper Off")
             flipper1(0)
-            gfrm = gen.get_frames()
-            gen.resume()
-            gen.waitfor(frames=gfrm + d)
-            gen.pause()
+            if key == "seconds":
+                gen.resume()
+                ttime=gen.get_pv("IN:LARMOR:DAE:RUNDURATION")
+                gen.waitfor(seconds=(gtotal+u+d)-ttime)
+                gen.pause()
+                gtotal=gen.get_pv("IN:LARMOR:DAE:RUNDURATION")
+            else:
+                gfrm = gen.get_frames()
+                gen.resume()
+                gen.waitfor(frames=gfrm + d)
+                gen.pause()
+                gtotal = get_total()
 
-            gtotal = get_total()
+    @dae_setter("SEMSANS", "semsans")
+    def setup_dae_alanis(self):
+        """Setup the instrument for using the Alanis fibre detector"""
+        self._generic_scan(
+            r"Alanis_Detector.dat",
+            r"Alanis_Spectra.dat",
+            r"Alanis_Wiring_dae3.dat",
+            [{"low": 5.0, "high": 100000.0, "step": self._step,
+              "trange": 1, "log": 0},
+             {"low": 0.0, "high": 0.0, "step": 0.0,
+              "trange": 2, "log": 0},
+             {"low": 5.0, "high": 100000.0, "step": 2.0, "trange": 1,
+              "log": 0, "regime": 2}])
+
+    @dae_setter("SEMSANS", "semsans")
+    def setup_dae_semsans(self):
+        """Setup the instrument for polarised SEMSANS on the fibre detector"""
+        self._generic_scan(
+            r"Alanis_Detector.dat",
+            r"Alanis_Spectra.dat",
+            r"Alanis_Wiring_dae3.dat",
+            [{"low": 5.0, "high": 100000.0, "step": self._step,
+              "trange": 1, "log": 0},
+             {"low": 0.0, "high": 0.0, "step": 0.0,
+              "trange": 2, "log": 0},
+             {"low": 5.0, "high": 100000.0, "step": 2.0, "trange": 1,
+              "log": 0, "regime": 2}])
 
     @staticmethod
     def _begin_semsans():
@@ -363,6 +406,9 @@ involves only having two spectra covering the entire main detecor."""
         elif size.upper() == "LARGE":
             # gen.cset(a1hgap=, a1vgap=, s1hgap=, s1vgap=)
             pass
+        else:
+            info("Aperture unchanged")
+
 
     def _configure_sans_custom(self):
         # move the transmission monitor out
@@ -375,7 +421,7 @@ involves only having two spectra covering the entire main detecor."""
     def _detector_is_on(self):
         """Is the detector currently on?"""
         voltage_status = [
-            self.get_pv(
+            self.ask_pv(
                 f"CAEN:hv0:0:{x}:status").lower() == "on"
             for x in [8, 9, 10, 11]]
         return all(voltage_status)
@@ -421,16 +467,16 @@ involves only having two spectra covering the entire main detecor."""
         gen.cset(pol_trans=100, pol_arc=-0.069)
 
     @staticmethod
-    def beam_stop_in_out(In=True):  # pylint: disable=invalid-name
+    def beam_stop_in_out(stop_in=True):  # pylint: disable=invalid-name
         """Move the Beam Stop in and out of the beam.
 
         Parameters
         ----------
-        In : bool
+        stop_in : bool
           Whether to move the beam stop in or out
         """
-        # move beamstop in or out. The default is to move in
-        if In:
+        # move beam stop in or out. The default is to move in
+        if stop_in:
             gen.cset(BSY=88.5, BSZ=353.0)
         else:
             gen.cset(BSY=200.0, BSZ=0.0)

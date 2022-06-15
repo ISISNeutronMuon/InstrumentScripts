@@ -3,8 +3,9 @@ from time import sleep
 from technique.sans.instrument import ScanningInstrument
 from technique.sans.genie import gen
 # pylint: disable=unused-import
-from technique.sans.util import set_metadata  # noqa: F401
+from technique.sans.util import dae_setter  # noqa: F401
 from general.scans.util import local_wrapper
+from logging import warning
 
 
 class LOQ(ScanningInstrument):
@@ -19,11 +20,21 @@ class LOQ(ScanningInstrument):
                 'C8T', 'C9T', 'C10T', 'C11T', 'C12T', 'C13T', 'C14T',
                 'W1B', 'W2B', 'W3B', 'W4B', 'W5B', 'W6B', 'W7B', 'W8B',
                 'W9B', 'W10B', 'W11B', 'W12B', 'W13B', 'W14B', 'W15B', 'W16B',
+                'D1B', 'D2B', 'D3B', 'D4B', 'D5B', 'D6B',
+                'D7B', 'D8B', 'D9B', 'D10B', 'D11B', 'D12B',
                 'DLS2', 'DLS3', 'DLS4', 'DLS5', 'DLS6', 'FIVE', 'SIX', 'SEVEN', 'EIGHT']
 
     def __init__(self):
-        ScanningInstrument.__init__(self)
+        super().__init__()
         self.setup_sans = self.setup_dae_histogram
+        _poslist_dls = self.get_pv("LKUP:SAMPLE:POSITIONS").split()
+
+    def do_sans_large(self, title=None, pos=None, thickness=1.0, dae=None, blank=False,
+                uamps=None, time=None, **kwargs):
+        # TODO apature
+        self.do_sans(title=title, pos=pos, thickness=thickness, dae=dae, blank=blank,
+                aperture="LARGE", uamps=uamps, time=time, **kwargs)
+
 
     def _generic_scan(  # pylint: disable=dangerous-default-value
             self,
@@ -43,41 +54,29 @@ class LOQ(ScanningInstrument):
         ScanningInstrument._generic_scan(
             self, detector, spectra, wiring, tcbs)
 
-    @set_metadata("SANS/TRANS", "sans")
+    @dae_setter("SANS/TRANS", "sans")
     def setup_dae_event(self):
         self.setup_dae_normal()
 
-    @set_metadata("SANS/TRANS", "sans")
+    @dae_setter("SANS/TRANS", "sans")
     def setup_dae_histogram(self):
         self.setup_dae_normal()
 
-    @set_metadata("TRANS", "transmission")
+    @dae_setter("TRANS", "transmission")
     def setup_dae_transmission(self):
         return self._generic_scan(
             detector="detector8.dat",
             spectra="spectra8.dat",
             wiring="wiring8.dat")
 
-    @set_metadata("SANS", "sans")
-    def setup_dae_bsalignment(self):
-        raise NotImplementedError("DAE mode bsalignment unwritten for LOQ")
-
-    @set_metadata("SCAN", "scan")
+    @dae_setter("SCAN", "scan")
     def setup_dae_scanning(self):
         # FIXME: LOQ doesn't have a history of scanning, so it's not
         # certain what mode should be used.  For now, we'll guess it
         # to be the same as histogram
         return self._generic_scan()
 
-    @set_metadata("SCAN", "scan")
-    def setup_dae_nr(self):
-        raise NotImplementedError("LOQ cannot perform reflectometry")
-
-    @set_metadata("SCAN", "scan")
-    def setup_dae_nrscanning(self):
-        raise NotImplementedError("LOQ cannot perform reflectometry")
-
-    @set_metadata("SANS/TRANS", "sans")
+    @dae_setter("SANS/TRANS", "sans")
     def setup_dae_normal(self):
         """Setup LOQ for normal operation"""
         gen.change_sync("smp")
@@ -90,7 +89,7 @@ class LOQ(ScanningInstrument):
                   {"low": 3500, "high": 43500.0, "step": 40000,
                    "log": False, "trange": 1, "regime": 2}])
 
-    @set_metadata("SANS/TRANS", "sans")
+    @dae_setter("SANS/TRANS", "sans")
     def setup_dae_quiet(self):
         """Setup LOQ for quiet operation"""
         gen.change_sync("internal")
@@ -103,7 +102,7 @@ class LOQ(ScanningInstrument):
                   {"low": 5, "high": 19995.0, "step": 19990.0, "log": False,
                    "trange": 1, "regime": 2}])
 
-    @set_metadata("SANS/TRANS", "sans")
+    @dae_setter("SANS/TRANS", "sans")
     def setup_dae_50hz_short(self):
         """Setup LOQ for 50hz mode while short"""
         gen.change_sync("isis")
@@ -122,7 +121,7 @@ class LOQ(ScanningInstrument):
                   {"low": 6000, "high": 2.60e4, "step": 20000,
                    "log": False, "trange": 1, "regime": 2}])
 
-    @set_metadata("SANS/TRANS", "sans")
+    @dae_setter("SANS/TRANS", "sans")
     def setup_dae_50hz_long(self):
         """Setup LOQ for 50hz mode while long"""
         gen.change_sync("isis")
@@ -148,6 +147,7 @@ class LOQ(ScanningInstrument):
     @staticmethod
     def set_aperture(size):
         if size == "":
+            print("Aperture unchanged")
             pass
         elif size.upper() in ["SMALL", "MEDIUM", "LARGE"]:
             gen.cset(Aperture_2=size.upper())
@@ -158,19 +158,19 @@ class LOQ(ScanningInstrument):
         """Is the detector currently on?"""
         return self.get_pv("MOXA12XX_02:CH0:AI:RBV") > 2
 
-    @staticmethod
-    def _detector_turn_on(delay=True):
+    def _detector_turn_on(self, delay=True):
         raise NotImplementedError("Detector toggling is not supported LOQ")
         # for x in range(8):
         #     self.send_pv("CAEN:hv0:4:{}:pwonoff".format(x), "On")
 
-    @staticmethod
-    def _detector_turn_off(delay=True):
+    def _detector_turn_off(self, delay=True):
         raise NotImplementedError("Detector toggling is not supported on LOQ")
         # for x in range(8):
         #     self.send_pv("CAEN:hv0:4:{}:pwonoff".format(x), "Off")
 
+    #TODO do_sans_large for setup
     def _configure_sans_custom(self):
+        # Set Aperture_2?
         gen.cset(Tx_Mon="OUT")
         gen.waitfor_move()
 
@@ -222,6 +222,21 @@ class LOQ(ScanningInstrument):
         sleep(1)
         gen.cset(Julabo_2_Circulator="ON")
         gen.waitfor_move()
+
+    def check_move_pos_dls(self, pos):
+        """Check whether the position is valid for the DSL sample
+         changer and return True or False
+
+        Parameters
+        ----------
+        pos : str
+          The sample changer position
+
+        """
+        if pos not in self._poslist_dls:
+            warning(f"Error in script, position {pos} does not exist")
+            return False
+        return True
 
 
 obj = LOQ()
