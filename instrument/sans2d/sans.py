@@ -45,11 +45,14 @@ class Sans2d(ScanningInstrument):
             return False
         return True
 
-    def do_sans_large(self, title=None, pos=None, thickness=1.0, dae=None, blank=False,
-                uamps=None, time=None, **kwargs):
-        # TODO apature
-        self.do_sans(title=title, pos=pos, thickness=thickness, dae=dae, blank=blank,
-                aperture="LARGE", uamps=uamps, time=time, **kwargs)
+    def do_sans_large(self, title="", position=None, thickness=1.0, dae=None,
+                    period=None, time=None, dls_sample_changer=False, **kwargs):
+        """
+        A wrapper around do_sans with aperture set to large
+        Please see measure for full documentation of parameters
+        """
+        self.do_sans(title=title, position=position, thickness=thickness, dae=dae,
+                period=period, aperture="LARGE", time=time, dls_sample_changer=dls_sample_changer, **kwargs)
 
     def _generic_scan(
             self,
@@ -86,9 +89,9 @@ class Sans2d(ScanningInstrument):
     @dae_setter("TRANS", "transmission")
     def setup_dae_transmission(self):
         self._generic_scan(
-            detector=r"detector_trans8.dat",
-            spectra=r"spectra_trans8.dat",
-            wiring=r"wiring_trans8.dat")
+            detector="detector_trans8.dat",
+            spectra="spectra_trans8.dat",
+            wiring="wiring_trans8.dat")
 
     def set_aperture(self, size):
         """
@@ -125,16 +128,13 @@ class Sans2d(ScanningInstrument):
     def _detector_turn_off(self, delay=True):
         alert_on_error("SANS2D Detectors must be turned off manually", False)
 
-    # TODO do_sans_large for setup
     def _configure_sans_custom(self):
         # move the transmission monitor out
         gen.set_pv("FINS_VAC:MONITOR3:STATUS:SP", "OUT", is_local=True)
-        gen.waitfor_move()
 
     def _configure_trans_custom(self):
         # move the transmission monitor in
         gen.set_pv("FINS_VAC:MONITOR3:STATUS:SP", "IN", is_local=True)
-        gen.waitfor_move()
 
 
 obj = Sans2d()

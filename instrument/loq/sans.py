@@ -1,46 +1,36 @@
 """This is the instrument implementation for the LOQ beamline."""
 from time import sleep
+from logging import warning
 from technique.sans.instrument import ScanningInstrument
 from technique.sans.genie import gen
 # pylint: disable=unused-import
 from technique.sans.util import dae_setter  # noqa: F401
 from general.scans.util import local_wrapper
-from logging import warning
 
 
 class LOQ(ScanningInstrument):
     """This class handles the LOQ beamline,  it is an extension
     of the Scanning instrument class."""
 
-    _poslist = ['AB', 'BB', 'CB', 'DB', 'EB', 'FB', 'GB', 'HB', 'IB', 'JB',
-                'KB', 'LB', 'MB', 'NB', 'OB', 'PB', 'QB', 'RB', 'SB', 'TB',
-                'C1B', 'C2B', 'C3B', 'C4B', 'C5B', 'C6B', 'C7B', 'C8B', 'C9B',
-                'C10B', 'C11B', 'C12B', 'C13B', 'C14B', 'C15B', 'C16B', 'C17B',
-                'C18B', 'C1T', 'C2T', 'C3T', 'C4T', 'C5T', 'C6T', 'C7T',
-                'C8T', 'C9T', 'C10T', 'C11T', 'C12T', 'C13T', 'C14T',
-                'W1B', 'W2B', 'W3B', 'W4B', 'W5B', 'W6B', 'W7B', 'W8B',
-                'W9B', 'W10B', 'W11B', 'W12B', 'W13B', 'W14B', 'W15B', 'W16B',
-                'D1B', 'D2B', 'D3B', 'D4B', 'D5B', 'D6B',
-                'D7B', 'D8B', 'D9B', 'D10B', 'D11B', 'D12B',
-                'DLS2', 'DLS3', 'DLS4', 'DLS5', 'DLS6', 'FIVE', 'SIX', 'SEVEN', 'EIGHT']
-
     def __init__(self):
         super().__init__()
         self.setup_sans = self.setup_dae_histogram
-        _poslist_dls = self.get_pv("LKUP:SAMPLE:POSITIONS").split()
+        self._poslist_dls = self.get_pv("LKUP:DLS:POSITIONS").split()
 
-    def do_sans_large(self, title=None, pos=None, thickness=1.0, dae=None, blank=False,
-                uamps=None, time=None, **kwargs):
-        # TODO apature
-        self.do_sans(title=title, pos=pos, thickness=thickness, dae=dae, blank=blank,
+    def do_sans_large(self, title=None, pos=None, thickness=1.0,
+                      dae=None, uamps=None, time=None, **kwargs):
+        """
+        A wrapper around do_sans with aperture set to large
+        Please see measure for full documentation of parameters
+        """
+        self.do_sans(title=title, pos=pos, thickness=thickness, dae=dae,
                 aperture="LARGE", uamps=uamps, time=time, **kwargs)
 
-
-    def _generic_scan(  # pylint: disable=dangerous-default-value
+    def _generic_scan(
             self,
-            detector=r"detector35576_M4.dat",
-            spectra=r"spectra35576_M4.dat",
-            wiring=r"wiring35576_M4.dat",
+            detector="detector35576_M4.dat",
+            spectra="spectra35576_M4.dat",
+            wiring="wiring35576_M4.dat",
             tcbs=[{"low": 3500.0, "high": 43500.0, "step": 0.025,
                    "log": True}]):
         gen.change_start()
@@ -68,13 +58,6 @@ class LOQ(ScanningInstrument):
             detector="detector8.dat",
             spectra="spectra8.dat",
             wiring="wiring8.dat")
-
-    @dae_setter("SCAN", "scan")
-    def setup_dae_scanning(self):
-        # FIXME: LOQ doesn't have a history of scanning, so it's not
-        # certain what mode should be used.  For now, we'll guess it
-        # to be the same as histogram
-        return self._generic_scan()
 
     @dae_setter("SANS/TRANS", "sans")
     def setup_dae_normal(self):
@@ -168,7 +151,6 @@ class LOQ(ScanningInstrument):
         # for x in range(8):
         #     self.send_pv("CAEN:hv0:4:{}:pwonoff".format(x), "Off")
 
-    #TODO do_sans_large for setup
     def _configure_sans_custom(self):
         # Set Aperture_2?
         gen.cset(Tx_Mon="OUT")
