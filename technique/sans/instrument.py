@@ -245,7 +245,7 @@ class ScanningInstrument(object):
         gen.change_finish()
 
     def _attempt_resume(self, title, pos, thick, dae, **kwargs):
-        if gen.get_title() != title + self.title_footer:
+        if gen.get_title() != f"{title}{self.title_footer}":
             raise RuntimeError(
                 f'Attempted to continue measurement "{title}", but was already in '
                 f'the middle of measurement "{gen.get_title()}".')
