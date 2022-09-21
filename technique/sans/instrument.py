@@ -47,7 +47,7 @@ class ScanningInstrument(object):
     end_transmission. If you wish to create a new dae_mode then
     follow the pattern of other dae_mode, you must tag the
     dae mode with the decorator @dae_setter (see dae_setter) for
-    more deatails.
+    more details.
 
     Attributes
     ----------
