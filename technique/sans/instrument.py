@@ -467,7 +467,7 @@ class ScanningInstrument(object):
         return True
 
     def check_move_pos_dls(self, pos):
-        """CCheck whether the position is valid for the DSL sample
+        """Check whether the position is valid for the DSL sample
          changer and return True or False
 
         Parameters
