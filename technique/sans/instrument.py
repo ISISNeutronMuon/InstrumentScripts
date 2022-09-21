@@ -532,7 +532,7 @@ class ScanningInstrument(object):
                 dae=None, aperture="", time=None,
                 period=None, dls_sample_changer=False, **kwargs):
         """Take a sample measurement. If no timing parameter is provided
-        then no measuremnt occurs but expirment setup does happend
+        then no measurement occurs but experiment setup does happen.
 
         Parameters
         ----------
