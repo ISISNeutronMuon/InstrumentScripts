@@ -40,7 +40,7 @@ class ScanningInstrument(object):
     begin/waitfor/end function beyond calling gen.begin you can
     define custom function within the instruments script files.
 
-    The functions should names should end with name of the dae_mode
+    The function names should end with name of the dae_mode
     that these custom implementation is used for. For example if
     you want a custom begin/waitfor/end for setup_dae_transmission
     then the functions begin_transmission, waitfor_transmission,
