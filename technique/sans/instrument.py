@@ -56,7 +56,7 @@ class ScanningInstrument(object):
         dae_setter a function called when setting the dae_mode
     """
 
-    # Property to indicate if a custom dae mode is being uses.
+    # Property to indicate if a custom dae mode is being used.
     # Used to indicate if a custom begin/wait/end functions should be used
     _dae_mode = None
 
