@@ -903,7 +903,7 @@ class ScanningInstrument(object):
 
     @tables_path.setter
     def tables_path(self, new_path):
-        self._tables_path = r"" + new_path
+        self._tables_path = new_path
 
     @abstractmethod
     def setup_dae_event(self):  # pragma: no cover
