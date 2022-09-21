@@ -872,7 +872,8 @@ class ScanningInstrument(object):
         """List the supported DAE modes on this beamline.
         Warning: Some methods may not be implemented from the base class
         """
-        return [x[10:] for x in dir(self) if x.startswith("setup_dae_")]
+        setup_dae = "setup_dae_"
+        return [x[len(setup_dae):] for x in dir(self) if x.startswith(setup_dae)]
 
     def get_pv(self, name):
         """Get the given PV within the sub hierarchy of the instrument.
