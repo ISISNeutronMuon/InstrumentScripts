@@ -36,7 +36,7 @@ def dae_setter(suffix, measurement_type):
     wasting time reloading an existing configuration
 
     Please note that this decorator assumes that the title of the
-    method begins with "setup_dae", followed by the new of the state
+    method begins with "setup_dae", followed by the new state
     of the wiring table.
     """
     def decorator(inner):
