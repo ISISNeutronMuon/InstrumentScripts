@@ -295,7 +295,7 @@ class ScanningInstrument(object):
 
     @property
     def measurement_type(self):
-        """Get the measurement type form the journal.
+        """Get the measurement type from the journal.
 
         Changing this property should perform no physical changes to the
         beamline. The only change should be in the MEASUREMENT:TYPE
