@@ -41,7 +41,7 @@ class ScanningInstrument(object):
     define custom function within the instruments script files.
 
     The function names should end with name of the dae_mode
-    that these custom implementation is used for. For example if
+    that the custom implementation is used for. For example if
     you want a custom begin/waitfor/end for setup_dae_transmission
     then the functions begin_transmission, waitfor_transmission,
     end_transmission. If you wish to create a new dae_mode then
