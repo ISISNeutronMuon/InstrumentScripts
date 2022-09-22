@@ -365,7 +365,7 @@ class Defaults(object):
             base = infile.readline()
             axis = base.split("\t")[0]
             result = base.split("\t")[1]
-            xs, ys, errs = np.loadtxt(infile, unpack=True)
+            xs, ys, errs = np.loadtxt(infile, unpack=True, encoding="utf-8")
             ys = [Average((y / e)**2, y / e**2) for y, e in zip(ys, errs)]
             scan = ReplayScan(xs, ys, axis, result, self)
             if fit is not None:
