@@ -1,8 +1,7 @@
 """This is the instrument implementation for the Sans2d beamline."""
 from technique.sans.genie import gen
 from technique.sans.instrument import ScanningInstrument
-# pylint: disable=unused-import
-from technique.sans.util import dae_setter  # noqa: F401
+from technique.sans.util import dae_setter
 from general.scans.util import local_wrapper
 from general.utilities.io import alert_on_error
 from logging import warning
@@ -54,19 +53,20 @@ class Sans2d(ScanningInstrument):
         self.do_sans(title=title, position=position, thickness=thickness, dae=dae,
                 period=period, aperture="LARGE", time=time, dls_sample_changer=dls_sample_changer, **kwargs)
 
-    def _generic_scan(
-            self,
-            detector, spectra,
-            wiring, tcbs=[{"low": 5.5, "high":50.0, "step": 44.5, "log": 0, "trange":1, "regime":1},
-                          {"low": 50.0, "high":2500.0, "step": 50.0, "log": 0, "trange":2, "regime":1},
-                          {"low": 2500.0, "high":14000.0, "step": 0.02, "log": 1, "trange":3, "regime":1},
-                          {"low": 14000.0, "high":99750.0, "step": 250.0, "log": 0, "trange":4, "regime":1},
-                          {"low": 99750.0, "high":100005.0, "step": 255.0, "log": 0, "trange":5, "regime":1},
-                          {"low": 5.5, "high":100005.0, "step": 5.0, "log": 0, "trange":1, "regime":2},
-                          {"low": 0.0, "high":0.0, "step": 0.0, "log": 0, "trange":2, "regime":2},
-                          {"low": 0.0, "high":0.0, "step": 0.0, "log": 0, "trange":3, "regime":2},
-                          {"low": 0.0, "high":0.0, "step": 0.0, "log": 0, "trange":4, "regime":2},
-                          {"low": 0.0, "high":0.0, "step": 0.0, "log": 0, "trange":5, "regime":2}]):
+    def _generic_scan(self, detector, spectra, wiring, tcbs=None):
+        if tcbs is None:
+            tcbs = [
+                {"low": 5.5, "high":50.0, "step": 44.5, "log": 0, "trange":1, "regime":1},
+                {"low": 50.0, "high":2500.0, "step": 50.0, "log": 0, "trange":2, "regime":1},
+                {"low": 2500.0, "high":14000.0, "step": 0.02, "log": 1, "trange":3, "regime":1},
+                {"low": 14000.0, "high":99750.0, "step": 250.0, "log": 0, "trange":4, "regime":1},
+                {"low": 99750.0, "high":100005.0, "step": 255.0, "log": 0, "trange":5, "regime":1},
+                {"low": 5.5, "high":100005.0, "step": 5.0, "log": 0, "trange":1, "regime":2},
+                {"low": 0.0, "high":0.0, "step": 0.0, "log": 0, "trange":2, "regime":2},
+                {"low": 0.0, "high":0.0, "step": 0.0, "log": 0, "trange":3, "regime":2},
+                {"low": 0.0, "high":0.0, "step": 0.0, "log": 0, "trange":4, "regime":2},
+                {"low": 0.0, "high":0.0, "step": 0.0, "log": 0, "trange":5, "regime":2}
+            ]
         ScanningInstrument._generic_scan(self, detector, spectra, wiring, tcbs)
 
     @dae_setter("SANS", "sans")
@@ -82,7 +82,7 @@ class Sans2d(ScanningInstrument):
         #     detector=r"detector_gastubes_02.dat",
         #     spectra=r"spectrum_gastubes_02.dat",
         #     wiring=r"wiring_gastubes_02_hist.dat",
-        #     tcbs=[])
+        #     tcbs=None)
         raise NotImplementedError(
             "Neutron reflectivity scanning tables not yet set")
 
@@ -110,17 +110,13 @@ class Sans2d(ScanningInstrument):
             return
         size = size.upper()
         if size not in ["SMALL", "MEDIUM", "LARGE", "XLARGE"]:
-            raise RuntimeError(f"Unknown slit size: {size}")
+            raise ValueError(f"Unknown slit size: {size}")
         gen.set_pv("LKUP:SCRAPER:POSN:SP", size, is_local=True)
         gen.waitfor_move()
 
     def _detector_is_on(self):
         """Is the detector currently on?"""
-        voltage_status = [
-            self.get_pv(
-                f"CAEN:hv0:1:{x}:status").lower() == "on"
-            for x in range(10)]
-        return all(voltage_status)
+        return all(self.get_pv(f"CAEN:hv0:1:{x}:status").lower() == "on" for x in range(10))
 
     def _detector_turn_on(self, delay=True):
         alert_on_error("SANS2D Detectors must be turned on manually", False)

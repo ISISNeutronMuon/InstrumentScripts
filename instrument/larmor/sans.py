@@ -2,8 +2,7 @@
 from logging import info
 from technique.sans.instrument import ScanningInstrument
 from technique.sans.genie import gen
-# pylint: disable=unused-import
-from technique.sans.util import dae_setter, user_script  # noqa: F401
+from technique.sans.util import dae_setter
 from general.scans.util import local_wrapper
 from .util import flipper1
 
@@ -65,16 +64,14 @@ class Larmor(ScanningInstrument):  # pylint: disable=too-many-public-methods
             gen.cset(TargetDiskPhase=1900)
             gen.cset(InstrumentDiskPhase=1600)
         else:
-            raise RuntimeError(
+            raise ValueError(
                 "The only known lranges for the chopper "
                 "are '0.9-13.25' and '0.65-12.95'")
 
-    def _generic_scan(  # pylint: disable=dangerous-default-value
-            self,
-            detector="detector.dat",
-            spectra="spectra_1To1.dat",
-            wiring="wiring_dae3.dat",
-            tcbs=[]):
+    def _generic_scan(self, detector="detector.dat", spectra="spectra_1To1.dat", wiring="wiring_dae3.dat", tcbs=None):
+        # Explicitly check and then set to empty list to avoid UB.
+        if tcbs is None:
+            tcbs = []
         ScanningInstrument._generic_scan(self, detector, spectra, wiring, tcbs)
 
     @dae_setter("SCAN", "scan")
@@ -94,7 +91,7 @@ detector is contained in only two channels."""
                    "trange": 1, "log": 0}])
 
     @dae_setter("SCAN", "scan")
-    def setup_dae_scanningAlanis(self):  # pylint: disable=no-self-use
+    def setup_dae_scanningAlanis(self):
         """Set the wiring tables for performing a scan where the entire main
             detector is contained in channel 11 and the Alanis Detector is in channel 12."""
         self._generic_scan(
@@ -103,7 +100,7 @@ detector is contained in only two channels."""
                    "trange": 1, "log": 0}])
 
     @dae_setter("SCAN", "scan")
-    def setup_dae_scanning11(self):  # pylint: disable=no-self-use
+    def setup_dae_scanning11(self):
         """Set the wiring tables for performing a scan where the entire main
         detector is contained in only one channel now we are using dae 3."""
         self._generic_scan(
@@ -112,7 +109,7 @@ detector is contained in only two channels."""
                    "trange": 1, "log": 0}])
 
     @dae_setter("SCAN", "scan")
-    def setup_dae_echoscan(self):  # pylint: disable=no-self-use
+    def setup_dae_echoscan(self):
         """Set the wiring tables for performing a spin echo tuning scan.  This
 involves only having two spectra covering the entire main detecor."""
         self.setup_dae_scanning12()
@@ -272,7 +269,7 @@ involves only having two spectra covering the entire main detecor."""
 
     @staticmethod
     @dae_setter("SANS", "sans")
-    def setup_dae_resonantimaging_choppers():  # pylint: disable=invalid-name
+    def setup_dae_resonantimaging_choppers():
         """Set the wiring thable for resonant imaging choppers"""
         info("Setting Chopper phases")
         gen.cset(T0Phase=49200)
@@ -305,7 +302,7 @@ involves only having two spectra covering the entire main detecor."""
         gen.begin(paused=1)
 
     @staticmethod
-    def _waitfor_sesans(u=600, d=600, **kwargs):  # pylint: disable=invalid-name
+    def _waitfor_sesans(up_state_frames=600, down_state_frames=600, **kwargs):
         """Perform a SESANS run"""
         if "uamps" in kwargs:
             get_total = gen.get_uamps
@@ -321,8 +318,8 @@ involves only having two spectra covering the entire main detecor."""
 
         if key == "seconds":
             gtotal=gen.get_pv("IN:LARMOR:DAE:RUNDURATION")
-            u=u/10
-            d=d/10
+            up_state_frames=up_state_frames/10
+            down_state_frames=down_state_frames/10
 
         while gtotal < kwargs[key]:
             gen.change(period=1)
@@ -331,12 +328,12 @@ involves only having two spectra covering the entire main detecor."""
             if key == "seconds":
                 gen.resume()
                 ttime=gen.get_pv("IN:LARMOR:DAE:RUNDURATION")
-                gen.waitfor(seconds=(gtotal+u)-ttime)
+                gen.waitfor(seconds=(gtotal+up_state_frames)-ttime)
                 gen.pause()
             else:
                 gfrm = gen.get_frames()
                 gen.resume()
-                gen.waitfor(frames=gfrm + u)
+                gen.waitfor(frames=gfrm + up_state_frames)
                 gen.pause()
 
             gen.change(period=2)
@@ -345,13 +342,13 @@ involves only having two spectra covering the entire main detecor."""
             if key == "seconds":
                 gen.resume()
                 ttime=gen.get_pv("IN:LARMOR:DAE:RUNDURATION")
-                gen.waitfor(seconds=(gtotal+u+d)-ttime)
+                gen.waitfor(seconds=(gtotal+up_state_frames+down_state_frames)-ttime)
                 gen.pause()
                 gtotal=gen.get_pv("IN:LARMOR:DAE:RUNDURATION")
             else:
                 gfrm = gen.get_frames()
                 gen.resume()
-                gen.waitfor(frames=gfrm + d)
+                gen.waitfor(frames=gfrm + down_state_frames)
                 gen.pause()
                 gtotal = get_total()
 
@@ -389,19 +386,17 @@ involves only having two spectra covering the entire main detecor."""
         Larmor._begin_sesans()
 
     @staticmethod
-    def _waitfor_semsans(u=600, d=600, **kwargs):  # pylint: disable=invalid-name
+    def _waitfor_semsans(up_state_frames=600, down_state_frames=600, **kwargs):
         """Perform a SESANS run"""
-        Larmor._waitfor_sesans(u, d, **kwargs)
+        Larmor._waitfor_sesans(up_state_frames, down_state_frames, **kwargs)
 
     @staticmethod
     def set_aperture(size):
         if size.upper() == "SMALL":
-            # gen.cset(a1hgap=, a1vgap=, s1hgap=, s1vgap=)
             pass
         elif size.upper() == "MEDIUM":
             gen.cset(a1hgap=20.0, a1vgap=20.0, s1hgap=14.0, s1vgap=14.0)
         elif size.upper() == "LARGE":
-            # gen.cset(a1hgap=, a1vgap=, s1hgap=, s1vgap=)
             pass
         else:
             info("Aperture unchanged")
@@ -417,11 +412,7 @@ involves only having two spectra covering the entire main detecor."""
 
     def _detector_is_on(self):
         """Is the detector currently on?"""
-        voltage_status = [
-            self.get_pv(
-                f"CAEN:hv0:0:{x}:status").lower() == "on"
-            for x in range(8, 12)]
-        return all(voltage_status)
+        return all(self.get_pv(f"CAEN:hv0:0:{x}:status").lower() == "on" for x in range(8, 12))
 
     def _detector_turn_on(self, delay=True):
         for i in range(8, 12):
@@ -439,30 +430,29 @@ involves only having two spectra covering the entire main detecor."""
             info("Waiting For Detector To Power Down (60s)")
             sleep(60)
 
-    # Instrument Specific Scripts
     @staticmethod
-    def frame_overload_mirror_in():  # pylint: disable=invalid-name
+    def frame_overload_mirror_in():
         """Put the frame overload mirror into the beam."""
         # gen.cset(pol_trans=0, pol_arc=-1.6)
         # Convert to angle instead of mm
         gen.cset(pol_trans=0, pol_arc=-0.084)
 
     @staticmethod
-    def short_polariser_in():  # pylint: disable=invalid-name
+    def short_polariser_in():
         """Put the short polariser for long wavelength into the beam."""
         # gen.cset(pol_trans=-100, pol_arc=-1.3)
         # Convert to angle instead of mm
         gen.cset(pol_trans=-100, pol_arc=-0.069)
 
     @staticmethod
-    def long_polariser_in():  # pylint: disable=invalid-name
+    def long_polariser_in():
         """Put the long polariser for short wavelengths into the beam."""
         # gen.cset(pol_trans=100, pol_arc=-1.3)
         # Convert to angle instead of mm
         gen.cset(pol_trans=100, pol_arc=-0.069)
 
     @staticmethod
-    def beam_stop_in_out(stop_in=True):  # pylint: disable=invalid-name
+    def beam_stop_in_out(stop_in=True):
         """Move the Beam Stop in and out of the beam.
 
         Parameters
@@ -514,8 +504,8 @@ involves only having two spectra covering the entire main detecor."""
 
     @staticmethod
     def home_s2():
-        """Rehome slit2.  This is currentl a no-op."""
-        info("Homing s2")
+        """Rehome slit2. This is currently a no-op."""
+        info("Homing s2. Not implemented.")
 
     def move_bench(self, angle=0.0, delaydet=True):
         """Safely move the downstream arm"""

@@ -3,8 +3,7 @@ from time import sleep
 from logging import warning
 from technique.sans.instrument import ScanningInstrument
 from technique.sans.genie import gen
-# pylint: disable=unused-import
-from technique.sans.util import dae_setter  # noqa: F401
+from technique.sans.util import dae_setter
 from general.scans.util import local_wrapper
 
 
@@ -26,13 +25,13 @@ class LOQ(ScanningInstrument):
         self.do_sans(title=title, pos=pos, thickness=thickness, dae=dae,
                 aperture="LARGE", uamps=uamps, time=time, **kwargs)
 
-    def _generic_scan(
-            self,
-            detector="detector35576_M4.dat",
-            spectra="spectra35576_M4.dat",
-            wiring="wiring35576_M4.dat",
-            tcbs=[{"low": 3500.0, "high": 43500.0, "step": 0.025,
-                   "log": True}]):
+    def _generic_scan(self,
+                      detector="detector35576_M4.dat",
+                      spectra="spectra35576_M4.dat",
+                      wiring="wiring35576_M4.dat",
+                      tcbs=None):
+        if tcbs is None:
+            tcbs = [{"low": 3500.0, "high": 43500.0, "step": 0.025, "log": True}]
         gen.change_start()
         for trange in range(1, 6):
             gen.change_tcb(low=0, high=0, step=0, log=0,
@@ -131,11 +130,10 @@ class LOQ(ScanningInstrument):
     def set_aperture(size):
         if size == "":
             print("Aperture unchanged")
-            pass
         elif size.upper() in ["SMALL", "MEDIUM", "LARGE"]:
             gen.cset(Aperture_2=size.upper())
         else:
-            raise RuntimeError(f"Slit size {size} is undefined")
+            raise ValueError(f"Slit size {size} is undefined")
 
     def _detector_is_on(self):
         """Is the detector currently on?"""
@@ -143,16 +141,11 @@ class LOQ(ScanningInstrument):
 
     def _detector_turn_on(self, delay=True):
         raise NotImplementedError("Detector toggling is not supported LOQ")
-        # for x in range(8):
-        #     self.send_pv("CAEN:hv0:4:{}:pwonoff".format(x), "On")
 
     def _detector_turn_off(self, delay=True):
         raise NotImplementedError("Detector toggling is not supported on LOQ")
-        # for x in range(8):
-        #     self.send_pv("CAEN:hv0:4:{}:pwonoff".format(x), "Off")
 
     def _configure_sans_custom(self):
-        # Set Aperture_2?
         gen.cset(Tx_Mon="OUT")
         gen.waitfor_move()
 
@@ -161,7 +154,6 @@ class LOQ(ScanningInstrument):
         gen.cset(Tx_Mon="IN")
         gen.waitfor_move()
 
-    # pylint: disable=invalid-name
     def run_off_julabo_1(self, temperature_1, temperature_2):
         """Run off Julabo 1"""
         self.send_pv("JULABO_01:MODE:SP", "OFF")
@@ -206,8 +198,7 @@ class LOQ(ScanningInstrument):
         gen.waitfor_move()
 
     def check_move_pos_dls(self, pos):
-        """Check whether the position is valid for the DSL sample
-         changer and return True or False
+        """Check whether the position is valid for the DLS sample changer and return True or False
 
         Parameters
         ----------

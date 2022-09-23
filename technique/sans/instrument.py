@@ -22,7 +22,7 @@ def _get_times(times):
     for k in ["uamps", "frames", "hours", "minutes", "seconds"]:
         if k in times:
             return k, times[k]
-    raise RuntimeError("No valid time found")
+    raise ValueError("No valid time found")
 
 
 @add_metaclass(ABCMeta)
@@ -31,7 +31,7 @@ class ScanningInstrument(object):
     """
     The base class for scanning measurement instruments.
 
-    This class has be extended for specific instruments with
+    This class can be extended for specific instruments with
     instrument specific implementations of abstract methods
     and overriding of any methods that need instrument specific
     implementations.
@@ -44,10 +44,10 @@ class ScanningInstrument(object):
     that the custom implementation is used for. For example if
     you want a custom begin/waitfor/end for setup_dae_transmission
     then the functions begin_transmission, waitfor_transmission,
-    end_transmission. If you wish to create a new dae_mode then
-    follow the pattern of other dae_mode, you must tag the
-    dae mode with the decorator @dae_setter (see dae_setter) for
-    more details.
+    end_transmission will need to be created. If you wish to create
+    a new dae_mode then follow the pattern of other dae_mode,
+    you must tag the dae mode with the decorator @dae_setter (see dae_setter)
+    for more details.
 
     Attributes
     ----------
@@ -68,26 +68,7 @@ class ScanningInstrument(object):
     # Methods to ignore in method_iterator
     _block_accessors = ["changer_pos_dls", "changer_pos", "method_iterator"]
 
-    _tables_path = r""
-
-    # Default original poslist should be overridden
-    _poslist = ['AB', 'BB', 'CB', 'DB', 'EB', 'FB', 'GB', 'HB', 'IB', 'JB',
-                'KB', 'LB', 'MB', 'NB', 'OB', 'PB', 'QB', 'RB', 'SB', 'TB',
-                'AT', 'BT', 'CT', 'DT', 'ET', 'FT', 'GT', 'HT', 'IT', 'JT',
-                'KT', 'LT', 'MT', 'NT', 'OT', 'PT', 'QT', 'RT', 'ST', 'TT',
-                '1CB', '2CB', '3CB', '4CB', '5CB', '6CB', '7CB',
-                '8CB', '9CB', '10CB', '11CB', '12CB', '13CB', '14CB',
-                '1CT', '2CT', '3CT', '4CT', '5CT', '6CT', '7CT',
-                '8CT', '9CT', '10CT', '11CT', '12CT', '13CT', '14CT',
-                '1GT', '2GT', '3GT', '4GT', '5GT', '6GT', '7GT',
-                '8GT', '9GT', '10GT', '11GT', '12GT', '13GT', '14GT',
-                '1WB', '2WB', '3WB', '4WB', '5WB', '6WB', '7WB',
-                '8WB', '9WB', '10WB', '11WB', '12WB', '13WB', '14WB',
-                '1WT', '2WT', '3WT', '4WT', '5WT', '6WT', '7WT',
-                '8WT', '9WT', '10WT', '11WT', '12WT', '13WT', '14WT',
-                '1GT', '2GT', '3GT', '4GT', '5GT', '6GT', '7GT', '8GT', '9GT',
-                '10GT', '11GT', '12GT', '2GB', '3GB', '4GB', '5GB', '6GB', '7GB',
-                '8GB', '9GB', '10GB', '11GB']
+    _tables_path = ""
 
     _poslist_dls = []
 
@@ -143,8 +124,7 @@ class ScanningInstrument(object):
 
         This method is intended for the creation of one off
         dae's if you wish to create a new dae configuration
-        they should be defined in the there instruments
-        script file.
+        they should be defined in the instruments script file.
 
         To create a new dae setup open the instrument file for
         instance Script/instrument/larmor/sans.py. Create a new
@@ -158,7 +138,7 @@ class ScanningInstrument(object):
         >>> self._generic_scan(detector="newDetector.dat",
         >>>                    spectra="newSpectra.dat",
         >>>                    wiring="newWiring.dat",
-        >>>                    tcbs=[])
+        >>>                    tcbs=None)
 
         You can then use this like any other dae setup:
 
@@ -200,7 +180,7 @@ class ScanningInstrument(object):
     def sanitised_timings(self, kwargs):
         """
         Include only the keyword arguments for run timings.
-        The list of accepted keywords can be found the
+        The list of accepted keywords can be found in the
         TIMINGS property
 
         Parameters
@@ -484,7 +464,7 @@ class ScanningInstrument(object):
         return gen.cget("SamplePos")["value"]
 
     @changer_pos.setter
-    def changer_pos(self, pos):  # pylint: disable=no-self-use
+    def changer_pos(self, pos):
         """Set the current sample changer position
 
         Parameters
@@ -501,7 +481,7 @@ class ScanningInstrument(object):
         return gen.cget("sample_position")["value"]
 
     @changer_pos_dls.setter
-    def changer_pos_dls(self, pos):  # pylint: disable=no-self-use
+    def changer_pos_dls(self, pos):
         """Set the current dls sample changer position
 
         Parameters
@@ -645,7 +625,6 @@ class ScanningInstrument(object):
         info("Using the following Sample Parameters")
         self.print_sample_pars()
         if period:
-            # Should this be soft period?
             gen.change_period(period)
 
     def _set_sample_position(self, position, dls_sample_changer=False):
