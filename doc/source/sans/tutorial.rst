@@ -33,7 +33,9 @@ First, we'll just do a simple measurement on the main detector for 600
 frames.
 
 >>> do_sans(title="Sample Name", frames=600)
+Set up instrument for sans measurement
 Setup Larmor for event
+Aperture unchanged
 Using the following Sample Parameters
 Geometry=Flat Plate
 Width=10
@@ -41,7 +43,9 @@ Height=10
 Thick=1.0
 Measuring Sample Name_SANS for 600 frames
 >>> do_trans(title="Sample Name", frames=180)
+Set up instrument for trans measurement
 Setup Larmor for transmission
+Aperture unchanged
 Using the following Sample Parameters
 Geometry=Flat Plate
 Width=10
@@ -126,6 +130,7 @@ and other beam-line parameters for a measurement.
 ...   gen.cset(Translation=100)
 ...   gen.cset(CoarseZ=-75)
 >>> measure("Sample Name", weird_place, Julabo1_SP=37, uamps=10)
+Aperture unchanged
 Moving to position weird_place
 Moving Julabo1_SP to 37
 Using the following Sample Parameters
@@ -153,7 +158,7 @@ not try to start a measurement in an unknown position.
 
 >>> set_default_dae(setup_dae_bsalignment)
 >>> measure("Beam stop", frames=300)
-Setup Larmor for bsalignment
+Aperture unchanged
 Using the following Sample Parameters
 Geometry=Flat Plate
 Width=10
@@ -177,7 +182,7 @@ It's similarly possible to set the default dae for transmission measurements.
 >>> set_default_dae("transmission", trans=True)
 
 >>> measure(title="Beam stop", dae="event", frames=300)
-Setup Larmor for event
+Aperture unchanged
 Using the following Sample Parameters
 Geometry=Flat Plate
 Width=10
@@ -191,7 +196,7 @@ keyword parameter that is automatically passed to
 back into event mode.
 
 >>> enumerate_dae()
-['4periods', 'alanis', 'bsalignment', 'diffraction', 'echoscan', 'event', 'event_fastsave', 'histogram', 'monitorsonly', 'monotest', 'nr', 'nrscanning', 'polarised', 'resonantimaging', 'resonantimaging_choppers', 'scanning', 'scanning12', 'semsans', 'sesans', 'transmission', 'tshift']
+['4periods', 'alanis', 'bsalignment', 'diffraction', 'echoscan', 'event', 'event_fastsave', 'histogram', 'monitorsonly', 'monotest', 'nr', 'nrscanning', 'polarised', 'resonantimaging', 'resonantimaging_choppers', 'scanning', 'scanning11', 'scanning12', 'scanningAlanis', 'semsans', 'sesans', 'transmission', 'tshift']
 
 The :py:meth:`ScanningInstrument.enumerate_dae` function will list all
 of the supported dae modes on the current beamline.
@@ -203,7 +208,7 @@ By request, the system is capable of detecting of reconnecting with
 the run if it's already in progress, assuming that the user is
 attempting to reconnect to the SAME run.
 
->>> do_sans(title="Example", position="CT", uamps=3)
+>>> do_sans(title="Example_SANS", position="CT", uamps=3)
 Moving to sample changer position CT
 Using the following Sample Parameters
 Geometry=Flat Plate
@@ -402,7 +407,7 @@ measurement will fail.
 >>> measure(title="Sample", frames=100)
 Traceback (most recent call last):
 ...
-RuntimeError: The detector is off.  Either turn on the detector or use the detector_lock(True) to indicate that the detector is off intentionally
+RuntimeError: The detector is off. Either turn on the detector or use the detector_lock(True) to indicate that the detector is off intentionally
 
 Performing transmission measurements does not require the detector
 
@@ -411,6 +416,7 @@ Waiting For Detector To Power Down (60s)
 False
 >>> measure(title="Sample", trans=True, frames=100)
 Setup Larmor for transmission
+Aperture unchanged
 Using the following Sample Parameters
 Geometry=Flat Plate
 Width=10
@@ -435,6 +441,7 @@ False
 True
 >>> measure(title="Sample", frames=100)
 Setup Larmor for event
+Aperture unchanged
 Using the following Sample Parameters
 Geometry=Flat Plate
 Width=10
@@ -462,23 +469,13 @@ manner as a normal measurement.
 
 >>> set_default_dae(setup_dae_sesans)
 >>> measure(title="SESANS Test", frames=6000)
-Setup Larmor for sesans
+Aperture unchanged
 Using the following Sample Parameters
 Geometry=Flat Plate
 Width=10
 Height=10
 Thick=1.0
-Measuring SESANS Test_SESANS for 6000 frames
-Flipper On
-Flipper Off
-Flipper On
-Flipper Off
-Flipper On
-Flipper Off
-Flipper On
-Flipper Off
-Flipper On
-Flipper Off
+Measuring SESANS Test_SANS for 6000 frames
 
 .. py:currentmodule:: instruments.larmor.sans
 
@@ -650,54 +647,18 @@ genie-python isn't found.
 
 >>> print(gen.mock_calls)
 [call.get_runstate(),
- call.get_pv('IN:LARMOR:CAEN:hv0:0:8:status'),
- call.get_pv('IN:LARMOR:CAEN:hv0:0:9:status'),
- call.get_pv('IN:LARMOR:CAEN:hv0:0:10:status'),
- call.get_pv('IN:LARMOR:CAEN:hv0:0:11:status'),
- call.change(nperiods=1),
- call.change_start(),
- call.get_pv('IN:LARMOR:DAE:DETECTOR_FILE'),
- call.mock_get_pv('IN:LARMOR:DAE:DETECTOR_FILE'),
- call.change_tables(detector='C:\\Instrument\\Settings\\Tables\\detector.dat'),
- call.get_pv('IN:LARMOR:DAE:SPECTRA_FILE'),
- call.mock_get_pv('IN:LARMOR:DAE:SPECTRA_FILE'),
- call.change_tables(spectra='C:\\Instrument\\Settings\\Tables\\spectra_1To1.dat'),
- call.get_pv('IN:LARMOR:DAE:WIRING_FILE'),
- call.mock_get_pv('IN:LARMOR:DAE:WIRING_FILE'),
- call.change_tables(wiring='C:\\Instrument\\Settings\\Tables\\wiring_event.dat'),
- call.change_tcb(high=100000.0, log=0, low=5.0, step=100.0, trange=1),
- call.change_tcb(high=0.0, log=0, low=0.0, step=0.0, trange=2),
- call.change_tcb(high=100000.0, log=0, low=5.0, regime=2, step=2.0, trange=1),
- call.change_finish(),
- call.cset(T0Phase=0),
- call.cset(TargetDiskPhase=2750),
- call.cset(InstrumentDiskPhase=2450),
- call.set_pv('IN:LARMOR:PARS:SAMPLE:MEAS:TYPE', 'sans'),
- call.cset(m4trans=200.0),
- call.set_pv('IN:LARMOR:PARS:SAMPLE:MEAS:LABEL', 'Test'),
- call.cset(a1hgap=20.0, a1vgap=20.0, s1hgap=14.0, s1vgap=14.0),
- call.cset(SamplePos='BT'),
- call.waitfor_move(),
- call.change_sample_par('Thick', 1.0),
- call.get_sample_pars(),
+ call.get_pv('CAEN:hv0:0:8:status'),
+ call.get_pv('CAEN:hv0:0:9:status'),
+ call.get_pv('CAEN:hv0:0:10:status'),
+ call.get_pv('CAEN:hv0:0:11:status'),
+ call.set_pv('PARS:SAMPLE:MEAS:TYPE', 'sans'),
+ call.set_pv('PARS:SAMPLE:MEAS:LABEL', 'Test'),
  call.change(title='Test_SANS'),
- call.begin(),
- call.waitfor(uamps=15),
- call.end()]
+ call.cset(a1hgap=20.0, a1vgap=20.0, s1hgap=14.0, s1vgap=14.0)]
 
-That's quite a few commands, so it's worth running through them.
-
-:2: Ensure that the instrument is ready to start a measurement
-:3-6: Check that the detector is on
-:7: Check that the detector is on
-:8-19: Put the instrument in event mode
-:20: Move the M4 transmission monitor out of the beam
-:21: Set the upstream slits
-:22: Move the sample into position
-:23: Let motors finish moving.
-:24: Set the sample thickness
-:25: Print and log the sample parameters
-:26: Set the sample title
-:27: Start the measurement.
-:28: Wait the requested time
-:29: Stop the measurement.
+:1: Ensure that the instrument is ready to start a measurement
+:2-5: Check that the detector is on
+:6: Set the measurement type
+:7: Set the measurement label
+:8: Set the sample title
+:9: Start the measurement.
