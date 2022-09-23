@@ -188,7 +188,7 @@ Geometry=Flat Plate
 Width=10
 Height=10
 Thick=1.0
-Measuring Beam stop for 300 frames
+Measuring Beam stop_SANS for 300 frames
 
 The :py:meth:`ScanningInstrument.measure` function also has a ``dae``
 keyword parameter that is automatically passed to
