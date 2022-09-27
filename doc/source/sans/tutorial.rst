@@ -32,16 +32,20 @@ Basic examples
 First, we'll just do a simple measurement on the main detector for 600
 frames.
 
->>> do_sans("Sample Name", frames=600)
+>>> do_sans(title="Sample Name", frames=600)
+Set up instrument for sans measurement
 Setup Larmor for event
+Aperture unchanged
 Using the following Sample Parameters
 Geometry=Flat Plate
 Width=10
 Height=10
 Thick=1.0
 Measuring Sample Name_SANS for 600 frames
->>> do_trans("Sample Name", frames=180)
+>>> do_trans(title="Sample Name", frames=180)
+Set up instrument for trans measurement
 Setup Larmor for transmission
+Aperture unchanged
 Using the following Sample Parameters
 Geometry=Flat Plate
 Width=10
@@ -51,13 +55,16 @@ Measuring Sample Name_TRANS for 180 frames
 
 The :py:meth:`ScanningInstrument.do_sans` and
 :py:meth:`ScanningInstrument.do_trans` functions are both simple
-wrappers around :py:meth:`ScanningInstrument.measure`.  ``measure`` is
-the primary entry point for all types of SANS measurement.  All of the
-parameters that will be covered for measure can also be applied to
-``do_sans`` and ``do_trans``. Below is an example of the extended
+wrappers around :py:meth:`ScanningInstrument.measure`. ``do_sans`` 
+and ``do_trans`` can be called without a time frame and the function
+will do any set up for the experiment to run in the configuration provided.
+
+``measure`` is the primary entry point for all types of SANS measurement.  
+All of the parameters that will be covered for measure can also be applied 
+to ``do_sans`` and ``do_trans``. Below is an example of the extended
 information that can be passed to these functions.
 
->>> measure("Sample Name", "QT", aperture="Medium", blank=True, uamps=5)
+>>> measure(title="Sample Name", position="QT", aperture="Medium", uamps=5)
 Setup Larmor for event
 Moving to sample changer position QT
 Using the following Sample Parameters
@@ -83,12 +90,8 @@ A couple of things changed with this new command.
    opportunity to decide their own aperture settings, but they should
    hopefully reach a consensus on the names.
 
-#. The sample has been marked as a blank.  The MEASUREMENT:TYPE block
-   in the run's journal entry will be set to "blank", instead of
-   "sans".  Had this been a transmission measurement, the block would
-   have been set to "blank_transmission"
 
->>> measure("Sample Name", CoarseZ=25, uamps=5, thickness=2.0, trans=True, blank=True)
+>>> measure(title="Sample Name", CoarseZ=25, uamps=5, thickness=2.0, trans=True, blank=True)
 Setup Larmor for transmission
 Moving CoarseZ to 25
 Using the following Sample Parameters
@@ -105,7 +108,7 @@ sample, unlike our previous 1 mm runs.  Finally, the instrument has
 converted into transmission mode, setting the appropriate wiring
 tables and moving the M4 monitor into the beam.
 
->>> measure("Sample Name", "CT", SampleX=10, Julabo1_SP=35, uamps=5)
+>>> measure(title="Sample Name", position="CT", SampleX=10, Julabo1_SP=35, uamps=5)
 Setup Larmor for event
 Moving to sample changer position CT
 Moving Julabo1_SP to 35
@@ -115,7 +118,7 @@ Geometry=Flat Plate
 Width=10
 Height=10
 Thick=1.0
-Measuring Sample Name_SANS for 5 uamps
+Measuring Sample Name for 5 uamps
 
 We can combine a sample changer position with motor movements.  This
 is useful for custom mounting that may not perfectly align with the
@@ -127,6 +130,7 @@ and other beam-line parameters for a measurement.
 ...   gen.cset(Translation=100)
 ...   gen.cset(CoarseZ=-75)
 >>> measure("Sample Name", weird_place, Julabo1_SP=37, uamps=10)
+Aperture unchanged
 Moving to position weird_place
 Moving Julabo1_SP to 37
 Using the following Sample Parameters
@@ -143,7 +147,7 @@ sample changer position.  It's still possible to override or amend
 these custom positions with measurement specific values, as we have
 done above with the Julabo temperature again.
 
->>> measure("Sample Name", 7, Julabo1_SP=37, uamps=10)
+>>> measure(title="Sample Name", position=7, Julabo1_SP=37, uamps=10)
 Traceback (most recent call last):
 ...
 TypeError: Cannot understand position 7
@@ -154,7 +158,7 @@ not try to start a measurement in an unknown position.
 
 >>> set_default_dae(setup_dae_bsalignment)
 >>> measure("Beam stop", frames=300)
-Setup Larmor for bsalignment
+Aperture unchanged
 Using the following Sample Parameters
 Geometry=Flat Plate
 Width=10
@@ -177,8 +181,8 @@ It's similarly possible to set the default dae for transmission measurements.
 >>> set_default_dae("bsalignment", trans=True)
 >>> set_default_dae("transmission", trans=True)
 
->>> measure("Beam stop", dae="event", frames=300)
-Setup Larmor for event
+>>> measure(title="Beam stop", dae="event", frames=300)
+Aperture unchanged
 Using the following Sample Parameters
 Geometry=Flat Plate
 Width=10
@@ -192,7 +196,7 @@ keyword parameter that is automatically passed to
 back into event mode.
 
 >>> enumerate_dae()
-['4periods', 'alanis', 'bsalignment', 'diffraction', 'echoscan', 'event', 'event_fastsave', 'histogram', 'monitorsonly', 'monotest', 'nr', 'nrscanning', 'polarised', 'resonantimaging', 'resonantimaging_choppers', 'scanning', 'scanning12', 'semsans', 'sesans', 'transmission', 'tshift']
+['4periods', 'alanis', 'bsalignment', 'diffraction', 'echoscan', 'event', 'event_fastsave', 'histogram', 'monitorsonly', 'monotest', 'nr', 'nrscanning', 'polarised', 'resonantimaging', 'resonantimaging_choppers', 'scanning', 'scanning11', 'scanning12', 'scanningAlanis', 'semsans', 'sesans', 'transmission', 'tshift']
 
 The :py:meth:`ScanningInstrument.enumerate_dae` function will list all
 of the supported dae modes on the current beamline.
@@ -204,7 +208,7 @@ By request, the system is capable of detecting of reconnecting with
 the run if it's already in progress, assuming that the user is
 attempting to reconnect to the SAME run.
 
->>> do_sans("Example", "CT", uamps=3)
+>>> do_sans(title="Example_SANS", position="CT", uamps=3)
 Moving to sample changer position CT
 Using the following Sample Parameters
 Geometry=Flat Plate
@@ -222,7 +226,7 @@ running the same command that was already started.
 
     >>> gen.begin()
 
->>> do_sans("Example", "CT", uamps=3)
+>>> do_sans(title="Example", position="CT", uamps=3)
 Detected that run was already in progress.  Reconnecting to existing run.
 
 However, if the user botches their edit of the script and attempts to
@@ -231,7 +235,7 @@ leaving the run measuring.
 
 .. Fake Ctrl-C
     >>> gen.begin()
->>> do_sans("H2O", "DT", uamps=3)
+>>> do_sans(title="H2O", position="DT", uamps=3)
 Traceback (most recent call last):
 ...
 RuntimeError: Attempted to continue measurement "H2O", but was already in the middle of measurement "Example_SANS".
@@ -253,10 +257,10 @@ the morning.  All that's required of the user is putting
 
 >>> @user_script
 ... def trial(time, trans):
-...     measure("Test1", "BT", uamps=time)
-...     measure("Test2", "VT", uamps=time)
-...     measure("Test1", "BT", trans=True, uanps=trans)
-...     measure("Test2", "VT", trans=True, uamps=trans)
+...     measure(title="Test1", position="BT", uamps=time)
+...     measure(title="Test2", position="VT", uamps=time)
+...     measure(title="Test1", position="BT", trans=True, uanps=trans)
+...     measure(title="Test2", position="VT", trans=True, uamps=trans)
 >>> trial(30, trans=10)
 Traceback (most recent call last):
 ...
@@ -269,10 +273,10 @@ positions to "CT" then gives:
 
 >>> @user_script
 ... def trial():
-...     measure("Test1", "BT", uamps=30)
-...     measure("Test2", "CT", uamps=30)
-...     measure("Test1", "BT", trans=True, uanps=10)
-...     measure("Test2", "CT", trans=True, uamps=10)
+...     measure(title="Test1", position="BT", uamps=30)
+...     measure(title="Test2", position="CT", uamps=30)
+...     measure(title="Test1", position="BT", trans=True, uanps=10)
+...     measure(title="Test2", position="CT", trans=True, uamps=10)
 >>> trial()
 Traceback (most recent call last):
 ...
@@ -283,10 +287,10 @@ found until two in the morning.
 
 >>> @user_script
 ... def trial():
-...     measure("Test1", "BT", uamps=30)
-...     measure("Test2", "CT", uamps=30)
-...     measure("Test1", "BT", trans=True, uamps=10)
-...     measure("Test2", "CT", trans=True, uamps=10)
+...     measure(title="Test1", position="BT", uamps=30)
+...     measure(title="Test2", position="CT", uamps=30)
+...     measure(title="Test1", position="BT", trans=True, uamps=10)
+...     measure(title="Test2", position="CT", trans=True, uamps=10)
 >>> trial() #doctest:+ELLIPSIS
 The script should finish in 2.0 hours
 ...
@@ -370,12 +374,12 @@ because there is infinite output.
 from SansScripting import *
 @user_script
 def good_julabo():
-    do_sans("Sample1", "AT", thickness=1, uamps=10)
-    do_trans("Sample2", "AT", thickness=1, uamps=5)
-    do_trans("Sample2", "BT", thickness=1, uamps=5)
-    do_sans("Sample2", "BT", thickness=1, uamps=10)
-    do_trans("Sample3", "CT", frames=3000, thickness=2)
-    do_sans("Sample3", "CT", frames=6000, thickness=2)
+    do_sans(title="Sample1", position="AT", thickness=1, uamps=10)
+    do_trans(title="Sample2", position="AT", thickness=1, uamps=5)
+    do_trans(title="Sample2", position="BT", thickness=1, uamps=5)
+    do_sans(title="Sample2", position="BT", thickness=1, uamps=10)
+    do_trans(title="Sample3", position="CT", frames=3000, thickness=2)
+    do_sans(title="Sample3", position="CT", frames=6000, thickness=2)
 
 When the user is ready to take the next step into full python
 scripting, the CSV file can be turned into a python source file that
@@ -400,18 +404,19 @@ False
 If we try to perform a measurement with the detector off, then the
 measurement will fail.
 
->>> measure("Sample", frames=100)
+>>> measure(title="Sample", frames=100)
 Traceback (most recent call last):
 ...
-RuntimeError: The detector is off.  Either turn on the detector or use the detector_lock(True) to indicate that the detector is off intentionally
+RuntimeError: The detector is off. Either turn on the detector or use the detector_lock(True) to indicate that the detector is off intentionally
 
 Performing transmission measurements does not require the detector
 
 >>> detector_on(False)
 Waiting For Detector To Power Down (60s)
 False
->>> measure("Sample", trans=True, frames=100)
+>>> measure(title="Sample", trans=True, frames=100)
 Setup Larmor for transmission
+Aperture unchanged
 Using the following Sample Parameters
 Geometry=Flat Plate
 Width=10
@@ -434,8 +439,9 @@ Waiting For Detector To Power Down (60s)
 False
 >>> detector_lock(True)
 True
->>> measure("Sample", frames=100)
+>>> measure(title="Sample", frames=100)
 Setup Larmor for event
+Aperture unchanged
 Using the following Sample Parameters
 Geometry=Flat Plate
 Width=10
@@ -462,24 +468,14 @@ periods.  From the user's perspective, this is all handled in the same
 manner as a normal measurement.
 
 >>> set_default_dae(setup_dae_sesans)
->>> measure("SESANS Test", frames=6000)
-Setup Larmor for sesans
+>>> measure(title="SESANS Test", frames=6000)
+Aperture unchanged
 Using the following Sample Parameters
 Geometry=Flat Plate
 Width=10
 Height=10
 Thick=1.0
-Measuring SESANS Test_SESANS for 6000 frames
-Flipper On
-Flipper Off
-Flipper On
-Flipper Off
-Flipper On
-Flipper Off
-Flipper On
-Flipper Off
-Flipper On
-Flipper Off
+Measuring SESANS Test_SANS for 6000 frames
 
 .. py:currentmodule:: instruments.larmor.sans
 
@@ -487,7 +483,7 @@ In this example, the instrument scientist has written two functions
 :py:meth:`Larmor._begin_sesans` and :py:meth:`Larmor._waitfor_sesans`
 which handle the SESANS specific nature of the measurement.
 
->>> measure("SESANS Test", u=1500, d=1500, uamps=10)
+>>> measure(title="SESANS Test", u=1500, d=1500, uamps=10)
 Using the following Sample Parameters
 Geometry=Flat Plate
 Width=10
@@ -634,7 +630,7 @@ Under the hood
 ==============
 
 >>> gen.reset_mock()
->>> measure("Test", "BT", dae="event", aperture="Medium", uamps=15)
+>>> measure(title="Test", position="BT", dae="event", aperture="Medium", uamps=15)
 Setup Larmor for event
 Moving to sample changer position BT
 Using the following Sample Parameters
@@ -651,54 +647,18 @@ genie-python isn't found.
 
 >>> print(gen.mock_calls)
 [call.get_runstate(),
- call.get_pv('IN:LARMOR:CAEN:hv0:0:8:status'),
- call.get_pv('IN:LARMOR:CAEN:hv0:0:9:status'),
- call.get_pv('IN:LARMOR:CAEN:hv0:0:10:status'),
- call.get_pv('IN:LARMOR:CAEN:hv0:0:11:status'),
- call.change(nperiods=1),
- call.change_start(),
- call.get_pv('IN:LARMOR:DAE:DETECTOR_FILE'),
- call.mock_get_pv('IN:LARMOR:DAE:DETECTOR_FILE'),
- call.change_tables(detector='C:\\Instrument\\Settings\\Tables\\detector.dat'),
- call.get_pv('IN:LARMOR:DAE:SPECTRA_FILE'),
- call.mock_get_pv('IN:LARMOR:DAE:SPECTRA_FILE'),
- call.change_tables(spectra='C:\\Instrument\\Settings\\Tables\\spectra_1To1.dat'),
- call.get_pv('IN:LARMOR:DAE:WIRING_FILE'),
- call.mock_get_pv('IN:LARMOR:DAE:WIRING_FILE'),
- call.change_tables(wiring='C:\\Instrument\\Settings\\Tables\\wiring_event.dat'),
- call.change_tcb(high=100000.0, log=0, low=5.0, step=100.0, trange=1),
- call.change_tcb(high=0.0, log=0, low=0.0, step=0.0, trange=2),
- call.change_tcb(high=100000.0, log=0, low=5.0, regime=2, step=2.0, trange=1),
- call.change_finish(),
- call.cset(T0Phase=0),
- call.cset(TargetDiskPhase=2750),
- call.cset(InstrumentDiskPhase=2450),
- call.set_pv('IN:LARMOR:PARS:SAMPLE:MEAS:TYPE', 'sans'),
- call.cset(m4trans=200.0),
- call.set_pv('IN:LARMOR:PARS:SAMPLE:MEAS:LABEL', 'Test'),
- call.cset(a1hgap=20.0, a1vgap=20.0, s1hgap=14.0, s1vgap=14.0),
- call.cset(SamplePos='BT'),
- call.waitfor_move(),
- call.change_sample_par('Thick', 1.0),
- call.get_sample_pars(),
+ call.get_pv('CAEN:hv0:0:8:status'),
+ call.get_pv('CAEN:hv0:0:9:status'),
+ call.get_pv('CAEN:hv0:0:10:status'),
+ call.get_pv('CAEN:hv0:0:11:status'),
+ call.set_pv('PARS:SAMPLE:MEAS:TYPE', 'sans'),
+ call.set_pv('PARS:SAMPLE:MEAS:LABEL', 'Test'),
  call.change(title='Test_SANS'),
- call.begin(),
- call.waitfor(uamps=15),
- call.end()]
+ call.cset(a1hgap=20.0, a1vgap=20.0, s1hgap=14.0, s1vgap=14.0)]
 
-That's quite a few commands, so it's worth running through them.
-
-:2: Ensure that the instrument is ready to start a measurement
-:3-6: Check that the detector is on
-:7: Check that the detector is on
-:8-19: Put the instrument in event mode
-:20: Move the M4 transmission monitor out of the beam
-:21: Set the upstream slits
-:22: Move the sample into position
-:23: Let motors finish moving.
-:24: Set the sample thickness
-:25: Print and log the sample parameters
-:26: Set the sample title
-:27: Start the measurement.
-:28: Wait the requested time
-:29: Stop the measurement.
+:1: Ensure that the instrument is ready to start a measurement
+:2-5: Check that the detector is on
+:6: Set the measurement type
+:7: Set the measurement label
+:8: Set the sample title
+:9: Start the measurement.
