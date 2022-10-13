@@ -1,0 +1,82 @@
+import os
+import requests
+import sys
+import shutil
+
+from datetime import datetime
+from io import BytesIO
+from PIL import Image
+from time import sleep
+from zipfile import ZipFile
+
+sys.path.insert(0, os.path.abspath(os.path.join(r"C:\\", "Instrument", "scripts")))
+sys.path.insert(0, os.path.abspath(os.path.join(os.environ["KIT_ROOT"], "ISIS", "inst_servers", "master")))
+
+from genie_python import genie as g
+from genie_python.channel_access_exceptions import UnableToConnectToPVException
+from server_common.helpers import register_ioc_start
+
+register_ioc_start("BGRSCRPT_03")
+
+g.set_instrument(None)
+
+# User editable constants
+DEVICE_IP = "130.246.50.7"
+INSTRUMENT = "EXAMPLE_INST"
+MINS_BETWEEN_SCREENSHOTS = 10
+
+while True:
+    try:
+        run_number = g.get_runnumber()
+        rb_number = g.get_rb()
+        base_dir = "C:\\data\\"
+        zip_base_file_path = base_dir + "NDX" + INSTRUMENT + run_number
+        zip_archive_file_path = zip_base_file_path + "_scope_screens.zip"
+        zip_temp_file_path = zip_base_file_path + "_scope_screens_temp.zip"
+
+        # Poll the device's web server for the image
+        response = requests.get(f"http://{DEVICE_IP}/image.png", timeout=10)
+        img = Image.open(BytesIO(response.content))
+
+        # Save the image in the form <RUN #>_<DATETIME STAMP>.png
+        image_file_name = rb_number + "_" + datetime.now().replace(microsecond=0).isoformat().replace(":", "-") + ".png"
+        img.save(base_dir + image_file_name)
+
+        # If it exists, make a copy of the existing zip file
+        try:
+            shutil.copy2(zip_archive_file_path, zip_temp_file_path) #  copy2 preserves metadata
+        except IOError as ioe:
+            print("Failed to make a copy of the zip archive. Making a new one.\n")
+
+        # Write the new image into the zip file.
+        with ZipFile(zip_temp_file_path, "a") as zip:
+            zip.write(base_dir + image_file_name, "oscilloscope_screenshots\\" + image_file_name)
+
+        # Overwrite the original file with the new one
+        shutil.copy2(zip_temp_file_path, zip_archive_file_path)
+
+        # Delete the temp file & image file
+        os.remove(zip_temp_file_path)
+        os.remove(base_dir + image_file_name)
+    except TypeError as te:
+        if str(te) == 'can only concatenate str (not "NoneType") to str':
+            print("ERROR: Could not determine run/rb number. Check DAE connection.\n")
+    except AttributeError as ae:
+        if str(ae) == "'NoneType' object has no attribute 'get_run_number'":
+            print("ERROR: Could not determine run number. Check DAE connection.\n")
+        else:
+            print(ae)
+    except requests.Timeout as to:
+        print(
+            "ERROR: Image collection from oscilloscope timed out.\n"
+            f"Check that the web server on the device is working by typing {DEVICE_IP} into a browser's address bar. "
+            "If the image from the oscillocope's screen is not showing or the page does not load, "
+            "the device may need to be rebooted.\n"
+            )
+    except IOError as ioe:
+        print(f"ERROR: Unable to replace {zip_archive_file_path}. It may have been set to read-only by the archive script.\n"
+        + str(ioe))
+
+    finally:
+        # Wait 10 minutes and start again
+        sleep(MINS_BETWEEN_SCREENSHOTS * 60)  # Only pull an image every 10 minutes
