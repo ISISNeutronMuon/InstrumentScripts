@@ -36,6 +36,7 @@ def get_image() -> Image:
 
 while not TESTING:
     try:
+        print("Creating filenames...")
         run_number = g.get_runnumber()
         rb_number = g.get_rb()
         base_dir = "C:\\data\\"
@@ -43,35 +44,35 @@ while not TESTING:
         zip_archive_file_path = zip_base_file_path + "_scope_screens.zip"
         zip_temp_file_path = zip_base_file_path + "_scope_screens_temp.zip"
 
-        # Poll the device's web server for the image
+        print("Polling device for image...")
         img = get_image()
 
-        # Save the image in the form <RUN #>_<DATETIME STAMP>.png
+        print("Saving image to file system...")
         image_file_name = get_filename(rb_number)
         img.save(base_dir + image_file_name)
 
-        # If it exists, make a copy of the existing zip file
+        print("Making a temporary copy of the archive zip file...")
         try:
             shutil.copy2(zip_archive_file_path, zip_temp_file_path) #  copy2 preserves metadata
         except IOError as ioe:
-            print("Failed to make a copy of the zip archive. Making a new one.\n")
+            print("Failed to make a copy of the zip archive. Making a new one.")
 
-        # Write the new image into the zip file.
+        print("Writing the new image to the temp zip archive...")
         with ZipFile(zip_temp_file_path, "a") as zip:
             zip.write(base_dir + image_file_name, "oscilloscope_screenshots\\" + image_file_name)
 
-        # Overwrite the original file with the new one
+        print("Replacing the original zip file with the temp one...")
         shutil.copy2(zip_temp_file_path, zip_archive_file_path)
 
-        # Delete the temp file & image file
+        print("Removing temporary files...")
         os.remove(zip_temp_file_path)
         os.remove(base_dir + image_file_name)
     except TypeError as te:
         if str(te) == 'can only concatenate str (not "NoneType") to str':
-            print("ERROR: Could not determine run/rb number. Check DAE connection.\n")
+            print("ERROR: Could not determine run/rb number. Check DAE connection.")
     except AttributeError as ae:
         if str(ae) == "'NoneType' object has no attribute 'get_run_number'":
-            print("ERROR: Could not determine run number. Check DAE connection.\n")
+            print("ERROR: Could not determine run number. Check DAE connection.")
         else:
             print(ae)
     except requests.Timeout as to:
@@ -79,12 +80,12 @@ while not TESTING:
             "ERROR: Image collection from oscilloscope timed out.\n"
             f"Check that the web server on the device is working by typing {DEVICE_IP} into a browser's address bar. "
             "If the image from the oscillocope's screen is not showing or the page does not load, "
-            "the device may need to be rebooted.\n"
+            "the device may need to be rebooted."
             )
     except IOError as ioe:
         print(f"ERROR: Unable to replace {zip_archive_file_path}. It may have been set to read-only by the archive script.\n"
         + str(ioe))
 
     finally:
-        # Wait 10 minutes and start again
+        print(f"Waiting for {MINS_BETWEEN_SCREENSHOTS} minutes...")
         sleep(MINS_BETWEEN_SCREENSHOTS * 60)  # Only pull an image after a user defined number of minutes
