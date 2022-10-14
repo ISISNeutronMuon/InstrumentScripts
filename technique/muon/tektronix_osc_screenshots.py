@@ -25,7 +25,16 @@ DEVICE_IP = "130.246.50.7"
 INSTRUMENT = "EXAMPLE_INST"
 MINS_BETWEEN_SCREENSHOTS = 10
 
-while True:
+TESTING = False  # Stops the permanent while loop running for testing the functions. 
+
+def get_filename(rb_number: str) -> str:
+    return rb_number + "_" + datetime.now().replace(microsecond=0).isoformat().replace(":", "-") + ".png"
+
+def get_image() -> Image:
+    response = requests.get(f"http://{DEVICE_IP}/image.png", timeout=10)
+    return Image.open(BytesIO(response.content))
+
+while not TESTING:
     try:
         run_number = g.get_runnumber()
         rb_number = g.get_rb()
@@ -35,11 +44,10 @@ while True:
         zip_temp_file_path = zip_base_file_path + "_scope_screens_temp.zip"
 
         # Poll the device's web server for the image
-        response = requests.get(f"http://{DEVICE_IP}/image.png", timeout=10)
-        img = Image.open(BytesIO(response.content))
+        img = get_image()
 
         # Save the image in the form <RUN #>_<DATETIME STAMP>.png
-        image_file_name = rb_number + "_" + datetime.now().replace(microsecond=0).isoformat().replace(":", "-") + ".png"
+        image_file_name = get_filename(rb_number)
         img.save(base_dir + image_file_name)
 
         # If it exists, make a copy of the existing zip file
@@ -79,4 +87,4 @@ while True:
 
     finally:
         # Wait 10 minutes and start again
-        sleep(MINS_BETWEEN_SCREENSHOTS * 60)  # Only pull an image every 10 minutes
+        sleep(MINS_BETWEEN_SCREENSHOTS * 60)  # Only pull an image after a user defined number of minutes
