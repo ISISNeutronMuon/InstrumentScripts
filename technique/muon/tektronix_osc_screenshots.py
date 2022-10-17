@@ -71,6 +71,8 @@ while not TESTING:
     except TypeError as te:
         if str(te) == 'can only concatenate str (not "NoneType") to str':
             print("ERROR: Could not determine run/rb number. Check DAE connection.")
+        else:
+            print(te)
     except AttributeError as ae:
         if str(ae) == "'NoneType' object has no attribute 'get_run_number'":
             print("ERROR: Could not determine run number. Check DAE connection.")
@@ -84,8 +86,7 @@ while not TESTING:
             "the device may need to be rebooted."
             )
     except IOError as ioe:
-        print(f"ERROR: Unable to replace {zip_archive_file_path}. It may have been set to read-only by the archive script.\n"
-        + str(ioe))
+        print(str(ioe))
 
     finally:
         print(f"Waiting for {MINS_BETWEEN_SCREENSHOTS} minutes...")
