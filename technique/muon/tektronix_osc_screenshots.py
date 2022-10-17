@@ -13,7 +13,6 @@ sys.path.insert(0, os.path.abspath(os.path.join(r"C:\\", "Instrument", "scripts"
 sys.path.insert(0, os.path.abspath(os.path.join(os.environ["EPICS_KIT_ROOT"], "ISIS", "inst_servers", "master")))
 
 from genie_python import genie as g
-from genie_python.channel_access_exceptions import UnableToConnectToPVException
 from server_common.helpers import register_ioc_start
 
 register_ioc_start("BGRSCRPT_03")
