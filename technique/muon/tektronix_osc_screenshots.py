@@ -28,7 +28,7 @@ MINS_BETWEEN_SCREENSHOTS = 10
 TESTING = False  # Stops the permanent while loop running for testing the functions. 
 
 def get_filename(rb_number: str) -> str:
-    return rb_number + "_" + datetime.now().replace(microsecond=0).isoformat().replace(":", "-") + ".png"
+    return f'{rb_number}_{datetime.now().replace(microsecond=0).isoformat().replace(":", "-")}.png'
 
 def get_image() -> Image:
     response = requests.get(f"http://{DEVICE_IP}/image.png", timeout=10)
@@ -59,7 +59,7 @@ while not TESTING:
 
         print("Writing the new image to the temp zip archive...")
         with ZipFile(zip_temp_file_path, "a") as zip:
-            zip.write(base_dir + image_file_name, "oscilloscope_screenshots\\" + image_file_name)
+            zip.write(base_dir + image_file_name, f"oscilloscope_screenshots\\{image_file_name}")
 
         print("Replacing the original zip file with the temp one...")
         shutil.copy2(zip_temp_file_path, zip_archive_file_path)
