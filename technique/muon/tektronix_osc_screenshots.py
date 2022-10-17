@@ -39,17 +39,18 @@ while not TESTING:
         print("Creating filenames...")
         run_number = g.get_runnumber()
         rb_number = g.get_rb()
-        base_dir = "C:\\data\\"
-        zip_base_file_path = base_dir + "NDX" + INSTRUMENT + run_number
-        zip_archive_file_path = zip_base_file_path + "_scope_screens.zip"
-        zip_temp_file_path = zip_base_file_path + "_scope_screens_temp.zip"
+        base_dir = os.path.join(f"C:{os.sep}", "data")
+        zip_filename = f"NDX{INSTRUMENT}{run_number}"
+        zip_archive_file_path = os.path.join(base_dir, f"{zip_filename}_scope_screens.zip")
+        zip_temp_file_path = os.path.join(base_dir, f"{zip_filename}_scope_screens_temp.zip")
 
         print("Polling device for image...")
         img = get_image()
 
         print("Saving image to file system...")
         image_file_name = get_filename(rb_number)
-        img.save(base_dir + image_file_name)
+        image_file_path = os.path.join(base_dir, image_file_name)
+        img.save(image_file_path)
 
         print("Making a temporary copy of the archive zip file...")
         try:
@@ -59,14 +60,14 @@ while not TESTING:
 
         print("Writing the new image to the temp zip archive...")
         with ZipFile(zip_temp_file_path, "a") as zip:
-            zip.write(base_dir + image_file_name, f"oscilloscope_screenshots\\{image_file_name}")
+            zip.write(image_file_path, os.path.join("oscilloscope_screenshots", image_file_name))
 
         print("Replacing the original zip file with the temp one...")
         shutil.copy2(zip_temp_file_path, zip_archive_file_path)
 
         print("Removing temporary files...")
         os.remove(zip_temp_file_path)
-        os.remove(base_dir + image_file_name)
+        os.remove(image_file_path)
     except TypeError as te:
         if str(te) == 'can only concatenate str (not "NoneType") to str':
             print("ERROR: Could not determine run/rb number. Check DAE connection.")
