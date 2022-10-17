@@ -21,7 +21,7 @@ register_ioc_start("BGRSCRPT_03")
 g.set_instrument(None)
 
 # User editable constants
-DEVICE_IP = "130.246.50.7"
+DEVICE_IP = ""
 INSTRUMENT = "EXAMPLE_INST"
 MINS_BETWEEN_SCREENSHOTS = 10
 
