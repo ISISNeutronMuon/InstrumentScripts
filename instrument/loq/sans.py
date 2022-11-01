@@ -14,7 +14,11 @@ class LOQ(ScanningInstrument):
     def __init__(self):
         super().__init__()
         self.setup_sans = self.setup_dae_histogram
-        self._poslist_dls = self.get_pv("LKUP:DLS:POSITIONS").split()
+        try:
+            self._poslist_dls = self.get_pv("LKUP:DLS:POSITIONS").split()
+        except AttributeError:
+            warning("No positions found for DLS Sample Changer!")
+            self._poslist_dls = []
 
     def do_sans_large(self, title=None, pos=None, thickness=1.0,
                       dae=None, uamps=None, time=None, **kwargs):

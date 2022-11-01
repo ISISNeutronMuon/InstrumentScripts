@@ -11,8 +11,11 @@ class Zoom(ScanningInstrument):
     of the Scanning instrument class."""
     def __init__(self):
         super().__init__()
-        # TODO fix DLS motionsetpoints lookup
-#        _poslist_dls = self.get_pv("LKUP:DLS:POSITIONS").split()
+        try:
+            self._poslist_dls = self.get_pv("LKUP:DLS:POSITIONS").split()
+        except AttributeError:
+            warning("No positions found for DLS Sample Changer!")
+            self._poslist_dls = []
 
     def _generic_scan(self, detector, spectra, wiring="detector_1det_1dae3card.dat", tcbs=None):
         # Explicitly check and then set to default value to avoid UB.
@@ -74,10 +77,9 @@ class Zoom(ScanningInstrument):
           The sample changer position
 
         """
-        # TODO fix DLS motionsetpoints lookup
-#        if pos not in self._poslist_dls:
-#            warning(f"Error in script, position {pos} does not exist")
-#            return False
+        if pos not in self._poslist_dls:
+            warning(f"Error in script, position {pos} does not exist")
+            return False
         return True
 
 
