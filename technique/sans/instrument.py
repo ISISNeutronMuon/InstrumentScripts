@@ -861,7 +861,7 @@ class ScanningInstrument(object):
         the value of the PV for "IN:LARMOR:DAE:WIRING_FILE"
 
         """
-        return gen.get_pv(self._PV_BASE + name)
+        return gen.get_pv(name, is_local=True)
 
     def send_pv(self, name, value):
         """Set the given PV within the sub hierarchy of the instrument.
