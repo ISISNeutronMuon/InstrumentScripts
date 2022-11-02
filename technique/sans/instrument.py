@@ -63,8 +63,6 @@ class ScanningInstrument(object):
     _detector_lock = False
     title_footer = ""
     _TIMINGS = ["uamps", "frames", "seconds", "minutes", "hours"]
-    # Gets the instruments prefix to be used with all pv commands
-    _PV_BASE = gen.my_pv_prefix
     # Methods to ignore in method_iterator
     _block_accessors = ["changer_pos_dls", "changer_pos", "method_iterator"]
 
@@ -870,7 +868,7 @@ class ScanningInstrument(object):
         change the value of the PV for "IN:LARMOR:DAE:WIRING_FILE" to
         the value in f.
         """
-        return gen.set_pv(self._PV_BASE + name, value)
+        return gen.set_pv(name, value, is_local=True)
 
     @property
     def tables_path(self):
