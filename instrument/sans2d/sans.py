@@ -12,11 +12,8 @@ class Sans2d(ScanningInstrument):
 
     def __init__(self):
         super().__init__()
-        try:
-            self._poslist_dls = self.get_pv("LKUP:DLS:POSITIONS").split()
-        except AttributeError:
-            warning("No positions found for DLS Sample Changer!")
-            self._poslist_dls = []
+        self._set_poslist_dls()
+
     def check_move_pos(self, pos):
         """Check whether the position is valid for the normal
         sample changer and return True or False
@@ -28,21 +25,6 @@ class Sans2d(ScanningInstrument):
 
         """
         if pos not in self._poslist:
-            warning(f"Error in script, position {pos} does not exist")
-            return False
-        return True
-
-    def check_move_pos_dls(self, pos):
-        """Check whether the position is valid for the DSL sample
-         changer and return True or False
-
-        Parameters
-        ----------
-        pos : str
-          The sample changer position
-
-        """
-        if pos not in self._poslist_dls:
             warning(f"Error in script, position {pos} does not exist")
             return False
         return True

@@ -445,8 +445,7 @@ class ScanningInstrument(object):
         return True
 
     def check_move_pos_dls(self, pos):
-        """Check whether the position is valid for the DSL sample
-         changer and return True or False
+        """Check whether the position is valid for the DLS sample changer and return True or False
 
         Parameters
         ----------
@@ -454,7 +453,16 @@ class ScanningInstrument(object):
           The sample changer position
 
         """
-        NotImplementedError("DSL sample change is unsupported on this instrument")
+        if self._poslist_dls is None:
+            NotImplementedError("DLS sample changer is unsupported on this instrument")
+
+        elif self._poslist_dls is []:
+            self._set_poslist_dls()
+
+        if pos not in self._poslist_dls:
+            warning(f"Error in script, position {pos} does not exist")
+            return False
+        return True
 
     @property
     def changer_pos(self):
@@ -949,3 +957,10 @@ class ScanningInstrument(object):
           The aperture size. e.g. "Small" or "Medium"
           A blank string (the default value) results in
           the aperture not being changed."""
+
+    def _set_poslist_dls(self):
+        try:
+            self._poslist_dls = self.get_pv("LKUP:DLS:POSITIONS").split()
+        except AttributeError:
+            warning("No positions found for DLS Sample Changer!")
+            self._poslist_dls = []

@@ -11,11 +11,7 @@ class Zoom(ScanningInstrument):
     of the Scanning instrument class."""
     def __init__(self):
         super().__init__()
-        try:
-            self._poslist_dls = self.get_pv("LKUP:DLS:POSITIONS").split()
-        except AttributeError:
-            warning("No positions found for DLS Sample Changer!")
-            self._poslist_dls = []
+        self._set_poslist_dls()
 
     def _generic_scan(self, detector, spectra, wiring="detector_1det_1dae3card.dat", tcbs=None):
         # Explicitly check and then set to default value to avoid UB.
@@ -66,21 +62,6 @@ class Zoom(ScanningInstrument):
     def _configure_trans_custom(self):
         # move the transmission monitor in
         self.send_pv("VACUUM:MONITOR:4:INSERT", "INSERT")
-
-    def check_move_pos_dls(self, pos):
-        """Check whether the position is valid for the DSL sample
-         changer and return True or False
-
-        Parameters
-        ----------
-        pos : str
-          The sample changer position
-
-        """
-        if pos not in self._poslist_dls:
-            warning(f"Error in script, position {pos} does not exist")
-            return False
-        return True
 
 
 obj = Zoom()
