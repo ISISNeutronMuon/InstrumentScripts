@@ -455,6 +455,7 @@ class ScanningInstrument(object):
         """
         if self._poslist_dls is None:
             NotImplementedError("DLS sample changer is unsupported on this instrument")
+            return False
 
         elif self._poslist_dls is []:
             self._set_poslist_dls()
