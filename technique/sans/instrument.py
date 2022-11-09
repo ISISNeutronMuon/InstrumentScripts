@@ -63,8 +63,6 @@ class ScanningInstrument(object):
     _detector_lock = False
     title_footer = ""
     _TIMINGS = ["uamps", "frames", "seconds", "minutes", "hours"]
-    # Gets the instruments prefix to be used with all pv commands
-    _PV_BASE = gen.my_pv_prefix
     # Methods to ignore in method_iterator
     _block_accessors = ["changer_pos_dls", "changer_pos", "method_iterator"]
 
@@ -447,8 +445,7 @@ class ScanningInstrument(object):
         return True
 
     def check_move_pos_dls(self, pos):
-        """Check whether the position is valid for the DSL sample
-         changer and return True or False
+        """Check whether the position is valid for the DLS sample changer and return True or False
 
         Parameters
         ----------
@@ -456,7 +453,17 @@ class ScanningInstrument(object):
           The sample changer position
 
         """
-        NotImplementedError("DSL sample change is unsupported on this instrument")
+        if self._poslist_dls is None:
+            NotImplementedError("DLS sample changer is unsupported on this instrument")
+            return False
+
+        elif self._poslist_dls is []:
+            self._set_poslist_dls()
+
+        if pos not in self._poslist_dls:
+            warning(f"Error in script, position {pos} does not exist")
+            return False
+        return True
 
     @property
     def changer_pos(self):
@@ -669,7 +676,7 @@ class ScanningInstrument(object):
         if time or self.sanitised_timings(kwargs):
             self._do_measure(title=title, time=time, **kwargs)
 
-    def do_sans(self, title="", position=None, thickness=1.0, dae=None,
+    def do_sans(self, title="", pos=None, thickness=1.0, dae=None,
                 aperture="", period=None, time=None, dls_sample_changer=False, **kwargs):
         """A wrapper around ``measure`` which ensures that the instrument is
         in sans mode before running the measurement if a title is given.
@@ -685,7 +692,7 @@ class ScanningInstrument(object):
         of parameters accepted. """
 
         if gen.get_runstate() != "SETUP":  # pragma: no cover
-            self._attempt_resume(title, position, thickness, dae, **kwargs)
+            self._attempt_resume(title, pos, thickness, dae, **kwargs)
             return
 
         info("Set up instrument for sans measurement")
@@ -696,7 +703,7 @@ class ScanningInstrument(object):
 
         if "trans" in kwargs:
             del kwargs["trans"]
-        self._measure(title=title, trans=False, position=position, thickness=thickness,
+        self._measure(title=title, trans=False, position=pos, thickness=thickness,
                       dae=dae, aperture=aperture, period=period,
                       time=time, _custom=False, dls_sample_changer=dls_sample_changer, **kwargs)
 
@@ -861,7 +868,7 @@ class ScanningInstrument(object):
         the value of the PV for "IN:LARMOR:DAE:WIRING_FILE"
 
         """
-        return gen.get_pv(self._PV_BASE + name)
+        return gen.get_pv(name, is_local=True)
 
     def send_pv(self, name, value):
         """Set the given PV within the sub hierarchy of the instrument.
@@ -870,7 +877,7 @@ class ScanningInstrument(object):
         change the value of the PV for "IN:LARMOR:DAE:WIRING_FILE" to
         the value in f.
         """
-        return gen.set_pv(self._PV_BASE + name, value)
+        return gen.set_pv(name, value, is_local=True)
 
     @property
     def tables_path(self):
@@ -951,3 +958,10 @@ class ScanningInstrument(object):
           The aperture size. e.g. "Small" or "Medium"
           A blank string (the default value) results in
           the aperture not being changed."""
+
+    def _set_poslist_dls(self):
+        try:
+            self._poslist_dls = self.get_pv("LKUP:DLS:POSITIONS").split()
+        except AttributeError:
+            warning("No positions found for DLS Sample Changer!")
+            self._poslist_dls = []

@@ -13,8 +13,7 @@ class LOQ(ScanningInstrument):
 
     def __init__(self):
         super().__init__()
-        self.setup_sans = self.setup_dae_histogram
-        self._poslist_dls = self.get_pv("LKUP:DLS:POSITIONS").split()
+        self._set_poslist_dls()
 
     def do_sans_large(self, title=None, pos=None, thickness=1.0,
                       dae=None, uamps=None, time=None, **kwargs):
@@ -196,20 +195,6 @@ class LOQ(ScanningInstrument):
         sleep(1)
         gen.cset(Julabo_2_Circulator="ON")
         gen.waitfor_move()
-
-    def check_move_pos_dls(self, pos):
-        """Check whether the position is valid for the DLS sample changer and return True or False
-
-        Parameters
-        ----------
-        pos : str
-          The sample changer position
-
-        """
-        if pos not in self._poslist_dls:
-            warning(f"Error in script, position {pos} does not exist")
-            return False
-        return True
 
 
 obj = LOQ()

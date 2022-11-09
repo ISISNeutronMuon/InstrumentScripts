@@ -12,7 +12,7 @@ class Sans2d(ScanningInstrument):
 
     def __init__(self):
         super().__init__()
-        self._poslist_dls = self.get_pv("LKUP:DLS:POSITIONS").split()
+        self._set_poslist_dls()
 
     def check_move_pos(self, pos):
         """Check whether the position is valid for the normal
@@ -29,29 +29,14 @@ class Sans2d(ScanningInstrument):
             return False
         return True
 
-    def check_move_pos_dls(self, pos):
-        """Check whether the position is valid for the DSL sample
-         changer and return True or False
-
-        Parameters
-        ----------
-        pos : str
-          The sample changer position
-
-        """
-        if pos not in self._poslist_dls:
-            warning(f"Error in script, position {pos} does not exist")
-            return False
-        return True
-
-    def do_sans_large(self, title="", position=None, thickness=1.0, dae=None,
-                    period=None, time=None, dls_sample_changer=False, **kwargs):
+    def do_sans_large(self, title="", pos=None, thickness=1.0, dae=None,
+                      period=None, time=None, dls_sample_changer=False, **kwargs):
         """
         A wrapper around do_sans with aperture set to large
         Please see measure for full documentation of parameters
         """
-        self.do_sans(title=title, position=position, thickness=thickness, dae=dae,
-                period=period, aperture="LARGE", time=time, dls_sample_changer=dls_sample_changer, **kwargs)
+        self.do_sans(title=title, pos=pos, thickness=thickness, dae=dae,
+                     period=period, aperture="LARGE", time=time, dls_sample_changer=dls_sample_changer, **kwargs)
 
     def _generic_scan(self, detector, spectra, wiring, tcbs=None):
         if tcbs is None:
