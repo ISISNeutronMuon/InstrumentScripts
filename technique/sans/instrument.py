@@ -707,7 +707,7 @@ class ScanningInstrument(object):
                       dae=dae, aperture=aperture, period=period,
                       time=time, _custom=False, dls_sample_changer=dls_sample_changer, **kwargs)
 
-    def do_trans(self, title="", position=None, thickness=1.0, dae=None,
+    def do_trans(self, title="", pos=None, thickness=1.0, dae=None,
                  aperture="", period=None, time=None, dls_sample_changer=False, **kwargs):
         """A wrapper around ``measure`` which ensures that the instrument is
          in transition mode before running the measurement if a title is given. It ensures that the
@@ -724,7 +724,7 @@ class ScanningInstrument(object):
         of parameters accepted. """
 
         if gen.get_runstate() != "SETUP":  # pragma: no cover
-            self._attempt_resume(title, position, thickness, dae, **kwargs)
+            self._attempt_resume(title, pos, thickness, dae, **kwargs)
             return
 
         info("Set up instrument for trans measurement")
@@ -735,7 +735,7 @@ class ScanningInstrument(object):
 
         if "trans" in kwargs:
             del kwargs["trans"]
-        self._measure(title=title, trans=True, position=position, thickness=thickness,
+        self._measure(title=title, trans=True, position=pos, thickness=thickness,
                       dae=dae, aperture=aperture, period=period,
                       time=time, _custom=False, dls_sample_changer=dls_sample_changer, **kwargs)
 
