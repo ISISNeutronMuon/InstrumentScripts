@@ -18,13 +18,14 @@ class LOQ(ScanningInstrument):
 
     _poslist = ['AB', 'BB', 'CB', 'DB', 'EB', 'FB', 'GB', 'HB', 'IB', 'JB',
                 'KB', 'LB', 'MB', 'NB', 'OB', 'PB', 'QB', 'RB', 'SB', 'TB',
-                'C1B', 'C2B', 'C3B', 'C4B', 'C5B', 'C6B', 'C7B', 'C8B', 'C9B',
-                'C10B', 'C11B', 'C12B', 'C13B', 'C14B', 'C15B', 'C16B', 'C17B',
-                'C18B', 'C1T', 'C2T', 'C3T', 'C4T', 'C5T', 'C6T', 'C7T',
-                'C8T', 'C9T', 'C10T', 'C11T', 'C12T', 'C13T', 'C14T',
-                'W1B', 'W2B', 'W3B', 'W4B', 'W5B', 'W6B', 'W7B', 'W8B',
-                'W9B', 'W10B', 'W11B', 'W12B', 'W13B', 'W14B', 'W15B', 'W16B',
-                'DLS2', 'DLS3', 'DLS4', 'DLS5', 'DLS6', 'FIVE', 'SIX', 'SEVEN', 'EIGHT']
+                '1CB', '2CB', '3CB', '4CB', '5CB', '6CB', '7CB', '8CB', '9CB',
+                '10CB', '11CB', '12CB', '13CB', '14CB', '15CB', '16CB', '17CB', '18CB',
+                '1WB', '2WB', '3WB', '4WB', '5WB', '6WB', '7WB', '8WB',
+                '9WB', '10WB', '11WB', '12WB', '13WB', '14WB', '15WB', '16WB',
+                '1DB', '2DB', '3DB', '4DB', '5DB', '6DB',
+                '7DB', '8DB', '9DB', '10DB', '11DB', '12DB',
+                'DLS2', 'DLS3', 'DLS4', 'DLS5', 'DLS6',
+                'FIVE', 'SIX', 'SEVEN', 'EIGHT']
 
     def _generic_scan(  # pylint: disable=dangerous-default-value
             self,
