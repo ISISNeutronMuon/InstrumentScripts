@@ -130,7 +130,7 @@ class ScanningInstrument(object):
                 '1WT', '2WT', '3WT', '4WT', '5WT', '6WT', '7WT',
                 '8WT', '9WT', '10WT', '11WT', '12WT', '13WT', '14WT',
                 '1GT', '2GT', '3GT', '4GT', '5GT', '6GT', '7GT', '8GT', '9GT',
-                '10GT', '11GT', '12GT']
+                '10GT', '11GT', '12GT', '1R', '2R', '3R', '4R', '5R', '6R', '7R']
 
     def _attempt_resume(self, title, pos, thick, dae, **kwargs):
         if gen.get_title() != title+self.title_footer:
