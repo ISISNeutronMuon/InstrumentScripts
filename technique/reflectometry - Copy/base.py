@@ -18,7 +18,7 @@ from .instrument_constants import get_instrument_constants
 
 def run_angle(sample, angle, count_uamps=None, count_seconds=None, count_frames=None, s1vg=None, s2vg=None, s3vg=None,
               s4vg=None, smangle=None, mode=None, do_auto_height=False, laser_offset_block=None, fine_height_block=None,
-              auto_height_target=0.0, continue_on_error=False, dry_run=False, include_gaps_in_title=True):
+              auto_height_target=0.0, continue_on_error=False, dry_run=False, include_gaps_in_title=False):
     """
     Move to a given theta and smangle with slits set. If a current, time or frame count are given then take a
     measurement.
@@ -52,9 +52,9 @@ def run_angle(sample, angle, count_uamps=None, count_seconds=None, count_frames=
         of the the maximum theta allowed. It will not move the super mirror in or out of the beam. The mode will not be
         changed and it will not use a height gun for auto-height mode.
 
-        >>> run_angle(my_sample, 0.0, s1vg=0.1, s2vg=0.3, mode="NR")
+        >>> run_angle(my_sample, 0.0, s1vg=0.1, s2vg=0.3, mode="Solid")
         In this evocation we are setting theta to 0 with s1 and s2 set to 0.1 and 0.3. The mode is also
-        changed to NR. Depending on what this means on your instrument this may also set the offsets for components
+        changed to Solid. Depending on what this means on your instrument this may also set the offsets for components
         back to 0. No count was specified so in this case the beamline is moved to the position and left there; no
         data is captured.
 
@@ -90,7 +90,7 @@ def run_angle(sample, angle, count_uamps=None, count_seconds=None, count_frames=
     movement.set_theta(angle)
 
     if not do_auto_height:
-        movement.set_height_offset(sample.height)
+        movement.set_height_offset(sample.height_offset)
     else:
         auto_height(laser_offset_block, fine_height_block, target=auto_height_target,
                     continue_if_nan=continue_on_error, dry_run=dry_run)
@@ -173,7 +173,7 @@ def transmission(sample, title, s1vg, s2vg, s3vg=None, s4vg=None, count_seconds=
         if constants.has_height2 and height_offset > 10:
             movement.set_height2_offset(sample.height2_offset - height_offset, constants)
         else:
-            movement.set_height_offset(sample.height - height_offset)
+            movement.set_height_offset(sample.height_offset - height_offset)
 
         if s3vg is None:
             s3vg = constants.s3max
@@ -207,7 +207,7 @@ def reset_hgaps_and_sample_height(movement, sample, constants):
         print("Reset horizontal gaps to {}".format(list(horizontal_gaps.values())))
         movement.set_h_gaps(**horizontal_gaps)
 
-        movement.set_height_offset(sample.height)
+        movement.set_height_offset(sample.height_offset)
         movement.set_height2_offset(sample.height2_offset, constants)
         movement.wait_for_move()
 
@@ -422,7 +422,7 @@ class _Movement(object):
         """
         print("Sample: height offset from beam={}".format(height_offset))
         if not self.dry_run:
-            g.cset("SAMPLEOFFSET", height_offset)
+            g.cset("HEIGHT", height_offset)
 
     def set_height2_offset(self, height, constants):
         """
@@ -433,7 +433,7 @@ class _Movement(object):
         if constants.has_height2:
             print("Sample: height2 offset from beam={}".format(height))
             if not self.dry_run:
-                g.cset("HEIGHT2_OFFSET", height)
+                g.cset("HEIGHT2", height)
         elif height != 0:
             print("ERROR: Height 2 off set is being ignored")
 
@@ -564,8 +564,8 @@ class _Movement(object):
             is_in_beam = "IN" if smangle > 0.0001 else "OUT"
             print("SM angle (in beam?): {} ({})".format(smangle, is_in_beam))
             if not self.dry_run:
-                g.cset("SMANGLE", smangle)
-                g.cset("SMINBEAM", is_in_beam)
+                g.cset("SM2ANGLE", smangle)
+                g.cset("SM2INBEAM", is_in_beam)
 
     def pause(self):
         """

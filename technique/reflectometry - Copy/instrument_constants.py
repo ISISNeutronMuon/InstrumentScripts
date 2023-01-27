@@ -1,11 +1,7 @@
 """
 Instrument specific constants
 """
-try:
-    # pylint: disable=import-error
-    from genie_python import genie as g
-except ImportError:
-    from mocks import g
+from genie_python import genie as g
 
 
 class InstrumentConstant(object):
