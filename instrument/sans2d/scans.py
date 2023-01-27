@@ -36,7 +36,7 @@ class Sans2d(Defaults):
             # create_spectra_definition(6, 7000.0, 74000.0, "monitor6"),
         ])
 
-    def scan(self, motion, start=None, stop=None, step=None, frames=None,
+    def scan(self, motion, start=None, stop=None, step=None, frames=None, aperture="Large",
              **kwargs):
         # Override scan so that we can do setup first
 
@@ -45,10 +45,10 @@ class Sans2d(Defaults):
 
         if det == 3:
             Sans2d_sans().setup_trans()
-            Sans2d_sans().set_aperture("Large")
+            Sans2d_sans().set_aperture(aperture)
             g.set_pv("FINS_VAC:MONITOR3:STATUS:SP", "IN", is_local=True)
         else:
-            Sans2d_sans().set_aperture("Large")
+            Sans2d_sans().set_aperture(aperture)
             g.set_pv("FINS_VAC:MONITOR3:STATUS:SP", "OUT", is_local=True)
 
             g.change_tables(
