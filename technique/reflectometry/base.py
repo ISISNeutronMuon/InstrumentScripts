@@ -11,12 +11,14 @@ from math import tan, radians, sin
 from six.moves import input
 from genie_python import genie as g
 
+import general.utilities.io
 from .sample import Sample
 from .instrument_constants import get_instrument_constants
 
 
 def run_angle(sample, angle, count_uamps=None, count_seconds=None, count_frames=None, s1vg=None, s2vg=None, s3vg=None,
-              s4vg=None, smangle=None, mode=None, auto_height=False, dry_run=False):
+              s4vg=None, smangle=None, mode=None, do_auto_height=False, laser_offset_block=None, fine_height_block=None,
+              auto_height_target=0.0, continue_on_error=False, dry_run=False, include_gaps_in_title=True):
     """
     Move to a given theta and smangle with slits set. If a current, time or frame count are given then take a
     measurement.
@@ -33,8 +35,13 @@ def run_angle(sample, angle, count_uamps=None, count_seconds=None, count_frames=
         s4vg: slit 4 vertical gap; None use fraction of maximum based on theta
         smangle: super mirror angle, place in the beam, if set to 0 remove from the beam; None don't move super mirror
         mode: mode to run in; None don't change modes
-        auto_height: if True when taking data run the auto-height routine
-        dry_run: True just print what is going to happen; False do the experiment
+        do_auto_height: if True when taking data run the auto-height routine
+        laser_offset_block: The block for the laser offset from centre
+        fine_height_block: The block for the sample fine height
+        auto_height_target: The target value for laser offset if using auto height
+        continue_on_error: If True, continue script on error; If False, interrupt and prompt the user on error
+        dry_run: If True just print what would happen; If False, run the experiment
+        include_gaps_in_title: Whether current slit gap sizes should be appended to the run title or not
 
     Examples:
         The simplest scan is:
@@ -82,14 +89,15 @@ def run_angle(sample, angle, count_uamps=None, count_seconds=None, count_frames=
     movement.set_height2_offset(sample.height2_offset, constants)
     movement.set_theta(angle)
 
-    if not auto_height:
+    if not do_auto_height:
         movement.set_height_offset(sample.height)
     else:
-        auto_height()  # TODO should set height based on laser gun measurement
+        auto_height(laser_offset_block, fine_height_block, target=auto_height_target,
+                    continue_if_nan=continue_on_error, dry_run=dry_run)
 
     movement.set_slit_gaps(angle, constants, s1vg, s2vg, s3vg, s4vg, sample)
     movement.wait_for_move()
-    movement.update_title(sample.title, sample.subtitle, angle, smangle, add_current_gaps=True)
+    movement.update_title(sample.title, sample.subtitle, angle, smangle, add_current_gaps=include_gaps_in_title)
 
     # count
     if count_seconds is None and count_uamps is None and count_frames is None:
@@ -98,10 +106,9 @@ def run_angle(sample, angle, count_uamps=None, count_seconds=None, count_frames=
         movement.count_for(count_uamps, count_seconds, count_frames)
 
 
-def transmission(sample, title, s1vg, s2vg, s3vg=None, s4vg=None,
-                 count_seconds=None, count_uamps=None, count_frames=None,
-                 s1hg=None, s2hg=None, s3hg=None, s4hg=None,
-                 height_offset=5, smangle=None, mode=None, dry_run=False):
+def transmission(sample, title, s1vg, s2vg, s3vg=None, s4vg=None, count_seconds=None, count_uamps=None,
+                 count_frames=None, s1hg=None, s2hg=None, s3hg=None, s4hg=None, height_offset=5, smangle=None,
+                 mode=None, dry_run=False, include_gaps_in_title=True):
     """
     Perform a transmission
     Args:
@@ -121,7 +128,9 @@ def transmission(sample, title, s1vg, s2vg, s3vg=None, s4vg=None,
         height_offset: Height offset from normal to set the sample to (offset is in negative direction)
         smangle: super mirror angle, place in the beam, if set to 0 remove from the beam; None don't move super mirror
         mode: mode to run in; None don't change mode
-        dry_run: True to print what happens; False to do experiment
+        dry_run: If True just print what would happen; If False, run the transmission
+        include_gaps_in_title: Whether current slit gap sizes should be appended to the run title or not
+
     Examples:
         The simplest transmission is:
 
@@ -175,7 +184,7 @@ def transmission(sample, title, s1vg, s2vg, s3vg=None, s4vg=None,
         movement.set_slit_gaps(0.0, constants, s1vg, s2vg, s3vg, s4vg, sample)
         movement.wait_for_move()
 
-        movement.update_title(title, "", None, smangle, add_current_gaps=True)
+        movement.update_title(title, "", None, smangle, add_current_gaps=include_gaps_in_title)
         movement.count_for(count_uamps, count_seconds, count_frames)
 
         # Horizontal gaps and height reset by with reset_gaps_and_sample_height
@@ -253,6 +262,66 @@ def slit_check(theta, footprint, resolution):
     print("For a foortprint of {} and resolution of {} at an angle {}:".format(theta, footprint, resolution))
     print("s1vg={}".format(s1))
     print("s2vg={}".format(s2))
+
+
+def auto_height(laser_offset_block: str, fine_height_block: str, target: float = 0.0, continue_if_nan: bool = False,
+                dry_run: bool = False):
+    """
+    Moves the sample fine height axis so that it is centred on the beam, based on the readout of a laser height gun.
+
+    Args:
+        laser_offset_block: The name of the block for the laser offset from centre
+        fine_height_block: The name of the block for the sample fine height axis
+        target: The target laser offset
+        continue_if_nan: Defines what to do in case of invalid values. If True, ignore errors and continue execution.
+            If False, break and wait for user input. (default: False)
+        dry_run: If True just print what is going to happen; If False, set the auto height
+        
+        >>> auto_height(b.KEYENCE, b.HEIGHT2)
+
+        Moves HEIGHT2 by (KEYENCE * (-1))
+
+        >>> auto_height(b.KEYENCE, b.HEIGHT2, target=0.5, continue_if_nan=True)
+
+        Moves HEIGHT2 by (target - b.KEYENCE) and does not interrupt script execution if an invalid value is read.
+    """
+    try:
+        target_height, current_height = _calculate_target_auto_height(laser_offset_block, fine_height_block, target)
+        if not dry_run:
+            g.cset(fine_height_block, target_height)
+            _auto_height_check_alarms(fine_height_block)
+            g.waitfor_move()
+    except TypeError as e:
+        prompt_user = not (continue_if_nan or dry_run)
+        general.utilities.io.alert_on_error("ERROR: cannot set auto height (invalid block value): {}".format(e), prompt_user)
+
+
+def _auto_height_check_alarms(fine_height_block):
+    """
+    Checks whether a given block for the fine height axis is in alarm after a move and sends an alert if not.
+
+    Args:
+        fine_height_block: The name of the fine height axis block
+    """
+    alarm_lists = g.check_alarms(fine_height_block)
+    if any(fine_height_block in alarm_list for alarm_list in alarm_lists):
+        general.utilities.io.alert_on_error(
+            "ERROR: cannot set auto height (target outside of range for fine height axis?)", True)
+
+
+def _calculate_target_auto_height(laser_offset_block, fine_height_block, target):
+    if laser_offset_block is None:
+        raise TypeError("No block given for laser offset.")
+    elif fine_height_block is None:
+        raise TypeError("No block given for fine height.")
+    current_laser_offset = g.cget(laser_offset_block)["value"]
+    difference = target - current_laser_offset
+
+    current_height = g.cget(fine_height_block)["value"]
+    target_height = current_height + difference
+
+    print("Target for fine height axis: {} (current {})".format(target_height, current_height))
+    return target_height, current_height
 
 
 class _Movement(object):
@@ -353,7 +422,10 @@ class _Movement(object):
         """
         print("Sample: height offset from beam={}".format(height_offset))
         if not self.dry_run:
-            g.cset("SAMPLEOFFSET", height_offset)
+            if g._genie_api.get_instrument_full_name() == "NDXINTER":
+                g.cset("HEIGHT", height_offset)
+            else:
+                g.cset("SAMPLEOFFSET", height_offset)
 
     def set_height2_offset(self, height, constants):
         """
@@ -364,7 +436,10 @@ class _Movement(object):
         if constants.has_height2:
             print("Sample: height2 offset from beam={}".format(height))
             if not self.dry_run:
-                g.cset("HEIGHT2_OFFSET", height)
+                if g._genie_api.get_instrument_full_name() == "NDXINTER":
+                    g.cset("HEIGHT2", height)
+                else:
+                    g.cset("HEIGHT2_OFFSET", height)
         elif height != 0:
             print("ERROR: Height 2 off set is being ignored")
 

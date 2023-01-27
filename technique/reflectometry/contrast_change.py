@@ -42,12 +42,13 @@ def contrast_change(valve_position, concentrations, flow, volume=None, seconds=N
         g.cset("hplcflow", flow)
         if volume is not None:
             g.cset("pump_for_volume", volume)
+            g.cset("start_pump_for_volume", 1)
         elif seconds is not None:
             g.cset("pump_for_time", seconds)
+            g.cset("start_pump_for_time", 1)
         else:
             print("Error concentration not set neither volume or time set!")
             return
-        g.cset("Pump_for_Time", 1)
         g.waitfor_block("pump_is_on", "Pumping")
 
         if wait:

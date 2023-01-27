@@ -63,24 +63,6 @@ class DemoDefaultScan(Defaults):
     def __init__(self):
         super(DemoDefaultScan, self).__init__()
 
-    @staticmethod
-    def log_file(info):
-        """
-        Parameters
-        ----------
-            info
-              dictionary containing useful keys to help form paths. It may contain no keys at all.
-                    possible keys are action_title - the name of the action requested
-        Returns
-        -------
-            Name for the log file
-        """
-        from datetime import datetime
-        now = datetime.now()
-        action_title = info.get("action_title", "unknown")
-        return os.path.join("C:\\", "scripts", "TEST", "{}_{}_{}_{}_{}_{}_{}.dat".format(
-            action_title, now.year, now.month, now.day, now.hour, now.minute, now.second))
-
     def scan(self, motion, start=None, stop=None, count=None, frames=None, det=None, mon=None, **kwargs):
         """
         Scan a motion.
@@ -113,7 +95,12 @@ class DemoDefaultScan(Defaults):
             detector - Choose how to measure the dependent variable in the scan.  A set of these will have already been
                 defined by your instrument scientist.  If you need something ad hoc, then check the documentation on
                 specific_spectra for more details
-
+            pixel_range - For summing the counts of multiple pixels. pixel_range is the number of pixels to consider
+                either side of the central detector spectrum
+            min_pixel - For summing the counts of multiple pixels. min_pixel is the spectrum number for the lower bound
+                of the range. Overridden by pixel_range
+            max_pixel - For summing the counts of multiple pixels. max_pixel is the spectrum number for the upper bound
+                of the range. Overridden by pixel_range
         Returns
         -------
             the scan, or if fitted the fit
@@ -121,7 +108,7 @@ class DemoDefaultScan(Defaults):
         Examples
         --------
         Scan theta from -0.5 to 0.5 with 11 steps and counting 100 frames using default detector and monitors
-        >>> scan("THETA", -0.5, 0.5, 11, frames=100)
+        >>> scan(b.THETA, -0.5, 0.5, 11, frames=100)
         """
         return super().scan(motion, start=start, stop=stop, count=count, frames=frames, det=det,
                             mon=mon, **kwargs)

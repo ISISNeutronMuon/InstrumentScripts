@@ -15,6 +15,8 @@ import os
 from six import add_metaclass
 import matplotlib.pyplot as plt
 import numpy as np
+
+from .plot_functions import PlotFunctions
 from .scans import SimpleScan, ReplayScan
 from .monoid import Average
 from .motion import get_motion
@@ -34,6 +36,8 @@ class Defaults(object):
     SINGLE_FIGURE = False
     _fig = None
     _axis = None
+    # default plot functions to use for generating graphs
+    plot_functions = PlotFunctions()
 
     @staticmethod
     @abstractmethod
@@ -46,10 +50,11 @@ class Defaults(object):
         """
 
     @staticmethod
-    @abstractmethod
     def log_file(info):
         """
         Returns the name of a unique log file where the scan data can be saved.
+
+        Override to provide a different path
 
         Parameters
         ----------
@@ -61,9 +66,16 @@ class Defaults(object):
             Name for the log file
         """
 
-    def get_fig(self):
+        from datetime import datetime
+        now = datetime.now()
+        action_title = info.get("action_title", "unknown")
+        base_dir = g.get_script_dir()
+        return os.path.join(base_dir, "{}_{}_{}_{}_{}_{}_{}.dat".format(
+            action_title, now.year, now.month, now.day, now.hour, now.minute, now.second))
+
+    def create_fig(self):
         """
-        Get a figure for the next scan.  The default method is to
+        Create a figure for the next scan.  The default method is to
         create a new figure for each scan, but this can be overridden
         to re-use the same figure, if the instrument scientist
         chooses.
@@ -71,11 +83,14 @@ class Defaults(object):
         if self.SINGLE_FIGURE:
             if not self._fig or not self._axis:
                 self._fig, self._axis = plt.subplots()
-                plt.show()
-            return (self._fig, self._axis)
-        fig, axis = plt.subplots()
-        plt.show()
-        return (fig, axis)
+        else:
+            self._fig, self._axis = plt.subplots()
+
+    def get_fig(self):
+        """
+        Get the figure for the next scan.
+        """
+        return (self._fig, self._axis)
 
     def scan(self, motion, start=None, stop=None, step=None, frames=None, save=False, **kwargs):
         """scan establishes the setup for performing a measurement scan.
@@ -83,13 +98,13 @@ class Defaults(object):
         Examples
         --------
 
-        >>> scan("translation", -5, 5, 0.1, 50)
+        >>> scan(b.translation, -5, 5, 0.1, 50)
 
         This will run a scan on the translation block from -5 to 5
         (exclusive) in steps of 0.1, measuring for 50 frames at each
         point and taking a plot
 
-        >>> scan("translation", start=-5, stop=5, stride=0.1).plot(frames=50)
+        >>> scan(b.translation, start=-5, stop=5, stride=0.1).plot(frames=50)
 
         This will scan the translation access from -5 to 5 inclusive
         in steps of 0.1.  At each point, the a measurement will be
@@ -97,7 +112,7 @@ class Defaults(object):
 
         As a different example,
 
-        >>> s = scan("coarsez", before=-50, step=5, gaps=20)
+        >>> s = scan(b.coarsez, before=-50, step=5, gaps=20)
 
         This will create a scan on the CoarseZ axis, starting at 50 mm
         below the current position and continuing in 5 mm increments
@@ -112,7 +127,7 @@ class Defaults(object):
         the end of the measurement, the `result` variable will hold
         the position of the observed peak.
 
-        >>> scan("translation", -5, 5, 0.1, 50, detector=specfic_spectra([[3]]))
+        >>> scan(b.translation, -5, 5, 0.1, 50, det=3)
 
         This is similar to our original scan on translation, except
         that the scan will be performed on monitor 3, instead of the
@@ -122,7 +137,7 @@ class Defaults(object):
         The scan function itself has one mandatory parameter `motion`
         but will require another three keyword parameters to define
         the range of the scan.  In the example above, the motion
-        parameter was "TRANSLATION" and the keyword parameters were
+        parameter was "b.translation" and the keyword parameters were
         start, stop, and stride.  Any set of three position parameters
         that uniquely define a range of motions will be accepted.
 
@@ -139,23 +154,22 @@ class Defaults(object):
         frames
           How many frames the measurement should be performed for.  If
           set to None or 0, then no automatic plot will be started.
-        before
-          A relative starting position for the scan.
-        after
-          A relative ending position for the scan
-        count
-          The number of points to measure
-        gaps
-          The number of steps to take
-        stride
-          The approximate step size.  The scan may shrink this step size
-          to ensure that the final point is still included in the scan.
-        detector
-          An optional parameter to choose how to measure the dependent
-          variable in the scan.  A set of these will have already been
-          defined by your instrument scientist.  If you need something
-          ad hoc, then check the documentation on specific_spectra for
-          more details
+        kwargs
+            various other options consistent with the scan library, common options are:
+            fit - produce a fit using this type of fit e.g. Gaussian, CentreOfMass, TopHat
+            before - A relative starting position for the scan.
+            after - A relative ending position for the scan
+            gaps - The number of steps to take
+            stride - The approximate step size.  The scan may shrink this step size to ensure that the final point is
+                still included in the scan.
+            mon - An optional parameter to choose which monitor to use for normalisation
+            det - An optional parameter to choose which detector spectrum to use for counts
+            pixel_range - For summing the counts of multiple pixels. pixel_range is the number of pixels to consider
+                either side of the central detector spectrum
+            min_pixel - For summing the counts of multiple pixels. min_pixel is the spectrum number for the lower bound
+                of the range. Overridden by pixel_range
+            max_pixel - For summing the counts of multiple pixels. max_pixel is the spectrum number for the upper bound
+                of the range. Overridden by pixel_range
 
         Returns
         -------
@@ -163,6 +177,8 @@ class Defaults(object):
           A scan object that will run through the requested points.
 
         """
+        self.create_fig()
+        plt.show()
         num_periods_cache = g.get_number_periods()
         try:
             if start is not None:
@@ -323,25 +339,35 @@ class Defaults(object):
         finally:
             motion(init)
 
-    def last_scan(self, path=None, axis="replay"):
+    def last_scan(self, path=None, axis="replay", fit=None):
         """Load the last run scan and replay that scan
 
         PARAMETERS
         ----------
         path
-        The log file to replay.  If None, replay the most recent scan
+            The log file to replay.  If None, replay the most recent scan
         axis
-        The label for the x axis
+            The label for the x axis
+        fit
+            produce a fit using this type of fit e.g. Gaussian, CentreOfMass, TopHat
 
         """
         if path is None:
-            path = max([f for f in os.listdir(os.getcwd())
-                        if f[-4:] == ".dat"],
-                       key=os.path.getctime)
+            data_dir = os.path.dirname(self.log_file({}))
+            try:
+                path = max([os.path.join(data_dir, f) for f in os.listdir(data_dir) if f[-4:] == ".dat"],
+                           key=os.path.getctime)
+            except ValueError:
+                raise ValueError("No previous scans in dir ({})".format(data_dir))
+
+        print(f"Loading data from {path}")
         with open(path, "r") as infile:
             base = infile.readline()
             axis = base.split("\t")[0]
             result = base.split("\t")[1]
-            xs, ys, errs = np.loadtxt(infile, unpack=True)
+            xs, ys, errs = np.loadtxt(infile, unpack=True, encoding="utf-8")
             ys = [Average((y / e)**2, y / e**2) for y, e in zip(ys, errs)]
-            return ReplayScan(xs, ys, axis, result, self)
+            scan = ReplayScan(xs, ys, axis, result, self)
+            if fit is not None:
+                return scan.fit(fit=fit)
+            return scan

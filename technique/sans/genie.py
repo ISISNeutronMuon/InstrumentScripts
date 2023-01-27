@@ -123,6 +123,7 @@ mock_gen.get_pv.side_effect = get_pv
 mock_gen.set_pv.side_effect = set_pv
 mock_gen.mock_detector_on = "On"
 mock_gen.mock_flipper_on = False
+mock_gen.my_pv_prefix = ""
 
 try:
     # pylint: disable=unused-import, useless-import-alias

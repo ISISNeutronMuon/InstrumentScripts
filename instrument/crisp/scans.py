@@ -76,26 +76,10 @@ class CrispDefaultScan(Defaults):
         Examples
         --------
         Scan theta from -0.5 to 0.5 with 11 steps and counting 100 frames using default detector and monitors
-        >>> scan("THETA", -0.5, 0.5, 11, frames=100)
+        >>> scan(b.THETA, -0.5, 0.5, 11, frames=100)
         """
         return super().scan(motion, start=start, stop=stop, count=count, frames=frames, det=det,
                             mon=mon, **kwargs)
-
-    @staticmethod
-    def log_file(info):
-        """
-        Returns the name of a unique log file where the scan data can be saved.
-        Parameters:
-            info: dictionary containing useful keys to help form paths. It may contain no keys at all.
-                    possible keys are action_title - the name of the action requested
-        Returns:
-            Name for the log file
-        """
-        from datetime import datetime
-        now = datetime.now()
-        action_title = info.get("action_title", "unknown")
-        return os.path.join("U:\\", "scripts", "TEST", "{}_{}_{}_{}_{}_{}_{}.dat".format(
-            action_title, now.year, now.month, now.day, now.hour, now.minute, now.second))
 
 
 _scan_instance = CrispDefaultScan()
