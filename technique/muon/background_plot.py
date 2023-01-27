@@ -3,17 +3,20 @@ Create a background plot. Which is a matplotlib figure that runs on the secondar
 """
 import os
 import matplotlib
-matplotlib.use('module://genie_python.matplotlib_backend.ibex_web_backend')
+matplotlib.use('module://genie_python.matplotlib_backend.ibex_websocket_backend')
+matplotlib.rcParams["axes.formatter.useoffset"] = False
 
 from datetime import datetime, timedelta
 
 from genie_python.genie_dae import DAE_PVS_LOOKUP
 from matplotlib import pyplot
+from matplotlib.ticker import MaxNLocator
+import matplotlib.dates as mdates
 from random import randrange
 from functools import partial
 from genie_python import genie as g
 from genie_python.genie_cachannel_wrapper import CaChannelWrapper, CaChannelException, UnableToConnectToPVException
-from genie_python.matplotlib_backend.ibex_web_backend import set_up_plot_default, SECONDARY_WEB_PORT
+from genie_python.matplotlib_backend.ibex_websocket_backend import set_up_plot_default, SECONDARY_WEB_PORT
 from requests import head, ConnectionError
 from time import sleep
 import threading
@@ -94,6 +97,7 @@ class BackgroundPlot(threading.Thread):
             self.start_new_data_file()
 
         pyplot.show()
+        pyplot.ion()
         print("Background plot: Started")
 
         while True:
@@ -101,9 +105,8 @@ class BackgroundPlot(threading.Thread):
                 self.update()
             except Exception as ex:
                 print("Update plot failed with {}".format(ex))
-            self.figure.canvas.draw()
-            self.figure.canvas.flush_events()
             sleep(self._interval)
+            pyplot.show()
 
     def set_up_plot(self):
         """
@@ -245,8 +248,10 @@ class BackgroundPlot(threading.Thread):
         self.figure.gca().relim()
         additional_to_right = (self.data_x[-1] - self.data_x[0])/20
         self.figure.gca().set_xlim(left=self.data_x[0], right=self.data_x[-1] + additional_to_right)
+        self.figure.gca().axes.xaxis.set_major_locator(MaxNLocator(5))
+        self.figure.gca().axes.xaxis.set_major_formatter(mdates.DateFormatter("%d-%m-%y %H:%M"))
+        self.figure.gca().axes.xaxis.set_tick_params(bottom=0.2, rotation=10)
         self.figure.gca().autoscale_view()
-
         return self.lines
 
     def get_data_point(self):

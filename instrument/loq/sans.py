@@ -1,39 +1,36 @@
 """This is the instrument implementation for the LOQ beamline."""
 from time import sleep
+from logging import warning
 from technique.sans.instrument import ScanningInstrument
 from technique.sans.genie import gen
-# pylint: disable=unused-import
-from technique.sans.util import set_metadata  # noqa: F401
+from technique.sans.util import dae_setter
 from general.scans.util import local_wrapper
 
 
 class LOQ(ScanningInstrument):
-    """This class handles the LOQ beamline"""
-
-    _PV_BASE = "IN:LOQ:"
+    """This class handles the LOQ beamline,  it is an extension
+    of the Scanning instrument class."""
 
     def __init__(self):
-        ScanningInstrument.__init__(self)
-        self.setup_sans = self.setup_dae_histogram
+        super().__init__()
+        self._set_poslist_dls()
 
-    _poslist = ['AB', 'BB', 'CB', 'DB', 'EB', 'FB', 'GB', 'HB', 'IB', 'JB',
-                'KB', 'LB', 'MB', 'NB', 'OB', 'PB', 'QB', 'RB', 'SB', 'TB',
-                'C1B', 'C2B', 'C3B', 'C4B', 'C5B', 'C6B', 'C7B', 'C8B', 'C9B',
-                'C10B', 'C11B', 'C12B', 'C13B', 'C14B', 'C15B', 'C16B', 'C17B',
-                'C18B', 'C1T', 'C2T', 'C3T', 'C4T', 'C5T', 'C6T', 'C7T',
-                'C8T', 'C9T', 'C10T', 'C11T', 'C12T', 'C13T', 'C14T',
-                'W1B', 'W2B', 'W3B', 'W4B', 'W5B', 'W6B', 'W7B', 'W8B',
-                'W9B', 'W10B', 'W11B', 'W12B', 'W13B', 'W14B', 'W15B', 'W16B',
-                'DLS2', 'DLS3', 'DLS4', 'DLS5', 'DLS6', 'FIVE', 'SIX', 'SEVEN', 'EIGHT']
+    def do_sans_large(self, title=None, pos=None, thickness=1.0,
+                      dae=None, uamps=None, time=None, **kwargs):
+        """
+        A wrapper around do_sans with aperture set to large
+        Please see measure for full documentation of parameters
+        """
+        self.do_sans(title=title, pos=pos, thickness=thickness, dae=dae,
+                aperture="LARGE", uamps=uamps, time=time, **kwargs)
 
-    def _generic_scan(  # pylint: disable=dangerous-default-value
-            self,
-            detector=r"detector35576_M4.dat",
-            spectra=r"spectra35576_M4.dat",
-            wiring=r"wiring35576_M4.dat",
-            tcbs=[{"low": 3500.0, "high": 43500.0, "step": 0.025,
-                   "log": True}]):
-        base = r"C:\Instrument\Settings\config\NDXLOQ\configurations\tables\\"
+    def _generic_scan(self,
+                      detector="detector35576_M4.dat",
+                      spectra="spectra35576_M4.dat",
+                      wiring="wiring35576_M4.dat",
+                      tcbs=None):
+        if tcbs is None:
+            tcbs = [{"low": 3500.0, "high": 43500.0, "step": 0.025, "log": True}]
         gen.change_start()
         for trange in range(1, 6):
             gen.change_tcb(low=0, high=0, step=0, log=0,
@@ -43,43 +40,24 @@ class LOQ(ScanningInstrument):
                        trange=1, regime=2)
         gen.change_finish()
         ScanningInstrument._generic_scan(
-            self, base + detector, base + spectra, base + wiring, tcbs)
+            self, detector, spectra, wiring, tcbs)
 
-    @set_metadata("SANS/TRANS", "sans")
+    @dae_setter("SANS/TRANS", "sans")
     def setup_dae_event(self):
         self.setup_dae_normal()
 
-    @set_metadata("SANS/TRANS", "sans")
+    @dae_setter("SANS/TRANS", "sans")
     def setup_dae_histogram(self):
         self.setup_dae_normal()
 
-    @set_metadata("TRANS", "transmission")
+    @dae_setter("TRANS", "transmission")
     def setup_dae_transmission(self):
         return self._generic_scan(
             detector="detector8.dat",
             spectra="spectra8.dat",
             wiring="wiring8.dat")
 
-    @set_metadata("SANS", "sans")
-    def setup_dae_bsalignment(self):
-        raise NotImplementedError("DAE mode bsalignment unwritten for LOQ")
-
-    @set_metadata("SCAN", "scan")
-    def setup_dae_scanning(self):
-        # FIXME: LOQ doesn't have a history of scanning, so it's not
-        # certain what mode should be used.  For now, we'll guess it
-        # to be the same as histogram
-        return self._generic_scan()
-
-    @set_metadata("SCAN", "scan")
-    def setup_dae_nr(self):
-        raise NotImplementedError("LOQ cannot perform reflectometry")
-
-    @set_metadata("SCAN", "scan")
-    def setup_dae_nrscanning(self):
-        raise NotImplementedError("LOQ cannot perform reflectometry")
-
-    @set_metadata("SANS/TRANS", "sans")
+    @dae_setter("SANS/TRANS", "sans")
     def setup_dae_normal(self):
         """Setup LOQ for normal operation"""
         gen.change_sync("smp")
@@ -92,7 +70,7 @@ class LOQ(ScanningInstrument):
                   {"low": 3500, "high": 43500.0, "step": 40000,
                    "log": False, "trange": 1, "regime": 2}])
 
-    @set_metadata("SANS/TRANS", "sans")
+    @dae_setter("SANS/TRANS", "sans")
     def setup_dae_quiet(self):
         """Setup LOQ for quiet operation"""
         gen.change_sync("internal")
@@ -105,7 +83,7 @@ class LOQ(ScanningInstrument):
                   {"low": 5, "high": 19995.0, "step": 19990.0, "log": False,
                    "trange": 1, "regime": 2}])
 
-    @set_metadata("SANS/TRANS", "sans")
+    @dae_setter("SANS/TRANS", "sans")
     def setup_dae_50hz_short(self):
         """Setup LOQ for 50hz mode while short"""
         gen.change_sync("isis")
@@ -124,7 +102,7 @@ class LOQ(ScanningInstrument):
                   {"low": 6000, "high": 2.60e4, "step": 20000,
                    "log": False, "trange": 1, "regime": 2}])
 
-    @set_metadata("SANS/TRANS", "sans")
+    @dae_setter("SANS/TRANS", "sans")
     def setup_dae_50hz_long(self):
         """Setup LOQ for 50hz mode while long"""
         gen.change_sync("isis")
@@ -150,43 +128,32 @@ class LOQ(ScanningInstrument):
     @staticmethod
     def set_aperture(size):
         if size == "":
-            pass
-        elif size.upper() == "SMALL":
-            gen.cset(Aperture_2="SMALL")
-        elif size.upper() == "MEDIUM":
-            gen.cset(Aperture_2="MEDIUM")
-        elif size.upper() == "LARGE":
-            gen.cset(Aperture_2="LARGE")
+            print("Aperture unchanged")
+        elif size.upper() in ["SMALL", "MEDIUM", "LARGE"]:
+            gen.cset(Aperture_2=size.upper())
         else:
-            raise RuntimeError("Slit size {} is undefined".format(size))
+            raise ValueError(f"Slit size {size} is undefined")
 
     def _detector_is_on(self):
         """Is the detector currently on?"""
         return self.get_pv("MOXA12XX_02:CH0:AI:RBV") > 2
 
-    @staticmethod
-    def _detector_turn_on(delay=True):
+    def _detector_turn_on(self, delay=True):
         raise NotImplementedError("Detector toggling is not supported LOQ")
-        # for x in range(8):
-        #     self.send_pv("CAEN:hv0:4:{}:pwonoff".format(x), "On")
 
-    @staticmethod
-    def _detector_turn_off(delay=True):
+    def _detector_turn_off(self, delay=True):
         raise NotImplementedError("Detector toggling is not supported on LOQ")
-        # for x in range(8):
-        #     self.send_pv("CAEN:hv0:4:{}:pwonoff".format(x), "Off")
 
     def _configure_sans_custom(self):
         gen.cset(Tx_Mon="OUT")
         gen.waitfor_move()
 
     def _configure_trans_custom(self):
-        gen.cset(Aperture_2="SMALL")
+        self.set_aperture("SMALL")
         gen.cset(Tx_Mon="IN")
         gen.waitfor_move()
 
-    # pylint: disable=invalid-name
-    def J1(self, temperature_1, temperature_2):
+    def run_off_julabo_1(self, temperature_1, temperature_2):
         """Run off Julabo 1"""
         self.send_pv("JULABO_01:MODE:SP", "OFF")
         sleep(1)
@@ -208,7 +175,7 @@ class LOQ(ScanningInstrument):
         gen.waitfor_move()
 
     @staticmethod
-    def J2(temperature_1, temperature_2):
+    def run_off_julabo_2(temperature_1, temperature_2):
         """Run off Julabo 2"""
         gen.cset(Julabo_1_Circulator="OFF")
         sleep(1)
