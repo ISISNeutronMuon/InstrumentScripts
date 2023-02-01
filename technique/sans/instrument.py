@@ -2,7 +2,7 @@
 """The baseline for loading a scanning instrument
 
 Each instrument will have its own module that declares a class
-inheriting from ScanningInstrument. The abstract base class is used
+inheriting from ScanningInstrument.  The abstract base class is used
 to ensure that the derived classes define the necessary methods to run
 any generic scripts.
 
@@ -79,8 +79,8 @@ class ScanningInstrument(object):
         """Iterate through the class's public functions"""
         for method in dir(self):
             if method[0] != "_" and method not in locals() and \
-                    method not in self._block_accessors and \
-                    callable(getattr(self, method)):
+               method not in self._block_accessors and \
+               callable(getattr(self, method)):
                 yield method
 
     def set_default_dae(self, mode=None, trans=False):
@@ -210,6 +210,12 @@ class ScanningInstrument(object):
 
         gen.change(nperiods=1)
         gen.change_start()
+        if self.ask_pv("DAE:DETECTOR_FILE") != wiring:
+            gen.change_tables(detector=detector)
+        if self.ask_pv("DAE:SPECTRA_FILE") != wiring:
+            gen.change_tables(spectra=spectra)
+        if self.ask_pv("DAE:WIRING_FILE") != wiring:
+            gen.change_tables(wiring=wiring)
         for tcb in tcbs:
             gen.change_tcb(**tcb)
         gen.change_finish()
@@ -221,6 +227,21 @@ class ScanningInstrument(object):
         if self.get_pv("DAE:WIRING_FILE") != wiring_path:
             gen.change_tables(wiring=wiring_path)
         gen.change_finish()
+
+    _poslist = ['AB', 'BB', 'CB', 'DB', 'EB', 'FB', 'GB', 'HB', 'IB', 'JB',
+                'KB', 'LB', 'MB', 'NB', 'OB', 'PB', 'QB', 'RB', 'SB', 'TB',
+                'AT', 'BT', 'CT', 'DT', 'ET', 'FT', 'GT', 'HT', 'IT', 'JT',
+                'KT', 'LT', 'MT', 'NT', 'OT', 'PT', 'QT', 'RT', 'ST', 'TT',
+                '1CB', '2CB', '3CB', '4CB', '5CB', '6CB', '7CB',
+                '8CB', '9CB', '10CB', '11CB', '12CB', '13CB', '14CB',
+                '1CT', '2CT', '3CT', '4CT', '5CT', '6CT', '7CT',
+                '8CT', '9CT', '10CT', '11CT', '12CT', '13CT', '14CT',
+                '1WB', '2WB', '3WB', '4WB', '5WB', '6WB', '7WB',
+                '8WB', '9WB', '10WB', '11WB', '12WB', '13WB', '14WB',
+                '1WT', '2WT', '3WT', '4WT', '5WT', '6WT', '7WT',
+                '8WT', '9WT', '10WT', '11WT', '12WT', '13WT', '14WT',
+                '1GT', '2GT', '3GT', '4GT', '5GT', '6GT', '7GT', '8GT', '9GT',
+                '10GT', '11GT', '12GT', '1R', '2R', '3R', '4R', '5R', '6R', '7R']
 
     def _attempt_resume(self, title, pos, thick, dae, **kwargs):
         if gen.get_title() != f"{title}{self.title_footer}":
@@ -280,7 +301,7 @@ class ScanningInstrument(object):
         value stored in the journal for the next run, which should be
         set to the new value.
         """
-        return self.get_pv("PARS:SAMPLE:MEAS:TYPE")
+        return self.ask_pv("PARS:SAMPLE:MEAS:TYPE")
 
     @measurement_type.setter
     def measurement_type(self, value):
@@ -292,7 +313,7 @@ class ScanningInstrument(object):
           The new measurement type
 
         This function should perform no physical changes to the
-        beamline. The only change should be in the MEASUREMENT:TYPE
+        beamline.  The only change should be in the MEASUREMENT:TYPE
         value stored in the journal for the next run, which should be
         set to the new value.
         """
@@ -307,7 +328,7 @@ class ScanningInstrument(object):
         value stored in the journal for the next run, which should be
         set to the new value.
         """
-        return self.get_pv("PARS:SAMPLE:MEAS:LABEL")
+        return self.ask_pv("PARS:SAMPLE:MEAS:LABEL")
 
     @measurement_label.setter
     def measurement_label(self, value):
@@ -319,7 +340,7 @@ class ScanningInstrument(object):
           The new sample label
 
         This function should perform no physical changes to the
-        beamline. The only change should be in the MEASUREMENT:LABEL
+        beamline.  The only change should be in the MEASUREMENT:LABEL
         value stored in the journal for the next run, which should be
         set to the new value.
         """
@@ -334,7 +355,7 @@ class ScanningInstrument(object):
         value stored in the journal for the next run, which should be
         set to the new value.
         """
-        return self.get_pv("PARS:SAMPLE:MEAS:ID")
+        return self.ask_pv("PARS:SAMPLE:MEAS:ID")
 
     @measurement_id.setter
     def measurement_id(self, value):  # pragma: no cover
@@ -346,7 +367,7 @@ class ScanningInstrument(object):
           The new id
 
         This function should perform no physical changes to the
-        beamline. The only change should be in the MEASUREMENT:ID
+        beamline.  The only change should be in the MEASUREMENT:ID
         value stored in the journal for the next run, which should be
         set to the new value.
         """
@@ -387,7 +408,7 @@ class ScanningInstrument(object):
         Parameters
         ----------
         state : bool or None
-          If None, return the current lock state. Otherwise, set the
+          If None, return the current lock state.  Otherwise, set the
           new lock state
 
         Returns
@@ -408,8 +429,8 @@ class ScanningInstrument(object):
         Parameters
         ----------
         powered : bool or None
-          If None, then return the detector's current state. If True,
-          turn the detector on. If False, turn the detector off.
+          If None, then return the detector's current state.  If True,
+          turn the detector on.  If False, turn the detector off.
         delay : bool
           If changing the detector state, whether to wait for the
           detector to finish warming up or powering down before
@@ -441,7 +462,7 @@ class ScanningInstrument(object):
         """
         if pos.upper() not in self._poslist:
             warning(f"Error in script, position {pos} does not exist")
-            return False
+        return False
         return True
 
     def check_move_pos_dls(self, pos):
@@ -524,23 +545,23 @@ class ScanningInstrument(object):
         Parameters
         ----------
         title : str
-          The title for the measurement. This is the only required parameter.
+          The title for the measurement.  This is the only required parameter.
         position : str or func
-          The sample position. This can be a string with the name of
+          The sample position.  This can be a string with the name of
           a sample position, or it can be a function which moves the
-          detector into the desired position. If left undefined, the
+          detector into the desired position.  If left undefined, the
           instrument will take the measurement in its current
           position.
           Example of a function that could be passed in:
           >>> def custom_pos_function():
           >>>   gen.cset(SamplePos="new position")
         thickness : float
-          The thickness of the sample in millimeters. The default is 1mm.
+          The thickness of the sample in millimeters.  The default is 1mm.
         trans : bool
           Whether to perform a transmission run instead of a sans run.
           True for trans run leave blank or False for sans
         dae : str
-          This option allows setting the default dae mode. It takes a
+          This option allows setting the default dae mode.  It takes a
           string that contains the name of the DAE mode to be used as
           the new default. There will be used in subsequence runs for sans
           and trans mode accordingly. For example,
@@ -552,7 +573,7 @@ class ScanningInstrument(object):
           >>> enumerate_dae()
           To create custom dae's use create_dae_custom
         aperture : str
-          The aperture size. e.g. "Small" or "Medium" A blank string
+          The aperture size.  e.g. "Small" or "Medium" A blank string
           (the default value) results in the aperture not being
           changed from default value for trans/sans.
         time : int
@@ -605,7 +626,7 @@ class ScanningInstrument(object):
         # Check detector for sans
         if not self.detector_lock() and not self.detector_on() and not trans:
             raise RuntimeError(
-                "The detector is off. Either turn on the detector or "
+                "The detector is off.  Either turn on the detector or "
                 "use the detector_lock(True) to indicate that the detector "
                 "is off intentionally")
         # If not called from do_sans/trans do so extra set up
@@ -627,7 +648,7 @@ class ScanningInstrument(object):
                 continue
             info(f"Moving {arg} to {val}")
             gen.cset(arg, val)
-            gen.waitfor_move()
+        gen.waitfor_move()
         gen.change_sample_par("Thick", thickness)
         info("Using the following Sample Parameters")
         self.print_sample_pars()
@@ -742,14 +763,14 @@ class ScanningInstrument(object):
     def measure_file(self, file_path, forever=False):
         """Perform a series of measurements based on a spreadsheet
 
-        The file should contain comma separated values. Excel can
-        easily produce files of this sort. The first line of the file
+        The file should contain comma separated values.  Excel can
+        easily produce files of this sort.  The first line of the file
         is the header with each field giving the name of a parameter
-        to the `measure` function. As always, the ``title`` parameter
-        is mandatory. Each subsequent line of the file represents a
+        to the `measure` function.  As always, the ``title`` parameter
+        is mandatory.  Each subsequent line of the file represents a
         single measurement with the fields indicating that values to
-        pass to their corresponding keywords. If a cell is blank, the
-        keyword's default parameter it used. Boolean values are
+        pass to their corresponding keywords.  If a cell is blank, the
+        keyword's default parameter it used.  Boolean values are
         represented by `True` and `False` and are not case-sensitive.
 
         The script is run through the simulator to check for errors
@@ -761,7 +782,7 @@ class ScanningInstrument(object):
           The location of the script file
         forever : bool
           If set to True, the instrument will repeatedly run the
-          script manually stopped. This can be useful for an
+          script manually stopped.  This can be useful for an
           overnight run where you want to keep measuring until the
           users return.
 
@@ -861,10 +882,10 @@ class ScanningInstrument(object):
         setup_dae = "setup_dae_"
         return [x[len(setup_dae):] for x in dir(self) if x.startswith(setup_dae)]
 
-    def get_pv(self, name):
+    def ask_pv(self, name):
         """Get the given PV within the sub hierarchy of the instrument.
 
-        For example, on Larmor, get_pv("DAE:WIRING_FILE") would return
+        For example, on Larmor, ask_pv("DAE:WIRING_FILE") would return
         the value of the PV for "IN:LARMOR:DAE:WIRING_FILE"
 
         """

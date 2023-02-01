@@ -8,3 +8,4 @@ from instrument.larmor.sans import *  # noqa: F401, F403
 from instrument.larmor.scans import *  # noqa: F401, F403
 from general.scans.detector import specific_spectra  # noqa: F401
 from general.scans.fit import *  # noqa: F401, F403
+import LSS.SESANSroutines as ss

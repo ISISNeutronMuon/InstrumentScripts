@@ -45,7 +45,7 @@ class Motion(object):
         self.getter = getter
         self.setter = setter
         self.title = title
-        self.unit = unit
+        self._unit = unit
         self._low = low
         self._high = high
 
@@ -113,6 +113,13 @@ class Motion(object):
         if success:
             return
         raise RuntimeError(msg)
+
+    @property
+    def unit(self):
+        """Lazily get the physical unit of the scan"""
+        if callable(self._unit):
+            self._unit = self._unit()
+        return self._unit
 
     @property
     def low(self):
