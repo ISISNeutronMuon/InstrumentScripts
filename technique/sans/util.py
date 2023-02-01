@@ -8,7 +8,7 @@ from .genie import SwitchGenie, mock_gen
 
 
 def dae_setter(suffix, measurement_type):
-    """Declare that a method sets the DAE wiring table
+    """Declare that a method should add metadata to the title and journal
 
     Parameters
     ==========
@@ -22,7 +22,7 @@ def dae_setter(suffix, measurement_type):
     A decorator for setting the dae mode
 
     This decorator was designed to work on subclasses of the
-    :py:class:`src.Instrument.ScanningInstrument` class.  The
+    :py:class:`src.Instrument.ScanningInstrument` class. The
     following functionality is added into the class
 
     1. If the wiring tables are already in the correct state, the function
@@ -36,24 +36,24 @@ def dae_setter(suffix, measurement_type):
     wasting time reloading an existing configuration
 
     Please note that this decorator assumes that the title of the
-    method begins with "setup_dae", followed by the new of the state
+    method begins with "setup_dae", followed by the new state
     of the wiring table.
-
     """
     def decorator(inner):
         """The actual decorator with the given parameters"""
         @wraps(inner)
         def wrapper(self, *args, **kwargs):
             """Memoize the dae mode"""
+            # This seems to get unset in the tests
+            self.measurement_type = measurement_type
             request = inner.__name__[10:]
             if request == self._dae_mode:  # pylint: disable=protected-access
                 return
             inner(self, *args, **kwargs)
-            info("Setup {} for {}".format(type(self).__name__,
-                                          request.replace("_", " ")))
+            info(f"Setup {type(self).__name__} for {request.replace('_', ' ')}")
             self._dae_mode = request  # pylint: disable=protected-access
             self.title_footer = "_" + suffix
-            self.measurement_type = measurement_type
+
         return wrapper
     return decorator
 

@@ -11,6 +11,7 @@ from __future__ import print_function
 from datetime import datetime
 import os.path
 import numpy as np
+
 try:
     # pylint: disable=import-error
     from genie_python import genie as g
@@ -20,6 +21,7 @@ from general.scans.defaults import Defaults
 from general.scans.detector import dae_periods, specific_spectra
 from general.scans.monoid import Polarisation, Average, MonoidList
 # from general.scans.motion import pv_motion
+from general.scans.motion import BlockMotion
 from general.scans.util import local_wrapper
 # pylint: disable=no-name-in-module
 from instrument.larmor.sans import setup_dae_transmission, setup_dae_semsans
@@ -43,7 +45,17 @@ class Larmor(Defaults):
     detector = specific_spectra([[4]], _trans_mode)
 
     @staticmethod
-    def log_file():
+    def log_file(info):
+        """
+        Parameters
+        ----------
+            info
+              dictionary containing useful keys to help form paths. It may contain no keys at all.
+                    possible keys are action_title - the name of the action requested
+        Returns
+        -------
+            Name for the log file
+        """
         now = datetime.now()
         return "larmor_scan_{}_{}_{}_{}_{}_{}.dat".format(
             now.year, now.month, now.day, now.hour, now.minute, now.second)
@@ -131,7 +143,6 @@ scan = local_wrapper(_lm, "scan")
 ascan = local_wrapper(_lm, "ascan")
 dscan = local_wrapper(_lm, "dscan")
 rscan = local_wrapper(_lm, "rscan")
-populate = local_wrapper(_lm, "populate")
 last_scan = local_wrapper(_lm, "last_scan")
 
 

@@ -9,9 +9,14 @@ treated as private.
 
 """
 from __future__ import absolute_import, print_function
+
+import pdb
+from typing import TYPE_CHECKING
+
 from abc import ABCMeta, abstractmethod
 # pylint: disable=no-name-in-module
-from collections import Iterable, OrderedDict
+from collections import OrderedDict
+from collections.abc import Iterable
 from contextlib import contextmanager
 from datetime import timedelta, datetime
 import time
@@ -21,9 +26,13 @@ import six
 from six import add_metaclass
 import matplotlib.pyplot as plt
 
+if TYPE_CHECKING:
+    from .defaults import Defaults
 from .monoid import ListOfMonoids, Monoid, Average, Exact
 from .detector import DetectorManager
 from .fit import Fit, ExactFit
+from pathlib import Path
+import os
 
 try:
     # pylint: disable=import-error
@@ -31,14 +40,6 @@ try:
 except ImportError:
     # We must be in a test environment
     from .mocks import g
-
-TIME_KEYS = ["frames", "uamps", "seconds", "minutes", "hours"]
-
-
-def just_times(kwargs):
-    """Filter a dict down to just the waitfor members"""
-    return {x: kwargs[x] for x in kwargs
-            if x in TIME_KEYS}
 
 
 def merge_dicts(x, y):
@@ -57,7 +58,7 @@ def _plot_range(array):
     if not (np.isfinite(low) and np.isfinite(high)):
         return (-1, 1)
     if not np.isfinite(low):
-        low = high-1
+        low = high - 1
     if not np.isfinite(high):
         high = low + 1
     diff = high - low
@@ -88,6 +89,10 @@ def estimate(seconds=None, minutes=None, hours=None,
 
     return 0
 
+def get_input(prompt: str):
+    return input(prompt)
+
+
 
 @add_metaclass(ABCMeta)
 class Scan(object):
@@ -95,6 +100,7 @@ class Scan(object):
     should never be instantiated directly, but rather by one of its
     subclasses."""
 
+    defaults: 'Defaults'
     defaults = None
 
     def _normalise_detector(self, detector):
@@ -150,30 +156,55 @@ class Scan(object):
         """
         return self + self.reverse
 
-    def plot(self, detector=None, save=None,
-             action=None, **kwargs):
-        """Run over the scan an perform a simple measurement at each position.
+    def plot(self, detector=None, save=None, action=None, **kwargs):
+        """
+        Run over the scan and perform a simple measurement at each position.
         The measurement parameter can be used to set what type of measurement
         is to be taken.  If the save parameter is set to a file name, then the
-        plot will be saved in that file."""
+        plot will be saved in that file.
+
+        Parameters
+        ----------
+        detector: detector or detector manager to use to take the measurement
+        save: name of file to save plot to; None don't save
+        action: extra action to take every measurement, e.g. fit the points and plot then
+        kwargs: extra kw args
+
+        Returns
+        -------
+        result of the last action
+        """
         warnings.simplefilter("ignore", UserWarning)
 
         detector = self._normalise_detector(detector)
 
+        plot_functions = self.defaults.plot_functions
         fig, axis = self.defaults.get_fig()
+        plot_functions.set_figure_and_axis(fig, axis)
 
         xs = []
         ys = ListOfMonoids()
 
         acc = None
         action_remainder = None
-        try:
-            with open(self.defaults.log_file(), "w") as logfile, \
+        log_filename = self.defaults.log_file(self.log_file_info())
+
+        path = Path(log_filename)
+        log_path = path.parent
+
+        path_exists = os.path.isdir(log_path)
+        
+        if path_exists:
+            print("Writing data to: {}".format(log_path))
+            with open(log_filename, "w") as logfile, \
                     detector(self, save=save, **kwargs) as detect:
                 for x in self:
                     # FIXME: Handle multidimensional plots
                     ((label, unit), position) = next(iter(x.items()))
-                    acc, value = detect(acc, **just_times(kwargs))
+
+                    # perform measurement
+                    acc, value = detect(acc, **kwargs)
+
                     if isinstance(value, float):
                         value = Average(value)
                     if not xs:
@@ -187,27 +218,22 @@ class Scan(object):
                         ys.append(value)
                     logfile.write("{}\t{}\t{}\n".format(xs[-1], str(ys[-1]),
                                                         str(ys[-1].err())))
-                    axis.clear()
-                    axis.set_xlabel("{} ({})".format(label, unit))
-                    axis.set_ylabel(detector.unit)
-                    if isinstance(self.min(), tuple):
-                        rng = [1.05 * self.min()[0] - 0.05 * self.max()[0],
-                               1.05 * self.max()[0] - 0.05 * self.min()[0]]
-                    else:
-                        rng = [1.05 * self.min() - 0.05 * self.max(),
-                               1.05 * self.max() - 0.05 * self.min()]
-                    axis.set_xlim(rng[0], rng[1])
-                    rng = _plot_range(ys)
-                    axis.set_ylim(rng[0], rng[1])
-                    ys.plot(axis, xs)
+
+                    plot_functions.setup_plot(self.min(), self.max(), label, unit, y_unit=detector.unit)
+                    plot_functions.plot_data_with_errors(xs, ys)
                     if action:
-                        action_remainder = action(xs, ys,
-                                                  axis, action_remainder)
-                    plt.draw()
-        except KeyboardInterrupt:  # pragma: no cover
-            pass
-        if isinstance(save, str):
-            fig.savefig(save)
+                        action_remainder = action(xs, ys, plot_functions, action_remainder)
+                    plot_functions.draw()
+
+            plot_functions.save(save)
+
+        else:
+            print(f"Folder " + log_filename + " doesn't exist.")
+            user_input = get_input("Would you like this folder created (y) or the scan to be aborted (n)?")
+            if user_input == "y":
+                g.set_user_script_dir(log_path)
+            elif user_input == "n":
+                print("Abort")
 
         return action_remainder
 
@@ -244,12 +270,15 @@ class Scan(object):
             raise RuntimeError(
                 "Could not get result from plot. Perhaps the fit failed?")
         if isinstance(result[0], Iterable) and \
-           not isinstance(fit, ExactFit) and \
-           not isinstance(result, tuple):
+                not isinstance(fit, ExactFit) and \
+                not isinstance(result, tuple):
             result = np.array([x for x in result if x is not None])
             result = np.median(result, axis=0)
 
-        return fit.readable(result)
+        fit_result = fit.readable(result)
+        print("Fit: {}".format(fit_result))
+
+        return fit_result
 
     def calculate(self, time=False, pad=0, **kwargs):
         # pylint: disable=redefined-outer-name
@@ -273,6 +302,22 @@ class Scan(object):
             print("The run would finish at {}".format(delta + datetime.now()))
         return total
 
+    def log_file_info(self):
+        """
+        Generate some info for creating the log file path.
+
+        Returns
+        -------
+        Dictionary containing keys for information. Keys are:
+            action_title: title of the action
+        """
+        log_info = {}
+        try:
+            log_info["action_title"] = self.action.title
+        except AttributeError:
+            pass
+        return log_info
+
 
 class SimpleScan(Scan):
     """SimpleScan is a scan along a single axis for a fixed set of values"""
@@ -289,7 +334,7 @@ class SimpleScan(Scan):
 
         """
         return SimpleScan(self.action,
-                          map(func, self.values),
+                          list(map(func, self.values)),
                           self.name)
 
     @property
@@ -394,77 +439,61 @@ class ContinuousScan(Scan):
 
         detector = self._normalise_detector(detector)
         fig, axis = self.defaults.get_fig()
+        plot_functions = self.defaults.plot_functions
+        plot_functions.set_figure_and_axis(fig, axis)
 
         xs = []
         ys = ListOfMonoids()
 
         acc = None
-        action_remainder = None
+        action_remainder = None  # store the result of an action on the points
 
-        try:
-            with open(self.defaults.log_file(), "w") as logfile, \
-                    detector(self, save=save, **kwargs) as detect:
+        with open(self.defaults.log_file(self.log_file_info()), "w") as logfile, \
+                detector(self, save=save, **kwargs) as detect:
 
-                for move in self:
-                    # Set initial motor position to correct value.
-                    if abs(self.motion() - move.start) > self.motion.tolerance:
-                        self.motion(move.start)
-                        while abs(self.motion() - move.start) > \
-                                self.motion.tolerance:
-                            time.sleep(update_freq)
+            for move in self:
+                # Set initial motor position to correct value.
+                if abs(self.motion() - move.start) > self.motion.tolerance:
+                    self.motion(move.start)
+                    while abs(self.motion() - move.start) > \
+                            self.motion.tolerance:
+                        time.sleep(update_freq)
 
-                    with temporarily_change_motor_speed(self.motion,
-                                                        move.speed):
+                with temporarily_change_motor_speed(self.motion,
+                                                    move.speed):
 
-                        self.motion(move.stop)
+                    self.motion(move.stop)
 
-                        while abs(self.motion() - move.stop) > \
-                                self.motion.tolerance:
+                    while abs(self.motion() - move.stop) > \
+                            self.motion.tolerance:
 
-                            position = self.motion()
-                            acc, value = detect(acc, **just_times(kwargs))
-                            value = Exact(value)
+                        position = self.motion()
+                        acc, value = detect(acc, **kwargs)
+                        value = Exact(value)
 
-                            xs.append(position)
-                            ys.append(value)
+                        xs.append(position)
+                        ys.append(value)
 
-                            logfile.write("{}\t{}\n".format(xs[-1],
-                                                            str(ys[-1])))
-                            axis.clear()
+                        logfile.write("{}\t{}\n".format(xs[-1],
+                                                        str(ys[-1])))
 
-                            if isinstance(self.min(), tuple):
-                                rng = [1.05 * self.min()[0] -
-                                       0.05 * self.max()[0],
+                        plot_functions.setup_plot(self.min(), self.max())
+                        plot_functions.plot_data_with_errors(xs, ys)
 
-                                       1.05 * self.max()[0] -
-                                       0.05 * self.min()[0]]
-                            else:
-                                rng = [1.05 * self.min() - 0.05 * self.max(),
-                                       1.05 * self.max() - 0.05 * self.min()]
-                            axis.set_xlim(rng[0], rng[1])
-                            rng = _plot_range(ys)
-                            axis.set_ylim(rng[0], rng[1])
-                            ys.plot(axis, xs)
-                            if action:
-                                action_remainder = action(xs, ys, axis,
-                                                          action_remainder)
+                        if action:
+                            action_remainder = action(xs, ys, axis, action_remainder)
+                        plot_functions.draw()
 
-                            plt.draw()
+                        # If we plot in a tight loop, matplotlib can't keep
+                        # up. Taking data at 5Hz during the move seems the
+                        # right balance of "continuous" and "pragmatic"
+                        #
+                        # Note: a galil's MAX update frequency is 40ms so
+                        # there is no benefit in making this number smaller
+                        # than 0.04
+                        time.sleep(update_freq)
 
-                            # If we plot in a tight loop, matplotlib can't keep
-                            # up. Taking data at 5Hz during the move seems the
-                            # right balance of "continuous" and "pragmatic"
-                            #
-                            # Note: a galil's MAX update frequency is 40ms so
-                            # there is no benefit in making this number smaller
-                            # than 0.04
-                            time.sleep(update_freq)
-
-        except KeyboardInterrupt:  # pragma: no cover
-            pass
-
-        if save:
-            fig.savefig(save)
+        plot_functions.save(save)
 
         return action_remainder
 
@@ -626,53 +655,50 @@ class ProductScan(Scan):
             values.append([np.nan] * len(self.inner))
 
         acc = action_remainder = None
-        try:
-            with open(self.defaults.log_file(), "w") as logfile, \
-                    detector(self, save) as detect:
-                for x in self:
-                    acc, value = detect(acc, **kwargs)
+        with open(self.defaults.log_file(self.log_file_info()), "w") as logfile, \
+                detector(self, save) as detect:
+            for x in self:
+                acc, value = detect(acc, **kwargs)
 
-                    keys = list(x.keys())
-                    keys[1] = keys[1]
-                    keys[0] = keys[0]
-                    y = x[keys[0]]
-                    x = x[keys[1]]
-                    if isinstance(value, float):
-                        value = Average(value)
-                    if x not in xs:
-                        xs.append(x)
-                    if y not in ys:
-                        ys.append(y)
-                    if isinstance(values[ys.index(y)][xs.index(x)], Monoid):
-                        values[ys.index(y)][xs.index(x)] += value
-                    else:
-                        values[ys.index(y)][xs.index(x)] = value
-                    logfile.write(
-                        "{}\t{}\n".format(xs[-1], str(values[-1])))
-                    axis.clear()
-                    axis.set_xlabel("{} ({})".format(keys[1][0], keys[1][1]))
-                    axis.set_ylabel("{} ({})".format(keys[0][0], keys[0][1]))
-                    miny, minx = self.min()
-                    maxy, maxx = self.max()
-                    rng = [1.05 * minx - 0.05 * maxx,
-                           1.05 * maxx - 0.05 * minx]
-                    axis.set_xlim(rng[0], rng[1])
-                    rng = [1.05 * miny - 0.05 * maxy,
-                           1.05 * maxy - 0.05 * miny]
-                    axis.set_ylim(rng[0], rng[1])
-                    axis.pcolor(
-                        self._estimate_locations(xs, len(self.inner),
-                                                 minx, maxx),
-                        self._estimate_locations(ys, len(self.outer),
-                                                 miny, maxy),
-                        np.array([[float(z) for z in row]
-                                  for row in values]))
-                    if action:
-                        action_remainder = action(xs, values,
-                                                  axis)
-                    plt.draw()
-        except KeyboardInterrupt:
-            pass
+                keys = list(x.keys())
+                keys[1] = keys[1]
+                keys[0] = keys[0]
+                y = x[keys[0]]
+                x = x[keys[1]]
+                if isinstance(value, float):
+                    value = Average(value)
+                if x not in xs:
+                    xs.append(x)
+                if y not in ys:
+                    ys.append(y)
+                if isinstance(values[ys.index(y)][xs.index(x)], Monoid):
+                    values[ys.index(y)][xs.index(x)] += value
+                else:
+                    values[ys.index(y)][xs.index(x)] = value
+                logfile.write(
+                    "{}\t{}\n".format(xs[-1], str(values[-1])))
+                axis.clear()
+                axis.set_xlabel("{} ({})".format(keys[1][0], keys[1][1]))
+                axis.set_ylabel("{} ({})".format(keys[0][0], keys[0][1]))
+                miny, minx = self.min()
+                maxy, maxx = self.max()
+                rng = [1.05 * minx - 0.05 * maxx,
+                       1.05 * maxx - 0.05 * minx]
+                axis.set_xlim(rng[0], rng[1])
+                rng = [1.05 * miny - 0.05 * maxy,
+                       1.05 * maxy - 0.05 * miny]
+                axis.set_ylim(rng[0], rng[1])
+                axis.pcolor(
+                    self._estimate_locations(xs, len(self.inner),
+                                             minx, maxx),
+                    self._estimate_locations(ys, len(self.outer),
+                                             miny, maxy),
+                    np.array([[float(z) for z in row]
+                              for row in values]))
+                if action:
+                    action_remainder = action(xs, values,
+                                              axis)
+                plt.draw()
         if save:
             fig.savefig(save)
 
@@ -807,7 +833,7 @@ class ReplayScan(Scan):
                           self.result, self.defaults)
 
     def map(self, func):
-        return ReplayScan(map(func, self.xs), self.ys, self.axis,
+        return ReplayScan(list(map(func, self.xs)), self.ys, self.axis,
                           self.result, self.defaults)
 
     def __len__(self):
@@ -821,33 +847,26 @@ class ReplayScan(Scan):
 
     def plot(self, detector=None, save=None,
              action=None, **kwargs):
-        """Overload the scan method for the replay scan.  Since we aren't
-actually detecting anything, we can run the code much simpler instead
-of trying to fake a detector."""
+        """
+        Overload the scan method for the replay scan.  Since we aren't
+        actually detecting anything, we can run the code much simpler instead
+        of trying to fake a detector."""
+
         action_remainder = None
         xs = self.xs
         ys = ListOfMonoids(self.ys)
 
+        plot_functions = self.defaults.plot_functions
         fig, axis = self.defaults.get_fig()
+        plot_functions.set_figure_and_axis(fig, axis)
 
-        axis.clear()
-        if isinstance(self.min(), tuple):
-            rng = [1.05 * self.min()[0] - 0.05 * self.max()[0],
-                   1.05 * self.max()[0] - 0.05 * self.min()[0]]
-        else:
-            rng = [1.05 * self.min() - 0.05 * self.max(),
-                   1.05 * self.max() - 0.05 * self.min()]
-        axis.set_xlabel(self.axis)
-        axis.set_ylabel(self.result)
-        axis.set_xlim(rng[0], rng[1])
-        rng = _plot_range(ys)
-        axis.set_ylim(rng[0], rng[1])
-        ys.plot(axis, xs)
+        plot_functions.setup_plot(self.min(), self.max(), x_label=self.axis, y_label=self.result)
+        plot_functions.plot_data_with_errors(xs, ys)
+
         if action:
-            action_remainder = action(xs, ys, axis, None)
-        if save:
-            fig.savefig(save)
+            action_remainder = action(xs, ys, plot_functions, None)
 
-        plt.draw()
+        plot_functions.draw()
+        plot_functions.save(save)
 
         return action_remainder

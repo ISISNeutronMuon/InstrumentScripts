@@ -11,7 +11,6 @@ Guide for Instrument Scientists
      >>> # matplotlib.use("Agg")
      >>> ();from instrument.larmor import *;()  # doctest:+ELLIPSIS
      (...)
-     >>> populate()
 
 Introduction
 ============
@@ -77,9 +76,10 @@ useful helper function for creating function the read from specific detectors.  
     >>> whole_detector = specific_spectra([[1]])
 
 Will create a new detector function ``whole_detector`` which returns
-the total counts on detector spectrum 1.  The user could then runghc
+the total counts on detector spectrum 1.  The user could then run
 
-    >>> scan(Theta, 0, 2, 0.6, 50, detector=whole_detector)
+    >>> scan("Theta", 0, 2, 0.6, 50, detector=whole_detector)
+    Writing data to: .
 
 To run the scan over those channels, instead of over the default setup.
 
@@ -91,6 +91,20 @@ file where the results of the current scan should be stored.  This
 function should return a unique value for each scan, to ensure that
 previous results are not overwritten.  This can easily be achieved by
 appending the current date and time onto the file name.
+To help with creating more usable log file names this function should take
+a single argument which is a dictionary of useful information. Any or all of these
+values may be missing so log_file should be prepared to use defaults. An example is:
+
+    >>> def log_file(info):
+    ...    from datetime import datetime
+    ...    now = datetime.now()
+    ...    action_name = info.get("action_name", "unknown")
+    ...    return os.path.join("C:\\", "scripts", "{}_{}_{}_{}_{}_{}_{}.dat".format(action_name, now.year, now.month, now.day, now.hour, now.minute, now.second))
+
+plot_functions
+--------------
+
+The `plot_functions` property of the defaults class allows the plot functions to be customised for your instrument. Either override this in you instruments defaults or set propeties of this in the scan function. This will allow you to set colours, marker size and shape for graphs. In the future there may be other options to.
 
 Monoid
 ======

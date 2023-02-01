@@ -10,7 +10,6 @@ information out of a combined measuremnts.
 """
 
 from abc import ABCMeta, abstractmethod
-from matplotlib.pyplot import rcParams
 import numpy as np
 from six import add_metaclass
 
@@ -58,7 +57,7 @@ class Monoid(object):
 
 class Average(Monoid):
     """
-    This monoid calculates the average of its values.
+    This monoid calculates the average of its values, e.g. detector count/monitor count
     """
 
     def __init__(self, x, count=1):
@@ -67,6 +66,8 @@ class Average(Monoid):
 
     def __float__(self):
         if self.count == 0:
+            if self.total == 0:
+                return 0.0
             return float(np.nan)
         return float(self.total) / float(self.count)
 
@@ -81,17 +82,29 @@ class Average(Monoid):
         return Average(0, 0)
 
     def err(self):
+        """
+        Calculates error in average count.
+
+        z=x/y
+        err_x = sqrt(x)
+        err_y = sqrt(y)
+        err_z^2 = (err_x . dz/dx)^2 + (err_y . dx_dy)^2
+        err_z^2 = x. 1/y^2 + y . x^2 / y^4
+        err_z^2 = x^2/y^2 . (1/x + 1/y)
+
+        Returns
+        -------
+        Error in average counts
+        """
+        if self.total == 0:
+            return 0.0
         if self.count == 0:
             return np.nan
-        if self.total == 0:
-            return 0
         return np.sqrt(self.total**2 / self.count**2
                        * (1 / self.total + 1 / self.count))
 
     def __str__(self):
-        if self.count == 0:
-            return str(np.nan)
-        return str(self.total / self.count)
+        return str(float(self))
 
     def __repr__(self):
         return "Average({}, count={})".format(self.total, self.count)
@@ -245,13 +258,6 @@ class ListOfMonoids(list):
     lists of Monoids
     """
 
-    def __init__(self, *args):
-        list.__init__(self, *args)
-        try:
-            self.color_cycle = rcParams["axes.prop_cycle"].by_key()["color"]
-        except KeyError:
-            self.color_cycle = ["k", "b", "g", "r"]
-
     def values(self):
         """
         Get the numerical values from the List
@@ -267,21 +273,6 @@ class ListOfMonoids(list):
         if isinstance(self[0], MonoidList):
             return np.array([y.err() for y in self]).T
         return [y.err() for y in self]
-
-    def plot(self, axis, xs):
-        """
-        Make an errorbar plot of a monoid onto an axis
-        at a given set of x coordinates
-        """
-        markers = "osp+xv^<>"
-        if isinstance(self[0], MonoidList):
-            for y, err, color, marker in zip(self.values(), self.err(),
-                                             self.color_cycle, markers):
-                axis.errorbar(xs, y, yerr=err, fmt="",
-                              color=color, marker=marker,
-                              linestyle="None")
-        else:
-            axis.errorbar(xs, self.values(), yerr=self.err(), fmt="d")
 
     def max(self):
         """

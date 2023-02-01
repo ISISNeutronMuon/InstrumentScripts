@@ -4,9 +4,11 @@ for fitting routines.  It also contains implementations of some common
 fits (i.e. Linear and Gaussian).
 
 """
+import traceback
 from abc import ABCMeta, abstractmethod
 import warnings
 import numpy as np
+from scipy.stats import linregress
 from six import add_metaclass
 from scipy.special import erf  # pylint: disable=no-name-in-module
 
@@ -77,7 +79,7 @@ class Fit(object):
         -------
         A function to call in the plotting loop
         """
-        def action(x, y, axis, old_params):
+        def action(x, y, plot_functions, old_params):
             """Fit and plot the data within the plotting loop
 
             Parameters
@@ -86,8 +88,8 @@ class Fit(object):
               The x positions measured thus far
             y : Array of Float
               The y positions measured thus far
-            axis : matplotlib.axis.Axis
-              The axis on which to plot
+            plot_functions : general.scans.plot_functions.PlotFunctions
+              plot_functions which allows items to be plotted
             old_params : None or tuple
               The previous fit
 
@@ -98,38 +100,42 @@ class Fit(object):
                 parameters if the fit was performed
 
             """
-            if len(x) < self.degree:
-                return None
-            plot_x = np.linspace(np.min(x), np.max(x), 1000)
-            values = np.array(y.values())
-            errs = np.array(y.err())
-            if len(values.shape) > 1:
-                params = []
-                for value in values:
-                    try:
-                        params.append(self.fit(x, value, errs))
-                    except RuntimeError:
-                        params.append(None)
-                        continue
-                    fity = self.get_y(plot_x, params[-1])
-                    axis.plot(plot_x, fity, "-",
-                              label="{} fit".format(self.title(params[-1])))
-            else:
-                try:
-                    params = self.fit(x, values, errs)
-                except RuntimeError:
+            try:
+                if len(x) < self.degree:
                     return None
-                fity = self.get_y(plot_x, params)
-                chi_sq = self.fit_quality(x, values, errs, params)
-                if old_params is not None:
-                    old_chi = self.fit_quality(x, values, errs, old_params)
-                    if chi_sq > old_chi:
-                        chi_sq = old_chi
-                        params = old_params
-                        fity = self.get_y(plot_x, params)
-                axis.plot(plot_x, fity, "-",
-                          label="{} fit".format(self.title(params)))
-            axis.legend()
+                points_x = np.array(x)
+                plot_x = np.linspace(np.min(points_x), np.max(points_x), 1000)
+                values = np.array(y.values())
+                errs = np.array(y.err())
+
+                if len(values.shape) > 1:
+                    params = []
+                    for value in values:
+                        try:
+                            params.append(self.fit(points_x, value, errs))
+                        except RuntimeError:
+                            params.append(None)
+                            continue
+                        fit_y = self.get_y(plot_x, params[-1])
+                        plot_functions.plot_fit(plot_x, fit_y, "{} fit".format(self.title(params[-1])))
+                else:
+                    try:
+                        params = self.fit(points_x, values, errs)
+                    except RuntimeError:
+                        return None
+                    chi_sq = self.fit_quality(points_x, values, errs, params)
+                    if old_params is not None:
+                        old_chi = self.fit_quality(points_x, values, errs, old_params)
+                        if chi_sq > old_chi:
+                            chi_sq = old_chi
+                            params = old_params
+                    fit_y = self.get_y(plot_x, params)
+                    plot_functions.plot_fit(plot_x, fit_y, "{} fit".format(self.title(params)))
+
+            except Exception as ex:
+                traceback.print_exc()
+                print("No fit performed because of above error please report it.")
+                params = old_params
             return params
         return action
 
@@ -183,7 +189,7 @@ class ExactFit(Fit):
         return fit[1]
 
     def readable(self, fit):
-        return {"x": fit[0], "y": map(float, fit[1])}
+        return {"x": fit[0], "y": list(map(float, fit[1]))}
 
     def title(self, _):
         return "Exact Points"
@@ -249,7 +255,7 @@ class PeakFit(Fit):
 
     def title(self, center):
         # pylint: disable=arguments-differ
-        return "Peak at {}".format(center)
+        return "Peak at {}".format(smart_number_format(center))
 
 
 @add_metaclass(ABCMeta)
@@ -492,6 +498,50 @@ class TopHatFit(CurveFit):
         return "Top Hat at {center:} of width {width:}".format(**params)
 
 
+class SlitScanFit(CurveFit):
+    """
+    Scan slit fit finder. Scan slit is a linear ramp starting from a centre position with background
+
+    if x<c:
+        y=background
+    else
+        y=background + m*(x-c)
+    """
+
+    def __init__(self):
+        super(SlitScanFit, self).__init__(3, "Slit Scan")
+
+    @staticmethod
+    def _model(xs, *args):
+        centre, gradient, background = args
+        return [background + 0.0 if x < centre else gradient*(x-centre) for x in xs]
+
+    @staticmethod
+    def guess(x, y):
+        background = np.min(y)
+        threshold = (np.max(y) - background) * 0.01 + background
+        x_values = x[y > threshold]
+        y_values = y[y > threshold] - background
+        slope, intercept, _, _, _ = linregress(x_values, y_values)
+        return [-intercept/slope, slope, background]
+
+    def readable(self, fit):
+        err = np.sqrt(fit[1])
+        fit = fit[0]
+        return {"center": fit[0], "center_err": err[0, 0],
+                "gradient": fit[1], "gradient_err": err[1, 1],
+                "background": fit[2], "background_err": err[2, 2]}
+
+    def title(self, fit):
+        # pylint: disable=arguments-differ
+        params = self.readable(fit)
+        for k in params:
+            if isinstance(params[k], float):
+                params[k] = smart_number_format(params[k])
+        return "Slit Scan Fit: y={{{gradient:}(x-{center:}) E x>{center:}}} + {background}".format(**params)
+
+
+
 class CentreOfMassFit(Fit):
     """
     A fit that calculates the 'centre of mass' of a peak over a background.
@@ -515,7 +565,7 @@ class CentreOfMassFit(Fit):
         warnings.simplefilter("ignore", RuntimeWarning)
 
     def fit(self, x, y, err):
-        if not (x and y.size and err.size):
+        if x is None or y is None or err is None or len(x) < 1 or len(y) < 1 or len(err) < 1:
             return [np.nan]
 
         raw_data = np.array([
@@ -554,13 +604,13 @@ class CentreOfMassFit(Fit):
         return np.zeros(len(x))
 
     def title(self, params):
-        return "Centre of mass = {}".format(params[0])
+        return "Centre of mass = {}".format(smart_number_format(params[0]))
 
     def readable(self, fit):
         return {"Centre_of_mass": fit[0]}
 
     def fit_plot_action(self):
-        def action(x, y, axis, _):
+        def action(x, y, plot_functions, _):
             """Fit and plot the data within the plotting loop
 
             Parameters
@@ -569,8 +619,8 @@ class CentreOfMassFit(Fit):
               The x positions measured thus far
             y : Array of Float
               The y positions measured thus far
-            axis : matplotlib.axis.Axis
-              The axis on which to plot
+            plot_functions : general.scans.plot_functions.PlotFunctions
+              plot_functions which allows items to be plotted
 
             Returns
             -------
@@ -582,19 +632,23 @@ class CentreOfMassFit(Fit):
             values = np.array(y.values())
             errs = np.array(y.err())
             params = self.fit(x, values, errs)
-            axis.axvline(x=params[0], color="orange")
-            axis.legend([self.title(params)])
+            plot_functions.plot_vertical_fit_line(params[0], self.title(params))
+
             return params
         return action
 
 
 def smart_number_format(x):
-    """Turn numbers into strings with a smart number of digits"""
+    """Turn numbers into strings with a smart number of digits
+    Parameters:
+        x:
+        number to format
+    """
     if abs(x) >= 1000:
-        return "{:.2e}".format(x)
+        return "{:.4e}".format(x)
     if abs(x) < 0.1:
-        return "{:.2e}".format(x)
-    return "{:.3f}".format(x)
+        return "{:.4e}".format(x)
+    return "{:.4f}".format(x)
 
 
 #: A linear regression
@@ -613,5 +667,7 @@ ExactPoints = ExactFit()
 
 CentreOfMass = CentreOfMassFit()
 
+SlitScan = SlitScanFit()
+
 __all__ = ["PolyFit", "Linear", "Gaussian", "DampedOscillator", "PeakFit",
-           "Erf", "TopHat", "ExactPoints", "CentreOfMass"]
+           "Erf", "TopHat", "ExactPoints", "CentreOfMass", "SlitScan"]

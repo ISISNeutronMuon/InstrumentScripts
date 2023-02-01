@@ -1,13 +1,9 @@
 """This module contains helper classes for controlling motions on the beamline
 
-There's three levels of depth to this module.  At the simplest level, merely
-import and call populate().  This create motion object for every block
-currently registered on the instrument.
+There's two levels of depth to this module.  At the simplest level the BlockMotion class,
+allows for creating single objects that correspond to single IBEX blocks.
 
-The next level down is the BlockMotion class, which allows for creating
-single objects that correspond to single IBEX blocks.
-
-Finally, at the bottom, BlockMotion derives from the Motion object,
+At the bottom, BlockMotion derives from the Motion object,
 which gives a simple framework for all physical parameters that
 can be controlled by an instrument.  Although it is called Motion,
 it will also handle temperatures, currents, and other physical properties.
@@ -18,6 +14,8 @@ try:
     from genie_python import genie as g
 except ImportError:
     from .mocks import g
+
+from six import text_type
 
 
 class Motion(object):
@@ -210,3 +208,54 @@ def pv_motion(pv_str, name):
                       "{}.VELO".format(pv_str), x),
                   tolerance_getter=lambda: g.get_pv(
                       "{}.RDBD".format(pv_str)))
+
+
+def get_motion(motion_or_block_name):
+    """
+    Get a motion object from the argument. Use to pass a motion argument in scans.
+
+    Parameters
+    ----------
+    motion_or_block_name
+      either a motion object or a block name
+
+    Returns
+    -------
+    motion object
+    """
+    if isinstance(motion_or_block_name, Motion):
+        motion = motion_or_block_name
+    elif isinstance(motion_or_block_name, (str, text_type)):
+        motion = BlockMotion(motion_or_block_name, get_units(motion_or_block_name))
+    else:
+        raise TypeError("Cannot run scan on axis {}. Try a string or a motion object instead.".format(
+            motion_or_block_name))
+    return motion
+
+
+def get_units(block_name):
+    """
+    This method is deprecated and will be removed, please use g.get_block_units(block_name).
+    Get the physical measurement units associated with a block name.
+
+    Parameters
+    ----------
+    block_name: name of the block
+
+    Returns
+    -------
+    units of the block
+    """
+    # TODO when genie_python include #5620 remove this or signal as deprecated
+    try:
+        return g.get_block_units(block_name)
+    except AttributeError:
+        pv_name = g.adv.get_pv_from_block(block_name)
+        if "." in pv_name:
+            # Remove any headers
+            pv_name = pv_name.split(".")[0]
+        unit_name = pv_name + ".EGU"
+        # pylint: disable=protected-access
+        if g._genie_api.pv_exists(unit_name):
+            return g.get_pv(unit_name)
+        return ""

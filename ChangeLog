@@ -1,3 +1,8 @@
+2020-08-20    <mihai.stavila@stfc.ac.uk>
+
+    * general/scans/motion.py (Motion.get_units): Moved to the
+    genie_epics_api as get_block_units(), added to g.cget().
+
 2019-11-29    <adam.washington@stfc.ac.uk>
 
 	* instrument/loq/scans.py (LOQ): Set LOQ to transmission mode before scans

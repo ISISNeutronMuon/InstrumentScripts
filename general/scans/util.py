@@ -43,15 +43,15 @@ def get_points(
       at 3 and ``before`` is set to 5, then the last scan point will be 8.
       This is a valid stop point.
     step : float
-      The fixed distance between points.  If the distance between the
-      beginning and end aren't an exact multiple of this step size,
-      then the end point will not be included.  This is a valid spacing.
+      The fixed distance between points.  The stop position is skipped, even if the distance
+      between the beginning and end are an exact multiple of this step size.
+      This is a valid spacing.
     stride : float
       The approximate distance between points.  In order to ensure that
       the ``start`` and ``stop`` points are included in the scan, a finer
       resolution scan will be called for if the stride is not an exact
       multiple of the distance. This is a valid spacing.
-    count : float
+    count : int
       The number of measurements to perform.  A scan with a ``count`` of 2
       would measure at only the beginning and the end.  This is a valid
       number of points.
@@ -82,7 +82,7 @@ def get_points(
 
     if start is not None and stop is not None:
         if stride:
-            steps = np.ceil((stop - start) / float(stride))
+            steps = int(np.ceil((stop - start) / float(stride)))
             return np.linspace(start, stop, steps + 1)
 
         if count:
