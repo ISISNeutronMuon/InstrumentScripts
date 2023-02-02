@@ -33,7 +33,7 @@ class LOQ(Defaults):
             Name for the log file
         """
         now = datetime.now()
-        return "U:/loq_scan_{}_{}_{}_{}_{}_{}.dat".format(
+        return "U:/Scans/loq_scan_{}_{}_{}_{}_{}_{}.dat".format(
             now.year, now.month, now.day, now.hour, now.minute, now.second)
 
     def __repr__(self):
