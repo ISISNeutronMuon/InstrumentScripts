@@ -136,7 +136,7 @@ class LOQ(ScanningInstrument):
 
     def _detector_is_on(self):
         """Is the detector currently on?"""
-        return self.ask_pv("MOXA12XX_02:CH0:AI:RBV") > 2
+        return self.get_pv("MOXA12XX_02:CH0:AI:RBV") > 2
 
     def _detector_turn_on(self, delay=True):
         raise NotImplementedError("Detector toggling is not supported LOQ")

@@ -429,7 +429,7 @@ involves only having two spectra covering the entire main detecor."""
     def _detector_is_on(self):
         """Is the detector currently on?"""
         voltage_status = all([
-            self.ask_pv(
+            self.get_pv(
                 "CAEN:hv0:0:{}:status".format(x)).lower() == "on"
             for x in [8, 9, 10, 11]])
         return voltage_status
@@ -549,7 +549,7 @@ involves only having two spectra covering the entire main detecor."""
             info("Lifting Bench (20s)")
             sleep(20)
 
-            if self.ask_pv("BENCH: STATUS") == 1:
+            if self.get_pv("BENCH: STATUS") == 1:
                 info("Rotating Bench")
                 gen.cset(bench_rot=angle)
                 gen.waitfor_move()
