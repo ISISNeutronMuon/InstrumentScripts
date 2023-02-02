@@ -14,21 +14,6 @@ class Sans2d(ScanningInstrument):
         super().__init__()
         self._set_poslist_dls()
 
-    def check_move_pos(self, pos):
-        """Check whether the position is valid for the normal
-        sample changer and return True or False
-
-        Parameters
-        ----------
-        pos : str
-          The sample changer position
-
-        """
-        if pos not in self._poslist:
-            warning(f"Error in script, position {pos} does not exist")
-            return False
-        return True
-
     def do_sans_large(self, title="", pos=None, thickness=1.0, dae=None,
                       period=None, time=None, dls_sample_changer=False, **kwargs):
         """

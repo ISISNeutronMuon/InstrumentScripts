@@ -71,7 +71,11 @@ class ScanningInstrument(object):
     _poslist_dls = []
 
     def __init__(self):
-        self._poslist = self.get_pv("LKUP:SAMPLE:POSITIONS").split()
+        sample_positions = self.get_pv("LKUP:SAMPLE:POSITIONS")
+        if sample_positions is not None:
+            self._poslist = sample_positions.split()
+        else:
+            warning("Sample positions from PV not available - using default poslist, which may be incorrect.")
         self.setup_sans = self.setup_dae_event
         self.setup_trans = self.setup_dae_transmission
 
@@ -460,9 +464,9 @@ class ScanningInstrument(object):
           The sample changer position
 
         """
-        if pos.upper() not in self._poslist:
+        if pos.upper() not in [pos_name.upper() for pos_name in self._poslist]:
             warning(f"Error in script, position {pos} does not exist")
-        return False
+            return False
         return True
 
     def check_move_pos_dls(self, pos):
@@ -481,7 +485,7 @@ class ScanningInstrument(object):
         elif self._poslist_dls is []:
             self._set_poslist_dls()
 
-        if pos not in self._poslist_dls:
+        if pos.upper() not in [pos_name.upper() for pos_name in self._poslist_dls]:
             warning(f"Error in script, position {pos} does not exist")
             return False
         return True
@@ -500,7 +504,12 @@ class ScanningInstrument(object):
         pos : str
           The new dls sample changer position
         """
-        return gen.cset(SamplePos=pos)
+        for possible_position in self._poslist:
+            if pos.upper() == possible_position.upper():
+                gen.cset(SamplePos=pos)
+                return
+        else:
+            warning(f"Unable to set changer position to {pos}; invalid position name?")
 
     @property
     def changer_pos_dls(self):
@@ -517,7 +526,12 @@ class ScanningInstrument(object):
         pos : str
           The new dls sample changer position
         """
-        return gen.cset(sample_position=pos)
+        for possible_position in self._poslist_dls:
+            if pos.upper() == possible_position.upper():
+                gen.cset(sample_position=pos)
+                return
+        else:
+            warning(f"Unable to set DLS changer position to {pos}; invalid position name?")
 
     def _setup_measurement_software(self, trans):
         """It will set the measurement type then sets the up the
