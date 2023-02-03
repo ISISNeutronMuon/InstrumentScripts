@@ -142,20 +142,20 @@ involves only having two spectra covering the entire main detecor."""
         # Normal event mode with full detector binning
         self._generic_scan(
             wiring=r"C:\Instrument\Settings\config\NDXLARMOR\configurations\tables\wiring_dae3_event.dat",
-            tcbs=[{"low": 5.0, "high": 100000.0, "step": self.step,
+            tcbs=[{"low": 5.0, "high": 100000.0, "step": self.get_tof_step(),
                    "trange": 1, "log": 0},
                   {"low": 0.0, "high": 0.0, "step": 0.0,
                    "trange": 2, "log": 0},
                   {"low": 5.0, "high": 100000.0, "step": 2.0, "trange": 1,
                    "log": 0, "regime": 2}])
             #Below is for MIEZE SANS
-            # tcbs=[{"low": 5.0, "high": 100000.0, "step": self.step,
+            # tcbs=[{"low": 5.0, "high": 100000.0, "step": self.get_tof_step(),
                    # "trange": 1, "log": 0},
                   # {"low": 0.0, "high": 0.0, "step": 0.0,
                    # "trange": 2, "log": 0},
                   # {"low": 22222.0, "high": 86222.0, "step": 1.0, "trange": 1,
                    # "log": 0, "regime": 2}])
-        self._set_choppers(self.lrange)
+        self._set_choppers(self._lrange)
 
     @dae_setter("SANS", "sans")
     def setup_dae_event_fastsave(self):
@@ -334,8 +334,8 @@ involves only having two spectra covering the entire main detecor."""
 
         if key == "seconds":
             gtotal=gen.get_pv("IN:LARMOR:DAE:RUNDURATION")
-            u=u/10
-            d=d/10
+            up_state_frames=up_state_frames/10
+            down_state_frames=down_state_frames/10
             
         while gtotal < kwargs[key]:
             gen.change(period=1)
@@ -344,12 +344,12 @@ involves only having two spectra covering the entire main detecor."""
             if key == "seconds":
                 gen.resume()
                 ttime=gen.get_pv("IN:LARMOR:DAE:RUNDURATION")
-                gen.waitfor(seconds=(gtotal+u)-ttime)
+                gen.waitfor(seconds=(gtotal+up_state_frames)-ttime)
                 gen.pause()
             else:
                 gfrm = gen.get_frames()
                 gen.resume()
-                gen.waitfor(frames=gfrm + u)
+                gen.waitfor(frames=gfrm + up_state_frames)
                 gen.pause()
 
             gen.change(period=2)
@@ -358,13 +358,13 @@ involves only having two spectra covering the entire main detecor."""
             if key == "seconds":
                 gen.resume()
                 ttime=gen.get_pv("IN:LARMOR:DAE:RUNDURATION")
-                gen.waitfor(seconds=(gtotal+u+d)-ttime)
+                gen.waitfor(seconds=(gtotal+up_state_frames+down_state_frames)-ttime)
                 gen.pause()
                 gtotal=gen.get_pv("IN:LARMOR:DAE:RUNDURATION")
             else:
                 gfrm = gen.get_frames()
                 gen.resume()
-                gen.waitfor(frames=gfrm + d)
+                gen.waitfor(frames=gfrm + down_state_frames)
                 gen.pause()
                 gtotal = get_total()
 
@@ -375,7 +375,7 @@ involves only having two spectra covering the entire main detecor."""
             r"C:\Instrument\Settings\config\NDXLARMOR\configurations\tables\Alanis_Detector.dat",
             r"C:\Instrument\Settings\config\NDXLARMOR\configurations\tables\Alanis_Spectra.dat",
             r"C:\Instrument\Settings\config\NDXLARMOR\configurations\tables\Alanis_Wiring_dae3.dat",
-            [{"low": 5.0, "high": 100000.0, "step": self.step,
+            [{"low": 5.0, "high": 100000.0, "step": self.get_tof_step(),
               "trange": 1, "log": 0},
              {"low": 0.0, "high": 0.0, "step": 0.0,
               "trange": 2, "log": 0},
@@ -389,7 +389,7 @@ involves only having two spectra covering the entire main detecor."""
             r"C:\Instrument\Settings\config\NDXLARMOR\configurations\tables\Alanis_Detector.dat",
             r"C:\Instrument\Settings\config\NDXLARMOR\configurations\tables\Alanis_Spectra.dat",
             r"C:\Instrument\Settings\config\NDXLARMOR\configurations\tables\Alanis_Wiring_dae3.dat",
-            [{"low": 5.0, "high": 100000.0, "step": self.step,
+            [{"low": 5.0, "high": 100000.0, "step": self.get_tof_step(),
               "trange": 1, "log": 0},
              {"low": 0.0, "high": 0.0, "step": 0.0,
               "trange": 2, "log": 0},

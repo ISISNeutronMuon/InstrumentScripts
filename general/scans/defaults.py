@@ -73,7 +73,7 @@ class Defaults(object):
         return os.path.join(base_dir, "{}_{}_{}_{}_{}_{}_{}.dat".format(
             action_title, now.year, now.month, now.day, now.hour, now.minute, now.second))
 
-    def create_fig(self):
+    def create_fig(self, force=False):
         """
         Create a figure for the next scan.  The default method is to
         create a new figure for each scan, but this can be overridden
