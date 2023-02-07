@@ -4,6 +4,7 @@ from logging import warning
 from technique.sans.instrument import ScanningInstrument
 from technique.sans.util import dae_setter
 from general.scans.util import local_wrapper
+from .util import flipper1
 
 
 class Zoom(ScanningInstrument):

@@ -449,10 +449,12 @@ involves only having two spectra covering the entire main detecor."""
     def _configure_sans_custom(self):
         # move the transmission monitor out
         gen.cset(m4trans=200.0)
+        waitfor_move()
 
     def _configure_trans_custom(self):
         # move the transmission monitor in
         gen.cset(m4trans=0.0)
+        waitfor_move()
 
     def _detector_is_on(self):
         """Is the detector currently on?"""
