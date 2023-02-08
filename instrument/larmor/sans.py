@@ -29,7 +29,7 @@ class Larmor(ScanningInstrument):  # pylint: disable=too-many-public-methods
 
     @property
     def TIMINGS(self):
-        if self._dae_mode == "sesans":
+        if self._dae_mode == "polsans":
             return self._TIMINGS + ["u", "d"]
         return self._TIMINGS
 
@@ -331,23 +331,21 @@ involves only having two spectra covering the entire main detecor."""
               "trange": 1, "log": 0},
              {"low": 0.0, "high": 0.0, "step": 0.0, "trange": 2, "log": 0}])
 
-    @dae_setter("SESANS", "sesans")
-    def setup_dae_sesans(self):
-        """Setup the instrument for SESANS measurements."""
-        # self.setup_dae_event()
-        self.setup_dae_alanis()
-
+    @dae_setter("POLSANS", "polsans")
+    def setup_dae_polsans(self):
+        """Setup the instrument for POLSANS measurements."""
+        self.setup_dae_event()
 
 
     @staticmethod
-    def _begin_sesans():
-        """Initialise a SESANS run"""
+    def _begin_polsans():
+        """Initialise a POLSANS run"""
         gen.change(nperiods=2)
         gen.begin(paused=1)
 
     @staticmethod
-    def _waitfor_sesans(up_state_frames=600, down_state_frames=600, **kwargs):
-        """Perform a SESANS run"""
+    def _waitfor_polsans(up_state_frames=600, down_state_frames=600, **kwargs):
+        """Perform a POLSANS run"""
         if "uamps" in kwargs:
             get_total = gen.get_uamps
             key = "uamps"
@@ -424,15 +422,30 @@ involves only having two spectra covering the entire main detecor."""
              {"low": 5.0, "high": 100000.0, "step": 2.0, "trange": 1,
               "log": 0, "regime": 2}])
 
+    @dae_setter("SESANS", "sesans")
+    def setup_dae_sesans(self):
+        """Setup the instrument for SESANS measurements."""
+        self.setup_dae_alanis()
+
     @staticmethod
     def _begin_semsans():
         """Initialise a SEMSANS run"""
-        Larmor._begin_sesans()
+        Larmor._begin_polsans()
+
+    @staticmethod
+    def _begin_sesans():
+        """Initialise a SESANS run"""
+        Larmor._begin_polsans()        
 
     @staticmethod
     def _waitfor_semsans(up_state_frames=600, down_state_frames=600, **kwargs):
-        """Perform a SESANS run"""
-        Larmor._waitfor_sesans(up_state_frames, down_state_frames, **kwargs)
+        """Perform a SEMSANS run"""
+        Larmor._waitfor_polsans(up_state_frames, down_state_frames, **kwargs)
+
+    @staticmethod
+    def _waitfor_sesans(up_state_frames=600, down_state_frames=600, **kwargs):
+        """Perform a SANSPOL run"""
+        Larmor._waitfor_polsans(up_state_frames, down_state_frames, **kwargs)        
 
     @staticmethod
     def set_aperture(size):
