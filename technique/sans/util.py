@@ -47,8 +47,8 @@ def dae_setter(suffix, measurement_type):
             # This seems to get unset in the tests
             self.measurement_type = measurement_type
             request = inner.__name__[10:]
-            if request == self._dae_mode:  # pylint: disable=protected-access
-                return
+            # if request == self._dae_mode:  # pylint: disable=protected-access
+            #     return
             inner(self, *args, **kwargs)
             info(f"Setup {type(self).__name__} for {request.replace('_', ' ')}")
             self._dae_mode = request  # pylint: disable=protected-access
