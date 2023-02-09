@@ -5,7 +5,8 @@ from technique.sans.genie import gen
 from technique.sans.util import dae_setter
 from general.scans.util import local_wrapper
 from .util import flipper1
-
+import datetime as dt
+#import dateparser as dp
 
 def sleep(seconds):
     """Override the sleep function to use genie.
@@ -49,6 +50,14 @@ class Larmor(ScanningInstrument):  # pylint: disable=too-many-public-methods
         self._dae_mode = ""
         self._step = step
 
+    def _generic_scan(  # pylint: disable=dangerous-default-value
+            self,
+            detector=r"C:\Instrument\Settings\config\NDXLARMOR\configurations\tables\detector.dat",
+            spectra=r"C:\Instrument\Settings\config\NDXLARMOR\configurations\tables\spectra_1To1.dat",
+            wiring=r"C:\Instrument\Settings\config\NDXLARMOR\configurations\tables\wiring_dae3.dat",
+            tcbs=[]):
+        ScanningInstrument._generic_scan(self, detector, spectra, wiring, tcbs)
+
     @staticmethod
     def _set_choppers(lrange):
         # now set the chopper phasing to the defaults
@@ -77,7 +86,7 @@ class Larmor(ScanningInstrument):  # pylint: disable=too-many-public-methods
     @dae_setter("SCAN", "scan")
     def setup_dae_scanning(self):
         self._generic_scan(
-            spectra="spectra_scanning_80.dat",
+            spectra=r"C:\Instrument\Settings\config\NDXLARMOR\configurations\tables\spectra_scanning_80.dat",
             tcbs=[{"low": 5.0, "high": 100000.0, "step": 100.0,
                    "trange": 1, "log": 0}])
 
@@ -86,30 +95,30 @@ class Larmor(ScanningInstrument):  # pylint: disable=too-many-public-methods
         """Set the wiring tables for performing a scan where the entire main
 detector is contained in only two channels."""
         self._generic_scan(
-            spectra="spectra_scanning_12.dat",
+            spectra=r"C:\Instrument\Settings\config\NDXLARMOR\configurations\tables\spectra_scanning_12.dat",
             tcbs=[{"low": 5.0, "high": 100000.0, "step": 100.0,
                    "trange": 1, "log": 0}])
 
     @dae_setter("SCAN", "scan")
-    def setup_dae_scanningAlanis(self):
+    def setup_dae_scanningAlanis(self):  # pylint: disable=no-self-use
         """Set the wiring tables for performing a scan where the entire main
             detector is contained in channel 11 and the Alanis Detector is in channel 12."""
         self._generic_scan(
-            spectra="spectra_scanning_Alanis.dat",
+            spectra=r"C:\Instrument\Settings\config\NDXLARMOR\configurations\tables\spectra_scanning_Alanis.dat",
             tcbs=[{"low": 5.0, "high": 100000.0, "step": 100.0,
                    "trange": 1, "log": 0}])
 
     @dae_setter("SCAN", "scan")
-    def setup_dae_scanning11(self):
+    def setup_dae_scanning11(self):  # pylint: disable=no-self-use
         """Set the wiring tables for performing a scan where the entire main
         detector is contained in only one channel now we are using dae 3."""
         self._generic_scan(
-            spectra="spectra_scanning_11.dat",
+            spectra=r"C:\Instrument\Settings\config\NDXLARMOR\configurations\tables\spectra_scanning_11.dat",
             tcbs=[{"low": 5.0, "high": 100000.0, "step": 100.0,
                    "trange": 1, "log": 0}])
-
+                   
     @dae_setter("SCAN", "scan")
-    def setup_dae_echoscan(self):
+    def setup_dae_echoscan(self):  # pylint: disable=no-self-use
         """Set the wiring tables for performing a spin echo tuning scan.  This
 involves only having two spectra covering the entire main detecor."""
         self.setup_dae_scanning12()
@@ -117,7 +126,7 @@ involves only having two spectra covering the entire main detecor."""
     @dae_setter("SCAN", "scan")
     def setup_dae_nr(self):
         self._generic_scan(
-            spectra="spectra_nrscanning.dat",
+            spectra=r"C:\Instrument\Settings\config\NDXLARMOR\configurations\tables\spectra_nrscanning.dat",
             tcbs=[{"low": 5.0, "high": 100000.0, "step": 100.0,
                    "trange": 1, "log": 0}])
 
@@ -132,13 +141,20 @@ involves only having two spectra covering the entire main detecor."""
     def setup_dae_event(self):
         # Normal event mode with full detector binning
         self._generic_scan(
-            wiring="wiring_dae3_event.dat",
-            tcbs=[{"low": 5.0, "high": 100000.0, "step": self._step,
+            wiring=r"C:\Instrument\Settings\config\NDXLARMOR\configurations\tables\wiring_dae3_event.dat",
+            tcbs=[{"low": 5.0, "high": 100000.0, "step": self.get_tof_step(),
                    "trange": 1, "log": 0},
                   {"low": 0.0, "high": 0.0, "step": 0.0,
                    "trange": 2, "log": 0},
                   {"low": 5.0, "high": 100000.0, "step": 2.0, "trange": 1,
                    "log": 0, "regime": 2}])
+            #Below is for MIEZE SANS
+            # tcbs=[{"low": 5.0, "high": 100000.0, "step": self.get_tof_step(),
+                   # "trange": 1, "log": 0},
+                  # {"low": 0.0, "high": 0.0, "step": 0.0,
+                   # "trange": 2, "log": 0},
+                  # {"low": 22222.0, "high": 86222.0, "step": 1.0, "trange": 1,
+                   # "log": 0, "regime": 2}])
         self._set_choppers(self._lrange)
 
     @dae_setter("SANS", "sans")
@@ -149,7 +165,7 @@ involves only having two spectra covering the entire main detecor."""
         # decrease filesize
         # This currently breaks mantid nexus read
         self._generic_scan(
-            wiring="wiring_event_fastsave.dat",
+            wiring=r"C:\Instrument\Settings\config\NDXLARMOR\configurations\tables\wiring_event_fastsave.dat",
             # change to log binning to reduce number of detector bins
             # by a factor of 10 to decrease write time
             tcbs=[{"low": 5.0, "high": 100000.0, "step": 0.1,
@@ -169,7 +185,7 @@ involves only having two spectra covering the entire main detecor."""
 
     @dae_setter("SANS", "sans")
     def setup_dae_histogram(self):
-        gen.change_sync('isis')
+        #gen.change_sync('isis')
         self._generic_scan(
             tcbs=[{"low": 5.0, "high": 100000.0, "step": 100.0,
                    "trange": 1, "log": 0},
@@ -179,11 +195,11 @@ involves only having two spectra covering the entire main detecor."""
 
     @dae_setter("TRANS", "transmission")
     def setup_dae_transmission(self):
-        gen.change_sync('isis')
+        #gen.change_sync('isis')
         self._generic_scan(
-            "detector_monitors_only.dat",
-            "spectra_monitors_only.dat",
-            "wiring_dae3_monitors_only.dat",
+            r"C:\Instrument\Settings\config\NDXLARMOR\configurations\tables\detector_monitors_only.dat",
+            r"C:\Instrument\Settings\config\NDXLARMOR\configurations\tables\spectra_monitors_only.dat",
+            r"C:\Instrument\Settings\config\NDXLARMOR\configurations\tables\wiring_dae3_monitors_only.dat",
             [{"low": 5.0, "high": 100000.0, "step": 100.0,
               "trange": 1, "log": 0},
              {"low": 0.0, "high": 0.0, "step": 0.0,
@@ -212,7 +228,7 @@ involves only having two spectra covering the entire main detecor."""
 
         """
         self._generic_scan(
-            wiring="wiring_tshift.dat",
+            wiring=r"C:\Instrument\Settings\config\NDXLARMOR\configurations\tables\wiring_tshift.dat",
             tcbs=[{"low": tlowdet, "high": thighdet, "step": 100.0,
                    "trange": 1, "log": 0},
                   {"low": 0.0, "high": 0.0, "step": 0.0,
@@ -249,7 +265,7 @@ involves only having two spectra covering the entire main detecor."""
     def setup_dae_monitorsonly(self):
         """Set the wiring tables to record only the monitors."""
         self._generic_scan(
-            spectra="spectra_phase1.dat",
+            spectra=r"C:\Instrument\Settings\config\NDXLARMOR\configurations\tables\spectra_phase1.dat",
             tcbs=[{"low": 5.0, "high": 100000.0, "step": 20.0,
                    "trange": 1, "log": 0},
                   {"low": 0.0, "high": 0.0, "step": 0.0,
@@ -259,9 +275,9 @@ involves only having two spectra covering the entire main detecor."""
     def setup_dae_resonantimaging(self):
         """Set the wiring table for resonant imaging"""
         self._generic_scan(
-            "detector_monitors_only.dat",
-            "spectra_monitors_only.dat",
-            "wiring_monitors_only.dat",
+            r"C:\Instrument\Settings\config\NDXLARMOR\configurations\tables\detector_monitors_only.dat",
+            r"C:\Instrument\Settings\config\NDXLARMOR\configurations\tables\spectra_monitors_only.dat",
+            r"C:\Instrument\Settings\config\NDXLARMOR\configurations\tables\wiring_monitors_only.dat",
             [{"low": 5.0, "high": 1500.0, "step": 0.256,
               "trange": 1, "log": 0},
              {"low": 1500.0, "high": 100000.0, "step": 100.0,
@@ -280,9 +296,9 @@ involves only having two spectra covering the entire main detecor."""
     def setup_dae_4periods(self):
         """Setup the instrument with four periods."""
         self._generic_scan(
-            "detector.dat",
-            "spectra_4To1.dat",
-            "wiring.dat",
+            r"C:\Instrument\Settings\config\NDXLARMOR\configurations\tables\detector.dat",
+            r"C:\Instrument\Settings\config\NDXLARMOR\configurations\tables\spectra_4To1.dat",
+            r"C:\Instrument\Settings\config\NDXLARMOR\configurations\tables\wiring.dat",
             [{"low": 5.0, "high": 100000.0, "step": 100.0,
               "trange": 1, "log": 0},
              {"low": 0.0, "high": 0.0, "step": 0.0, "trange": 2, "log": 0}])
@@ -290,7 +306,7 @@ involves only having two spectra covering the entire main detecor."""
     @dae_setter("SESANS", "sesans")
     def setup_dae_sesans(self):
         """Setup the instrument for SESANS measurements."""
-        # self.setup_dae_event()
+        #self.setup_dae_event()
         self.setup_dae_alanis()
 
 
@@ -320,7 +336,7 @@ involves only having two spectra covering the entire main detecor."""
             gtotal=gen.get_pv("IN:LARMOR:DAE:RUNDURATION")
             up_state_frames=up_state_frames/10
             down_state_frames=down_state_frames/10
-
+            
         while gtotal < kwargs[key]:
             gen.change(period=1)
             info("Flipper On")
@@ -356,10 +372,10 @@ involves only having two spectra covering the entire main detecor."""
     def setup_dae_alanis(self):
         """Setup the instrument for using the Alanis fibre detector"""
         self._generic_scan(
-            "Alanis_Detector.dat",
-            "Alanis_Spectra.dat",
-            "Alanis_Wiring_dae3.dat",
-            [{"low": 5.0, "high": 100000.0, "step": self._step,
+            r"C:\Instrument\Settings\config\NDXLARMOR\configurations\tables\Alanis_Detector.dat",
+            r"C:\Instrument\Settings\config\NDXLARMOR\configurations\tables\Alanis_Spectra.dat",
+            r"C:\Instrument\Settings\config\NDXLARMOR\configurations\tables\Alanis_Wiring_dae3.dat",
+            [{"low": 5.0, "high": 100000.0, "step": self.get_tof_step(),
               "trange": 1, "log": 0},
              {"low": 0.0, "high": 0.0, "step": 0.0,
               "trange": 2, "log": 0},
@@ -370,10 +386,10 @@ involves only having two spectra covering the entire main detecor."""
     def setup_dae_semsans(self):
         """Setup the instrument for polarised SEMSANS on the fibre detector"""
         self._generic_scan(
-            "Alanis_Detector.dat",
-            "Alanis_Spectra.dat",
-            "Alanis_Wiring_dae3.dat",
-            [{"low": 5.0, "high": 100000.0, "step": self._step,
+            r"C:\Instrument\Settings\config\NDXLARMOR\configurations\tables\Alanis_Detector.dat",
+            r"C:\Instrument\Settings\config\NDXLARMOR\configurations\tables\Alanis_Spectra.dat",
+            r"C:\Instrument\Settings\config\NDXLARMOR\configurations\tables\Alanis_Wiring_dae3.dat",
+            [{"low": 5.0, "high": 100000.0, "step": self.get_tof_step(),
               "trange": 1, "log": 0},
              {"low": 0.0, "high": 0.0, "step": 0.0,
               "trange": 2, "log": 0},
@@ -412,7 +428,11 @@ involves only having two spectra covering the entire main detecor."""
 
     def _detector_is_on(self):
         """Is the detector currently on?"""
-        return all(self.get_pv(f"CAEN:hv0:0:{x}:status").lower() == "on" for x in range(8, 12))
+        voltage_status = all([
+            self.get_pv(
+                "CAEN:hv0:0:{}:status".format(x)).lower() == "on"
+            for x in [8, 9, 10, 11]])
+        return voltage_status
 
     def _detector_turn_on(self, delay=True):
         for i in range(8, 12):

@@ -47,7 +47,11 @@ class Zoom(ScanningInstrument):
 
     def _detector_is_on(self):
         """Is the detector currently on?"""
-        return all(self.get_pv(f"CAEN:hv0:4:{x}:status").lower() == "on" for x in range(8))
+        voltage_status = all([
+            self.get_pv(
+                "CAEN:hv0:4:{}:status".format(x)).lower() == "on"
+            for x in range(8)])
+        return voltage_status
 
     def _detector_turn_on(self, delay=True):
         raise NotImplementedError("Detector toggling is not supported Zoom")
