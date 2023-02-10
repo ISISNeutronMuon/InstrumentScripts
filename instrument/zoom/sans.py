@@ -24,7 +24,7 @@ class Zoom(ScanningInstrument):
 
     @property
     def TIMINGS(self):
-        if self._dae_mode == "polsans":
+        if self._dae_mode == "polsans" or self._dae_mode == "poltrans":
             return self._TIMINGS + ["u", "d"]
         return self._TIMINGS        
 
@@ -83,7 +83,17 @@ class Zoom(ScanningInstrument):
     def _begin_polsans():
         """Initialise a POLSANS run"""
         gen.change(nperiods=2)
-        gen.begin(paused=1)
+        gen.begin(paused=1)     
+
+    @dae_setter("POLTRANS", "poltrans")
+    def setup_dae_poltrans(self):
+        """Setup the instrument for POLSANS transmission measurements."""
+        self.setup_dae_transmission()
+
+    @staticmethod
+    def _begin_poltrans():
+        """Initialise a POLSANS transmission run"""
+        Zoom._begin_polsans()           
 
     @staticmethod
     def _waitfor_polsans(up_state_frames=600, down_state_frames=600, **kwargs):
@@ -110,9 +120,8 @@ class Zoom(ScanningInstrument):
             info("Flipper On")
             flipper1(1)
             if key == "seconds":
-                gen.resume()
-                ttime=gen.get_pv("IN:ZOOM:DAE:RUNDURATION")
-                gen.waitfor(seconds=(gtotal+up_state_frames)-ttime)
+                gen.resume()                
+                gen.waitfor(seconds=up_state_frames)
                 gen.pause()
             else:
                 gfrm = gen.get_frames()
@@ -125,8 +134,7 @@ class Zoom(ScanningInstrument):
             flipper1(0)
             if key == "seconds":
                 gen.resume()
-                ttime=gen.get_pv("IN:ZOOM:DAE:RUNDURATION")
-                gen.waitfor(seconds=(gtotal+up_state_frames+down_state_frames)-ttime)
+                gen.waitfor(seconds=down_state_frames)
                 gen.pause()
                 gtotal=gen.get_pv("IN:ZOOM:DAE:RUNDURATION")
             else:
@@ -134,7 +142,117 @@ class Zoom(ScanningInstrument):
                 gen.resume()
                 gen.waitfor(frames=gfrm + down_state_frames)
                 gen.pause()
-                gtotal = get_total()                        
+                gtotal = get_total()  
+
+           
+
+    @dae_setter("PASANS", "pasans")
+    def setup_dae_pasans(self):
+        """Setup the instrument for Polarisation Analysis SANS measurements."""
+        self.setup_dae_event()
+
+    @staticmethod
+    def _begin_pasans():
+        """Initialise a polarisation analysisSANS run"""
+        gen.change(nperiods=4)
+        gen.begin(paused=1)   
+
+    @staticmethod
+    def _waitfor_pasans(no_flip_state_frames=600, flip_state_frames=600, **kwargs):
+        """Perform a polarisation analysis SANS run"""
+        if "uamps" in kwargs:
+            get_total = gen.get_uamps
+            key = "uamps"
+        elif "seconds" in kwargs:
+            get_total = gen.get_uamps
+            key = "seconds"
+        else:
+            get_total = gen.get_frames
+            key = "frames"
+        gfrm = gen.get_frames()
+        gtotal = get_total()
+
+        if key == "seconds":
+            gtotal=gen.get_pv("IN:ZOOM:DAE:RUNDURATION")
+            no_flip_state_frames=no_flip_state_frames/10
+            flip_state_frames=flip_state_frames/10
+
+        while gtotal < kwargs[key]:
+            gen.change(period=1)
+            info("Flipper On")
+            flipper1(1)
+            info("Analyser On State")            
+            self.send_pv('3HE:STATE', 1)
+            if key == "seconds":
+                gen.resume()
+                gen.waitfor(seconds=no_flip_state_frames)
+                gen.pause()
+                gtotal=gen.get_pv("IN:ZOOM:DAE:RUNDURATION")
+            else:
+                gfrm = gen.get_frames()
+                gen.resume()
+                gen.waitfor(frames=gfrm + no_flip_state_frames)
+                gen.pause()
+
+            gen.change(period=2)
+            info("Flipper Off")
+            flipper1(0)
+            info("Analyser On State")            
+            self.send_pv('3HE:STATE', 1)
+            if key == "seconds":
+                gen.resume()
+                gen.waitfor(seconds=flip_state_frames)
+                gen.pause()
+                gtotal=gen.get_pv("IN:ZOOM:DAE:RUNDURATION")
+            else:
+                gfrm = gen.get_frames()
+                gen.resume()
+                gen.waitfor(frames=gfrm + flip_state_frames)
+                gen.pause()     
+
+            gen.change(period=3)
+            info("Flipper Off")
+            flipper1(0)
+            info("Analyser Off State")            
+            self.send_pv('3HE:STATE', 0)
+            if key == "seconds":
+                gen.resume()
+                gen.waitfor(seconds=no_flip_state_frames)
+                gen.pause()
+                gtotal=gen.get_pv("IN:ZOOM:DAE:RUNDURATION")
+            else:
+                gfrm = gen.get_frames()
+                gen.resume()
+                gen.waitfor(frames=gfrm + no_flip_state_frames)
+                gen.pause()                            
+
+            gen.change(period=4)
+            info("Flipper On")
+            flipper1(1)
+            info("Analyser On State")            
+            self.send_pv('3HE:STATE', 0)            
+            if key == "seconds":
+                gen.resume()
+                gen.waitfor(seconds=flip_state_frames)
+                gen.pause()
+                gtotal=gen.get_pv("IN:ZOOM:DAE:RUNDURATION")
+            else:
+                gfrm = gen.get_frames()
+                gen.resume()
+                gen.waitfor(frames=gfrm + flip_state_frames)
+                gen.pause()
+                gtotal = get_total()         
+
+    @dae_setter("PATRANS", "patrans")
+    def setup_dae_patrans(self):
+        """Setup the instrument for polarisation analysis SANS transmission measurements."""
+        self.setup_dae_transmission()
+
+    @staticmethod
+    def _begin_patrans():
+        """Initialise a polarisation analysis SANS transmission run"""
+        Zoom._begin_pasans()                        
+         
 
     def set_aperture(self, size):
         warning("Setting the aperture is not implemented.")
@@ -158,6 +276,17 @@ class Zoom(ScanningInstrument):
         # move the transmission monitor in
         self.send_pv("VACUUM:MONITOR:2:EXTRACT","EXTRACT")
         self.send_pv("VACUUM:MONITOR:4:INSERT", "INSERT")
+
+# These settings has been used for second frame for 10-25 AA
+#    def _configure_sans_custom(self): 
+#        # move the transmission monitor out
+#        self.send_pv("VACUUM:MONITOR:2:INSERT","INSERT")
+#        self.send_pv("VACUUM:MONITOR:4:EXTRACT", "EXTRACT")
+
+#    def _configure_trans_custom(self):
+#        # move the transmission monitor in
+#        self.send_pv("VACUUM:MONITOR:2:INSERT","INSERT")
+#        self.send_pv("VACUUM:MONITOR:4:INSERT", "INSERT")        
 
 
     def col_8m():
