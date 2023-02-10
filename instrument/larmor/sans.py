@@ -462,11 +462,19 @@ involves only having two spectra covering the entire main detecor."""
     @dae_setter("PASANS", "pasans")
     def setup_dae_pasans(self):
         """Setup the instrument for Polarisation Analysis SANS measurements."""
+        #As there is no monitor after the analyser on Larmor a transmisson is 
+        #done with an attenuated direct beam measured on main detector with 
+        #beamstop removed. This operation needs reversing for scattering mode.
+        beam_stop_in_out(stop_in=True)
+        gen.waitfor_move()
+        gen.cset(A1HGap=25)                
+        gen.cset(A1VGap=25)
+        gen.waitfor_move()
         self.setup_dae_event()
 
     @staticmethod
     def _begin_pasans():
-        """Initialise a polarisation analysisSANS run"""
+        """Initialise a polarisation analysis SANS run"""
         gen.change(nperiods=4)
         gen.begin(paused=1)   
 
@@ -559,7 +567,15 @@ involves only having two spectra covering the entire main detecor."""
     @dae_setter("PATRANS", "patrans")
     def setup_dae_patrans(self):
         """Setup the instrument for polarisation analysis SANS transmission measurements."""
-        self.setup_dae_transmission()
+        #As there is no monitor after the analyser on Larmor the attenuated direct beam
+        #is measured on main detector and beamstop removed.
+        gen.cset(A1HGap=4)                
+        gen.cset(A1VGap=4)
+        gen.waitfor_move()
+        beam_stop_in_out(stop_in=False)
+        gen.waitfor_move()
+        self.setup_dae_event()
+
 
     @staticmethod
     def _begin_patrans():
