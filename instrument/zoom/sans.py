@@ -303,13 +303,27 @@ class Zoom(ScanningInstrument):
         print("4m configuration:choppers, polariser")
         gen.cset("PGC_Unit",-125.5)
         gen.cset("disk2",99000)
-        
+        gen.cset("J1_VGAP",30) 
+        gen.cset("J1_HGAP",30)
+        #reflection for J2 larger than 15x15 from polariser
+        gen.cset("J2_VGAP",15) 
+        gen.cset("J2_HGAP",15)
+        gen.cset("J4_VGAP",10) 
+        gen.cset("J4_HGAP",10)      
+        gen.waitfor_move()
         
     def polariser_8m():    
         print("8m configuration:choppers, polariser")
         gen.cset("PGC_Unit",-125.5)
-        gen.cset("disk2",97000) 
-
+        gen.cset("disk2",97000)
+        gen.cset("J1_VGAP",30) 
+        gen.cset("J1_HGAP",30)
+        #reflection for J2 larger than 15x15 from polariser
+        gen.cset("J2_VGAP",15) 
+        gen.cset("J2_HGAP",15)         
+        gen.cset("J4_VGAP",12) 
+        gen.cset("J4_HGAP",12) 
+        gen.waitfor_move()
 
 obj = Zoom()
 for method in obj.method_iterator():
