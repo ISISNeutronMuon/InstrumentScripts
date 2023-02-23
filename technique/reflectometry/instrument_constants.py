@@ -1,7 +1,11 @@
 """
 Instrument specific constants
 """
-from genie_python import genie as g
+try:
+    # pylint: disable=import-error
+    from genie_python import genie as g
+except ImportError:
+    from mocks import g
 
 
 class InstrumentConstant(object):
@@ -44,7 +48,7 @@ def get_instrument_constants():
     try:
         s1_z = get_reflectometry_value("S1_Z")
         s2_z = get_reflectometry_value("S2_Z")
-        sm_z = get_reflectometry_value("SM_Z")
+        sm_z = get_reflectometry_value("SM2_Z") # set to SM2_Z for now, needs updating to include both.
         sample_z = get_reflectometry_value("SAMPLE_Z")
         s3_z = get_reflectometry_value("S3_Z")
         s4_z = get_reflectometry_value("S4_Z")

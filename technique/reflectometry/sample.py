@@ -9,7 +9,7 @@ class SampleGenerator:
     """
 
     def __init__(self, translation, height2_offset, phi_offset, psi_offset, height_offset, resolution, footprint,
-                 title="", subtitle=""):
+                 sample_length, valve, hgaps, title="", subtitle=""):
         """
         Initialiser.
         Args:
@@ -33,9 +33,13 @@ class SampleGenerator:
         self.phi_offset = float(phi_offset)
         self.translation = float(translation)
         self.height2_offset = float(height2_offset)
+        self.sample_length = float(sample_length)
+        self.valve = int(valve)
+        self.hgaps = dict(hgaps)
 
     def new_sample(self, title=None, subtitle=None, translation=None, height2_offset=None, phi_offset=None,
-                   psi_offset=None, height_offset=None, resolution=None, footprint=None):
+                   psi_offset=None, height_offset=None, resolution=None, footprint=None,
+                   sample_length=None, valve=None, hgaps=None):
         """
         Create a new sample with given values; if no value defined use defaults
         Args:
@@ -69,9 +73,16 @@ class SampleGenerator:
             resolution = self.resolution
         if footprint is None:
             footprint = self.footprint
+        if sample_length is None:
+            sample_length = self.sample_length
+        if valve is None:
+            valve = self.valve
+        if hgaps is None:
+            hgaps = self.hgaps
+            
 
         return Sample(title, subtitle, translation, height2_offset, phi_offset, psi_offset,
-                      height_offset, resolution, footprint)
+                      height_offset, resolution, footprint, sample_length, valve, hgaps)
 
     def __repr__(self):
         return "Sample generator: {}".format(self.__dict__)
@@ -82,8 +93,8 @@ class Sample:
     A sample definition
 
     """
-    def __init__(self, title, subtitle, translation, height2_offset, phi_offset, psi_offset, height,
-                 resolution, footprint):
+    def __init__(self, title, subtitle, translation, height2_offset, phi_offset, psi_offset, height_offset,
+                 resolution, footprint, sample_length, valve, hgaps):
         """
         Initialiser.
         Args:
@@ -102,11 +113,14 @@ class Sample:
         self.title = title
         self.footprint = footprint
         self.resolution = resolution
-        self.height = height
+        self.height_offset = height_offset
         self.psi_offset = psi_offset
         self.phi_offset = phi_offset
         self.translation = translation
         self.height2_offset = height2_offset
-
+        self.sample_length = float(sample_length)
+        self.valve = int(valve)
+        self.hgaps = dict(hgaps)
+        
     def __repr__(self):
         return "Sample: {}".format(self.__dict__)
