@@ -73,15 +73,20 @@ class Defaults(object):
         return os.path.join(base_dir, "{}_{}_{}_{}_{}_{}_{}.dat".format(
             action_title, now.year, now.month, now.day, now.hour, now.minute, now.second))
 
-    def create_fig(self):
+    def create_fig(self, force=False):
         """
         Create a figure for the next scan.  The default method is to
         create a new figure for each scan, but this can be overridden
         to re-use the same figure, if the instrument scientist
         chooses.
+
+        If true, the force parameter creates a new graph, even when a
+        single figure has been requested.
+
         """
         if self.SINGLE_FIGURE:
-            if not self._fig or not self._axis:
+            if not (force or self._fig and self._axis):
+                plt.close("all")
                 self._fig, self._axis = plt.subplots()
         else:
             self._fig, self._axis = plt.subplots()
@@ -170,6 +175,13 @@ class Defaults(object):
                 of the range. Overridden by pixel_range
             max_pixel - For summing the counts of multiple pixels. max_pixel is the spectrum number for the upper bound
                 of the range. Overridden by pixel_range
+        save
+          By default, the scan routines save a text file of the scan
+          results, but no run number is assigned and the data is not
+          stored in the archive.  The run log file remains the only
+          record of the scan.  If the save parameter is set to true,
+          then a full run number is assigned and all of the data and
+          metadata is stored in the archive.
 
         Returns
         -------
@@ -339,7 +351,33 @@ class Defaults(object):
         finally:
             motion(init)
 
-    def last_scan(self, path=None, axis="replay", fit=None):
+    def populate(self):
+        """Create Motion objects in the GLOBAL namespace for each
+        block registered with IBEX."""
+        for i in g.get_blocks():
+            if not isinstance(i, (str, text_type)):
+                continue
+            temp = BlockMotion(i, lambda cap=i: self.get_units(cap))
+            __builtins__[i.upper()] = temp
+            __builtins__[i] = temp
+            __builtins__[i.lower()] = temp
+
+    _UNITS = {"Theta": u"deg", "Two_Theta": u"deg"}
+
+    @staticmethod
+    def get_units(motion):
+        """Get the physical measurement units associated with a block name."""
+        pv_name = g.adv.get_pv_from_block(motion)
+        if "." in pv_name:
+            # Remove any headers
+            pv_name = pv_name.split(".")[0]
+        unit_name = pv_name + ".EGU"
+        # pylint: disable=protected-access
+        if getattr(g, "__api").pv_exists(unit_name):
+            return g.get_pv(unit_name)
+        return ""
+
+    def last_scan(self, path=None, axis="replay"):
         """Load the last run scan and replay that scan
 
         PARAMETERS

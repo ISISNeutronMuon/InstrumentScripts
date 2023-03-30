@@ -36,7 +36,7 @@ def dae_setter(suffix, measurement_type):
     wasting time reloading an existing configuration
 
     Please note that this decorator assumes that the title of the
-    method begins with "setup_dae", followed by the new state
+    method begins with "setup_dae", followed by the new of the state
     of the wiring table.
     """
     def decorator(inner):
@@ -44,16 +44,14 @@ def dae_setter(suffix, measurement_type):
         @wraps(inner)
         def wrapper(self, *args, **kwargs):
             """Memoize the dae mode"""
-            # This seems to get unset in the tests
-            self.measurement_type = measurement_type
             request = inner.__name__[10:]
-            # if request == self._dae_mode:  # pylint: disable=protected-access
-            #     return
+            if request == self._dae_mode:  # pylint: disable=protected-access
+                return
             inner(self, *args, **kwargs)
             info(f"Setup {type(self).__name__} for {request.replace('_', ' ')}")
             self._dae_mode = request  # pylint: disable=protected-access
             self.title_footer = "_" + suffix
-
+            self.measurement_type = measurement_type
         return wrapper
     return decorator
 

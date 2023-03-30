@@ -2,7 +2,7 @@
 """The baseline for loading a scanning instrument
 
 Each instrument will have its own module that declares a class
-inheriting from ScanningInstrument.  The abstract base class is used
+inheriting from ScanningInstrument. The abstract base class is used
 to ensure that the derived classes define the necessary methods to run
 any generic scripts.
 
@@ -22,7 +22,7 @@ def _get_times(times):
     for k in ["uamps", "frames", "hours", "minutes", "seconds"]:
         if k in times:
             return k, times[k]
-    raise ValueError("No valid time found")
+    raise RuntimeError("No valid time found")
 
 
 @add_metaclass(ABCMeta)
@@ -31,7 +31,7 @@ class ScanningInstrument(object):
     """
     The base class for scanning measurement instruments.
 
-    This class can be extended for specific instruments with
+    This class has be extended for specific instruments with
     instrument specific implementations of abstract methods
     and overriding of any methods that need instrument specific
     implementations.
@@ -40,14 +40,14 @@ class ScanningInstrument(object):
     begin/waitfor/end function beyond calling gen.begin you can
     define custom function within the instruments script files.
 
-    The function names should end with name of the dae_mode
-    that the custom implementation is used for. For example if
+    The functions should names should end with name of the dae_mode
+    that these custom implementation is used for. For example if
     you want a custom begin/waitfor/end for setup_dae_transmission
     then the functions begin_transmission, waitfor_transmission,
-    end_transmission will need to be created. If you wish to create
-    a new dae_mode then follow the pattern of other dae_mode,
-    you must tag the dae mode with the decorator @dae_setter (see dae_setter)
-    for more details.
+    end_transmission. If you wish to create a new dae_mode then
+    follow the patteren of other dae_mode, the you must tag the
+    dae mode with the decorator @dae_setter (see dae_setter) for
+    more deatails.
 
     Attributes
     ----------
@@ -56,26 +56,42 @@ class ScanningInstrument(object):
         dae_setter a function called when setting the dae_mode
     """
 
-    # Property to indicate if a custom dae mode is being used.
+    # Property to indicate if a custom dae mode is being uses.
     # Used to indicate if a custom begin/wait/end functions should be used
     _dae_mode = None
 
     _detector_lock = False
     title_footer = ""
     _TIMINGS = ["uamps", "frames", "seconds", "minutes", "hours"]
+    # Gets the instruments prefix to be used with all pv commands
+    _PV_BASE = gen.my_pv_prefix
     # Methods to ignore in method_iterator
     _block_accessors = ["changer_pos_dls", "changer_pos", "method_iterator"]
 
-    _tables_path = ""
+    _tables_path = r""
+
+    _poslist = ['AB', 'BB', 'CB', 'DB', 'EB', 'FB', 'GB', 'HB', 'IB', 'JB',
+                'KB', 'LB', 'MB', 'NB', 'OB', 'PB', 'QB', 'RB', 'SB', 'TB',
+                'AT', 'BT', 'CT', 'DT', 'ET', 'FT', 'GT', 'HT', 'IT', 'JT',
+                'KT', 'LT', 'MT', 'NT', 'OT', 'PT', 'QT', 'RT', 'ST', 'TT',
+                '1CB', '2CB', '3CB', '4CB', '5CB', '6CB', '7CB',
+                '8CB', '9CB', '10CB', '11CB', '12CB', '13CB', '14CB',
+                '1CT', '2CT', '3CT', '4CT', '5CT', '6CT', '7CT',
+                '8CT', '9CT', '10CT', '11CT', '12CT', '13CT', '14CT',
+                '1GT', '2GT', '3GT', '4GT', '5GT', '6GT', '7GT',
+                '8GT', '9GT', '10GT', '11GT', '12GT', '13GT', '14GT',
+                '1WB', '2WB', '3WB', '4WB', '5WB', '6WB', '7WB',
+                '8WB', '9WB', '10WB', '11WB', '12WB', '13WB', '14WB',
+                '1WT', '2WT', '3WT', '4WT', '5WT', '6WT', '7WT',
+                '8WT', '9WT', '10WT', '11WT', '12WT', '13WT', '14WT',
+                '1GT', '2GT', '3GT', '4GT', '5GT', '6GT', '7GT', '8GT', '9GT',
+                '10GT', '11GT', '12GT', '2GB', '3GB', '4GB', '5GB', '6GB', '7GB',
+                '8GB', '9GB', '10GB', '11GB']
 
     _poslist_dls = []
 
     def __init__(self):
-        sample_positions = self.get_pv("LKUP:SAMPLE:POSITIONS")
-        if sample_positions is not None:
-            self._poslist = sample_positions.split()
-        else:
-            warning("Sample positions from PV not available - using default poslist, which may be incorrect.")
+        self._poslist = self.get_pv("LKUP:SAMPLE:POSITIONS").split()
         self.setup_sans = self.setup_dae_event
         self.setup_trans = self.setup_dae_transmission
 
@@ -83,8 +99,8 @@ class ScanningInstrument(object):
         """Iterate through the class's public functions"""
         for method in dir(self):
             if method[0] != "_" and method not in locals() and \
-               method not in self._block_accessors and \
-               callable(getattr(self, method)):
+                    method not in self._block_accessors and \
+                    callable(getattr(self, method)):
                 yield method
 
     def set_default_dae(self, mode=None, trans=False):
@@ -114,9 +130,9 @@ class ScanningInstrument(object):
                 print(f"No dae called 'setup_dae_{mode}', "
                       f"you can use setup_dae_custom to create custom daes")
 
-    # I don't like that users can parse any function to create DAE that's sounds bad
-    # This would give up some more control over the function that they set but would
-    # take away there freedom.
+    #        I dont like that users can parse any function to create DAE thats sounds bad
+    #        This would give up some more control over the function that they set but would take away
+    #        there freedom. I i think it worth it but I am not sure
     def create_dae_custom(self, detector, spectra, wiring, tcb, trans):
         """
         A function for setting the default dae with custom
@@ -126,21 +142,22 @@ class ScanningInstrument(object):
 
         This method is intended for the creation of one off
         dae's if you wish to create a new dae configuration
-        they should be defined in the instruments script file.
+        they should be defined in the there instruments
+        script file.
 
         To create a new dae setup open the instrument file for
         instance Script/instrument/larmor/sans.py. Create a new
         method with the following the naming convention and be
         sure to tag it with the @set_metadata decorator:
 
-        >>> @dae_setter("SANS", "sans")
+        >>> @set_metadata("SANS", "sans")
         >>> def setup_dae_newmode(self):
 
         You can then define a new dae set up for instance:
         >>> self._generic_scan(detector="newDetector.dat",
         >>>                    spectra="newSpectra.dat",
         >>>                    wiring="newWiring.dat",
-        >>>                    tcbs=None)
+        >>>                    tcbs=[])
 
         You can then use this like any other dae setup:
 
@@ -158,8 +175,7 @@ class ScanningInstrument(object):
           Path to wiring table
 
         tcb: [dict]
-          Time channel settings stored in a array of dictionaries
-          >>> [{"low": 3500.0, "high": 43500.0, "step": 0.025, "log": True}]
+          ??
 
         trans : bool
           If true, set the default transmission instead of the default
@@ -182,7 +198,7 @@ class ScanningInstrument(object):
     def sanitised_timings(self, kwargs):
         """
         Include only the keyword arguments for run timings.
-        The list of accepted keywords can be found in the
+        The list of accepted keywords can be found the
         TIMINGS property
 
         Parameters
@@ -208,9 +224,9 @@ class ScanningInstrument(object):
         letting subclasses provide default parameters
         simplifies creating new dae states.
         """
-        detector_path = os.path.join(self._tables_path, detector)
-        spectra_path = os.path.join(self._tables_path, spectra)
-        wiring_path = os.path.join(self._tables_path, wiring)
+        detector_path = self._tables_path + detector
+        spectra_path = self._tables_path + spectra
+        wiring_path = self._tables_path + wiring
 
         gen.change(nperiods=1)
         gen.change_start()
@@ -226,23 +242,8 @@ class ScanningInstrument(object):
             gen.change_tables(wiring=wiring_path)
         gen.change_finish()
 
-    _poslist = ['AB', 'BB', 'CB', 'DB', 'EB', 'FB', 'GB', 'HB', 'IB', 'JB',
-                'KB', 'LB', 'MB', 'NB', 'OB', 'PB', 'QB', 'RB', 'SB', 'TB',
-                'AT', 'BT', 'CT', 'DT', 'ET', 'FT', 'GT', 'HT', 'IT', 'JT',
-                'KT', 'LT', 'MT', 'NT', 'OT', 'PT', 'QT', 'RT', 'ST', 'TT',
-                '1CB', '2CB', '3CB', '4CB', '5CB', '6CB', '7CB',
-                '8CB', '9CB', '10CB', '11CB', '12CB', '13CB', '14CB',
-                '1CT', '2CT', '3CT', '4CT', '5CT', '6CT', '7CT',
-                '8CT', '9CT', '10CT', '11CT', '12CT', '13CT', '14CT',
-                '1WB', '2WB', '3WB', '4WB', '5WB', '6WB', '7WB',
-                '8WB', '9WB', '10WB', '11WB', '12WB', '13WB', '14WB',
-                '1WT', '2WT', '3WT', '4WT', '5WT', '6WT', '7WT',
-                '8WT', '9WT', '10WT', '11WT', '12WT', '13WT', '14WT',
-                '1GT', '2GT', '3GT', '4GT', '5GT', '6GT', '7GT', '8GT', '9GT',
-                '10GT', '11GT', '12GT', '1R', '2R', '3R', '4R', '5R', '6R', '7R']
-
     def _attempt_resume(self, title, pos, thick, dae, **kwargs):
-        if gen.get_title() != f"{title}{self.title_footer}":
+        if gen.get_title() != title + self.title_footer:
             raise RuntimeError(
                 f'Attempted to continue measurement "{title}", but was already in '
                 f'the middle of measurement "{gen.get_title()}".')
@@ -292,7 +293,7 @@ class ScanningInstrument(object):
 
     @property
     def measurement_type(self):
-        """Get the measurement type from the journal.
+        """Get the measurement type form the journal.
 
         Changing this property should perform no physical changes to the
         beamline. The only change should be in the MEASUREMENT:TYPE
@@ -311,7 +312,7 @@ class ScanningInstrument(object):
           The new measurement type
 
         This function should perform no physical changes to the
-        beamline.  The only change should be in the MEASUREMENT:TYPE
+        beamline. The only change should be in the MEASUREMENT:TYPE
         value stored in the journal for the next run, which should be
         set to the new value.
         """
@@ -338,7 +339,7 @@ class ScanningInstrument(object):
           The new sample label
 
         This function should perform no physical changes to the
-        beamline.  The only change should be in the MEASUREMENT:LABEL
+        beamline. The only change should be in the MEASUREMENT:LABEL
         value stored in the journal for the next run, which should be
         set to the new value.
         """
@@ -365,7 +366,7 @@ class ScanningInstrument(object):
           The new id
 
         This function should perform no physical changes to the
-        beamline.  The only change should be in the MEASUREMENT:ID
+        beamline. The only change should be in the MEASUREMENT:ID
         value stored in the journal for the next run, which should be
         set to the new value.
         """
@@ -406,7 +407,7 @@ class ScanningInstrument(object):
         Parameters
         ----------
         state : bool or None
-          If None, return the current lock state.  Otherwise, set the
+          If None, return the current lock state. Otherwise, set the
           new lock state
 
         Returns
@@ -427,8 +428,8 @@ class ScanningInstrument(object):
         Parameters
         ----------
         powered : bool or None
-          If None, then return the detector's current state.  If True,
-          turn the detector on.  If False, turn the detector off.
+          If None, then return the detector's current state. If True,
+          turn the detector on. If False, turn the detector off.
         delay : bool
           If changing the detector state, whether to wait for the
           detector to finish warming up or powering down before
@@ -458,13 +459,15 @@ class ScanningInstrument(object):
           The sample changer position
 
         """
-        if pos.upper() not in [pos_name.upper() for pos_name in self._poslist]:
+        if pos.upper() not in self._poslist:
             warning(f"Error in script, position {pos} does not exist")
             return False
         return True
 
+
     def check_move_pos_dls(self, pos):
-        """Check whether the position is valid for the DLS sample changer and return True or False
+        """CCheck whether the position is valid for the DSL sample
+         changer and return True or False
 
         Parameters
         ----------
@@ -472,17 +475,7 @@ class ScanningInstrument(object):
           The sample changer position
 
         """
-        if self._poslist_dls is None:
-            NotImplementedError("DLS sample changer is unsupported on this instrument")
-            return False
-
-        elif self._poslist_dls is []:
-            self._set_poslist_dls()
-
-        if pos.upper() not in [pos_name.upper() for pos_name in self._poslist_dls]:
-            warning(f"Error in script, position {pos} does not exist")
-            return False
-        return True
+        NotImplementedError("DSL sample change is unsupported on this instrument")
 
     @property
     def changer_pos(self):
@@ -490,29 +483,7 @@ class ScanningInstrument(object):
         return gen.cget("SamplePos")["value"]
 
     @changer_pos.setter
-    def changer_pos(self, pos):
-        """Set the current sample changer position
-
-        Parameters
-        ----------
-        pos : str
-          The new dls sample changer position
-        """
-        for possible_position in self._poslist:
-            if pos.upper() == possible_position.upper():
-                gen.cset(SamplePos=pos)
-                return
-        else:
-            warning(f"Unable to set changer position to {pos}; invalid position name?")
-
-    @property
-    def changer_pos_dls(self):
-        """Get the current dls sample changer position
-        if dls sample changer available"""
-        return gen.cget("sample_position")["value"]
-
-    @changer_pos_dls.setter
-    def changer_pos_dls(self, pos):
+    def changer_pos(self, pos):  # pylint: disable=no-self-use
         """Set the current dls sample changer position
 
         Parameters
@@ -520,60 +491,76 @@ class ScanningInstrument(object):
         pos : str
           The new dls sample changer position
         """
-        for possible_position in self._poslist_dls:
-            if pos.upper() == possible_position.upper():
-                gen.cset(sample_position=pos)
-                return
-        else:
-            warning(f"Unable to set DLS changer position to {pos}; invalid position name?")
+        return gen.cset(SamplePos=pos)
 
-    def _setup_measurement_software(self, trans):
+    @property
+    def changer_pos_dls(self):
+        """Get the current sample changer position"""
+        return gen.cget("sample_position")["value"]
+
+    @changer_pos_dls.setter
+    def changer_pos_dls(self, pos):  # pylint: disable=no-self-use
+        """Set the current dls sample changer position
+
+        Parameters
+        ----------
+        pos : str
+          The new dls sample changer position
+        """
+        return gen.cset(sample_position=pos)
+
+    def _setup_measurement_software(self, trans, blank):
         """It will set the measurement type then sets the up the
-        current dae for trans/sans measurement. The measurement
-        type (formally set here then reset in the decorator) 
-        should be set in the decorator dae_setter of the called method.
+        current dae for trans/sans measurement
 
         Parameters
         ----------
         trans : bool
           Is this a transmission measurement
+        blank : bool
+          Is this a measurement on a sample blank
         """
         if trans:
+            if blank:
+                self.measurement_type = "blank_transmission"
+            else:
+                self.measurement_type = "transmission"
             self.setup_trans()
 
         else:
+            if blank:
+                self.measurement_type = "blank"
             self.setup_sans()
 
     def measure(self, title="", position=None, thickness=1.0, trans=False,
-                dae=None, aperture="", time=None,
+                dae=None, blank=False, aperture="", time=None,
                 period=None, dls_sample_changer=False, **kwargs):
         """Take a sample measurement. If no timing parameter is provided
-        then no measurement occurs but experiment setup does happen.
+        then no measuremnt occurs but expirment setup does happend
 
         Parameters
         ----------
         title : str
-          The title for the measurement.  This is the only required parameter.
+          The title for the measurement. This is the only required parameter.
         position : str or func
-          The sample position.  This can be a string with the name of
+          The sample position. This can be a string with the name of
           a sample position, or it can be a function which moves the
-          detector into the desired position.  If left undefined, the
+          detector into the desired position. If left undefined, the
           instrument will take the measurement in its current
           position.
           Example of a function that could be passed in:
           >>> def custom_pos_function():
           >>>   gen.cset(SamplePos="new position")
         thickness : float
-          The thickness of the sample in millimeters.  The default is 1mm.
+          The thickness of the sample in millimeters. The default is 1mm.
         trans : bool
           Whether to perform a transmission run instead of a sans run.
           True for trans run leave blank or False for sans
         dae : str
-          This option allows setting the default dae mode.  It takes a
+          This option allows setting the default dae mode. It takes a
           string that contains the name of the DAE mode to be used as
-          the new default. There will be used in subsequence runs for sans
-          and trans mode accordingly. For example,
-          >>> measure("title=Test", frames=10, dae="event")
+          the new default. For example,
+          >>> measure("Test", frames=10, dae="event")
           Is equivalent to
           >>> set_default_dae(setup_dae_event)
           >>> measure("Test", frames=10)
@@ -581,13 +568,15 @@ class ScanningInstrument(object):
           >>> enumerate_dae()
           To create custom dae's use create_dae_custom
         aperture : str
-          The aperture size.  e.g. "Small" or "Medium" A blank string
+          The aperture size. e.g. "Small" or "Medium" A blank string
           (the default value) results in the aperture not being
           changed from default value for trans/sans.
+        blank : bool
+          If this sample should be considered a blank/can/solvent measurement
         time : int
-            The number of seconds for the experiment to run.
-            To run for different units of time you can included parameters 
-            from the TIMINGS property this includes uamps, frames, and hours
+            The number of seconds for the expiment to run.
+            To run for different units of time you can inclued parameters from
+            the TIMEING propertry this includes uamps, frames, and hours
             However, these will be ignored if time argument is provided.
         period : int
             The period to collect the dae data
@@ -597,9 +586,9 @@ class ScanningInstrument(object):
           This is a general term for all other arrangements but in
           this case there are some specific thing you can pass:
 
-          If given a time duration from the TIMINGS property you can have
-          more control over the time frame of the run Options . However, 
-          these will be ignored if time is provided.
+          If given a time duration from the TIMEING propertry you can have
+          more control over the time frame of the run Otions . However, these will
+          be ignored if time is provided.
 
           If given a block name, it will move that block to the given
           position.
@@ -607,49 +596,42 @@ class ScanningInstrument(object):
         Examples
         ----------
 
-        >>> measure(title="H2O", frames=900)
+        >>> measure("H2O", frames=900)
 
-        Perform a SANS measurement in the current position on a 1 mm
+        Perform a SANS measurment in the current position on a 1 mm
         thick water sample until the proton beam has released 900
         proton pulses (approx 15 minutes).
 
-        >>> measure(title="D2O", pos="LT", thickness=2.0, trans=True, CoarseZ=25, uamps=10)
+        >>> measure("D2O", pos="LT", thickness=2.0, trans=True, CoarseZ=25, uamps=10)
 
         Move to sample changer position LT, then adjust the CoarseZ
         motor to 25 mm. Finally, take a transmission measurement on a
         2 mm thick deuterium sample for 10 µA hours of proton
         current. (approx 15 minutes).
         """
-        if gen.get_runstate() != "SETUP":  # pragma: no cover
-            self._attempt_resume(title, position, thickness, dae, **kwargs)
-            return
-
         self._measure(title=title, position=position, thickness=thickness, trans=trans,
-                      dae=dae, aperture=aperture, time=time,
+                      dae=dae, blank=blank, aperture=aperture, time=time,
                       period=period, _custom=True, dls_sample_changer=dls_sample_changer, **kwargs)
 
     def _setup(self, title="", position=None, thickness=1.0, trans=False,
-               dae=None, aperture="", period=None,
+               dae=None, blank=False, aperture="", period=None,
                _custom=True, dls_sample_changer=False, **kwargs):
         # Check detector for sans
         if not self.detector_lock() and not self.detector_on() and not trans:
             raise RuntimeError(
-                "The detector is off.  Either turn on the detector or "
+                "The detector is off. Either turn on the detector or "
                 "use the detector_lock(True) to indicate that the detector "
                 "is off intentionally")
         # If not called from do_sans/trans do so extra set up
         if _custom:
             self.set_default_dae(dae, trans)
-            self._setup_measurement_software(trans)
-
+            self._setup_measurement_software(trans, blank)
         self.measurement_label = title
         gen.change(title=title + self.title_footer)
-
         self.set_aperture(aperture)
-
         if position:
             self._set_sample_position(position, dls_sample_changer)
-
+            gen.waitfor_move()
         # Check for extra blocks to be at set positions
         for arg, val in sorted(kwargs.items()):
             if arg in self.TIMINGS:
@@ -679,7 +661,6 @@ class ScanningInstrument(object):
             position()
         else:
             raise TypeError(f"Cannot understand position {position}")
-        gen.waitfor_move()
 
     def _do_measure(self, title="", time=None, **kwargs):
         if time:
@@ -694,18 +675,18 @@ class ScanningInstrument(object):
         self._end()
 
     def _measure(self, title="", position=None, thickness=1.0, trans=False,
-                 dae=None, aperture="", period=None,
+                 dae=None, blank=False, aperture="", period=None,
                  time=None, _custom=True, **kwargs):
 
         self._setup(title=title, position=position, thickness=thickness, trans=trans,
-                    dae=dae, aperture=aperture, period=period,
+                    dae=dae, blank=blank, aperture=aperture, period=period,
                     _custom=_custom, **kwargs)
 
         # If a time frame given start the experiment
         if time or self.sanitised_timings(kwargs):
             self._do_measure(title=title, time=time, **kwargs)
 
-    def do_sans(self, title="", pos=None, thickness=1.0, dae=None,
+    def do_sans(self, title="", position=None, thickness=1.0, dae=None, blank=False,
                 aperture="", period=None, time=None, dls_sample_changer=False, **kwargs):
         """A wrapper around ``measure`` which ensures that the instrument is
         in sans mode before running the measurement if a title is given.
@@ -721,22 +702,22 @@ class ScanningInstrument(object):
         of parameters accepted. """
 
         if gen.get_runstate() != "SETUP":  # pragma: no cover
-            self._attempt_resume(title, pos, thickness, dae, **kwargs)
+            self._attempt_resume(title, position, thickness, dae, **kwargs)
             return
 
         info("Set up instrument for sans measurement")
         self._configure_sans_custom()
         gen.waitfor_move()
         self.set_default_dae(mode=dae, trans=False)
-        self._setup_measurement_software(trans=False)
+        self._setup_measurement_software(trans=False, blank=blank)
 
         if "trans" in kwargs:
             del kwargs["trans"]
-        self._measure(title=title, trans=False, position=pos, thickness=thickness,
-                      dae=dae, aperture=aperture, period=period,
+        self._measure(title=title, trans=False, position=position, thickness=thickness,
+                      dae=dae, blank=blank, aperture=aperture, period=period,
                       time=time, _custom=False, dls_sample_changer=dls_sample_changer, **kwargs)
 
-    def do_trans(self, title="", pos=None, thickness=1.0, dae=None,
+    def do_trans(self, title="", position=None, thickness=1.0, dae=None, blank=False,
                  aperture="", period=None, time=None, dls_sample_changer=False, **kwargs):
         """A wrapper around ``measure`` which ensures that the instrument is
          in transition mode before running the measurement if a title is given. It ensures that the
@@ -753,32 +734,32 @@ class ScanningInstrument(object):
         of parameters accepted. """
 
         if gen.get_runstate() != "SETUP":  # pragma: no cover
-            self._attempt_resume(title, pos, thickness, dae, **kwargs)
+            self._attempt_resume(title, position, thickness, dae, **kwargs)
             return
 
         info("Set up instrument for trans measurement")
         self._configure_trans_custom()
         gen.waitfor_move()
         self.set_default_dae(mode=dae, trans=True)
-        self._setup_measurement_software(trans=True)
+        self._setup_measurement_software(trans=True, blank=blank)
 
         if "trans" in kwargs:
             del kwargs["trans"]
-        self._measure(title=title, trans=True, position=pos, thickness=thickness,
-                      dae=dae, aperture=aperture, period=period,
+        self._measure(title=title, trans=True, position=position, thickness=thickness,
+                      dae=dae, blank=blank, aperture=aperture, period=period,
                       time=time, _custom=False, dls_sample_changer=dls_sample_changer, **kwargs)
 
     def measure_file(self, file_path, forever=False):
         """Perform a series of measurements based on a spreadsheet
 
-        The file should contain comma separated values.  Excel can
-        easily produce files of this sort.  The first line of the file
+        The file should contain comma separated values. Excel can
+        easily produce files of this sort. The first line of the file
         is the header with each field giving the name of a parameter
-        to the `measure` function.  As always, the ``title`` parameter
-        is mandatory.  Each subsequent line of the file represents a
+        to the `measure` function. As always, the ``title`` parameter
+        is mandatory. Each subsequent line of the file represents a
         single measurement with the fields indicating that values to
-        pass to their corresponding keywords.  If a cell is blank, the
-        keyword's default parameter it used.  Boolean values are
+        pass to their corresponding keywords. If a cell is blank, the
+        keyword's default parameter it used. Boolean values are
         represented by `True` and `False` and are not case-sensitive.
 
         The script is run through the simulator to check for errors
@@ -790,7 +771,7 @@ class ScanningInstrument(object):
           The location of the script file
         forever : bool
           If set to True, the instrument will repeatedly run the
-          script manually stopped.  This can be useful for an
+          script manually stopped. This can be useful for an
           overnight run where you want to keep measuring until the
           users return.
 
@@ -816,7 +797,7 @@ class ScanningInstrument(object):
                     self.measure(**row)
 
         if forever:  # pragma: no cover
-            while True:
+            while True:  # ??
                 inner()
         else:
             inner()
@@ -857,7 +838,7 @@ class ScanningInstrument(object):
                 out.write(f'    {header}(title="{title}", ')
 
                 if "pos" in row:
-                    out.write(f'position="{row["pos"]}", ')
+                    out.write(f'pos="{row["pos"]}", ')
                     del row["pos"]
 
                 row = {key: row[key] for key in row if row[key].strip() != ""}
@@ -887,8 +868,7 @@ class ScanningInstrument(object):
         """List the supported DAE modes on this beamline.
         Warning: Some methods may not be implemented from the base class
         """
-        setup_dae = "setup_dae_"
-        return [x[len(setup_dae):] for x in dir(self) if x.startswith(setup_dae)]
+        return [x[10:] for x in dir(self) if x.startswith("setup_dae_")]
 
     def get_pv(self, name):
         """Get the given PV within the sub hierarchy of the instrument.
@@ -897,7 +877,7 @@ class ScanningInstrument(object):
         the value of the PV for "IN:LARMOR:DAE:WIRING_FILE"
 
         """
-        return gen.get_pv(name, is_local=True)
+        return gen.get_pv(self._PV_BASE + name)
 
     def send_pv(self, name, value):
         """Set the given PV within the sub hierarchy of the instrument.
@@ -906,7 +886,7 @@ class ScanningInstrument(object):
         change the value of the PV for "IN:LARMOR:DAE:WIRING_FILE" to
         the value in f.
         """
-        return gen.set_pv(name, value, is_local=True)
+        return gen.set_pv(self._PV_BASE + name, value)
 
     @property
     def tables_path(self):
@@ -918,7 +898,7 @@ class ScanningInstrument(object):
 
     @tables_path.setter
     def tables_path(self, new_path):
-        self._tables_path = new_path
+        self._tables_path = r"" + new_path
 
     @abstractmethod
     def setup_dae_event(self):  # pragma: no cover
@@ -987,10 +967,3 @@ class ScanningInstrument(object):
           The aperture size. e.g. "Small" or "Medium"
           A blank string (the default value) results in
           the aperture not being changed."""
-
-    def _set_poslist_dls(self):
-        try:
-            self._poslist_dls = self.get_pv("LKUP:DLS:POSITIONS").split()
-        except AttributeError:
-            warning("No positions found for DLS Sample Changer!")
-            self._poslist_dls = []
