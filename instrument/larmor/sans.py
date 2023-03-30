@@ -5,8 +5,7 @@ from technique.sans.genie import gen
 from technique.sans.util import dae_setter
 from general.scans.util import local_wrapper
 from .util import flipper1
-import datetime as dt
-#import dateparser as dp
+
 
 def sleep(seconds):
     """Override the sleep function to use genie.
@@ -52,14 +51,6 @@ class Larmor(ScanningInstrument):  # pylint: disable=too-many-public-methods
         self._dae_mode = ""
         self._step = step
 
-    def _generic_scan(  # pylint: disable=dangerous-default-value
-            self,
-            detector=r"C:\Instrument\Settings\config\NDXLARMOR\configurations\tables\detector.dat",
-            spectra=r"C:\Instrument\Settings\config\NDXLARMOR\configurations\tables\spectra_1To1.dat",
-            wiring=r"C:\Instrument\Settings\config\NDXLARMOR\configurations\tables\wiring_dae3.dat",
-            tcbs=[]):
-        ScanningInstrument._generic_scan(self, detector, spectra, wiring, tcbs)
-
     @staticmethod
     def _set_choppers(lrange):
         # now set the chopper phasing to the defaults
@@ -83,11 +74,14 @@ class Larmor(ScanningInstrument):  # pylint: disable=too-many-public-methods
                 "The only known lranges for the chopper "
                 "are '0.9-13.25', '0.65-12.95' and '13-26AA'")
 
-    def _generic_scan(self, detector="detector.dat", spectra="spectra_1To1.dat", wiring="wiring_dae3.dat", tcbs=None):
-        # Explicitly check and then set to empty list to avoid UB.
-        if tcbs is None:
-            tcbs = []
+    def _generic_scan(  # pylint: disable=dangerous-default-value
+            self,
+            detector=r"C:\Instrument\Settings\config\NDXLARMOR\configurations\tables\detector.dat",
+            spectra=r"C:\Instrument\Settings\config\NDXLARMOR\configurations\tables\spectra_1To1.dat",
+            wiring=r"C:\Instrument\Settings\config\NDXLARMOR\configurations\tables\wiring_dae3.dat",
+            tcbs=[]):
         ScanningInstrument._generic_scan(self, detector, spectra, wiring, tcbs)
+
 
     @dae_setter("SCAN", "scan")
     def setup_dae_scanning(self):
@@ -122,7 +116,7 @@ detector is contained in only two channels."""
             spectra=r"C:\Instrument\Settings\config\NDXLARMOR\configurations\tables\spectra_scanning_11.dat",
             tcbs=[{"low": 5.0, "high": 100000.0, "step": 100.0,
                    "trange": 1, "log": 0}])
-                   
+
     @dae_setter("SCAN", "scan")
     def setup_dae_echoscan(self):  # pylint: disable=no-self-use
         """Set the wiring tables for performing a spin echo tuning scan.  This
@@ -139,7 +133,7 @@ involves only having two spectra covering the entire main detecor."""
     @dae_setter("SCAN", "scan")
     def setup_dae_nrscanning(self):
         self._generic_scan(
-            spectra="spectra_scanning_auto.dat",
+            spectra=r"U:\Users\Masks\spectra_scanning_auto.dat",
             tcbs=[{"low": 5.0, "high": 100000.0, "step": 100.0,
                    "trange": 1, "log": 0}])
 
@@ -148,7 +142,7 @@ involves only having two spectra covering the entire main detecor."""
         if self._lrange == "13-26":
             self._generic_scan(
                 wiring="wiring_dae3_event.dat",
-                tcbs=[{"low": 100005.0, "high": 200000.0, "step": self._step,
+                tcbs=[{"low": 100005.0, "high": 200000.0, "step": self.get_tof_step(),
                    "trange": 1, "log": 0},
                   {"low": 0.0, "high": 0.0, "step": 0.0,
                    "trange": 2, "log": 0},
@@ -162,7 +156,7 @@ involves only having two spectra covering the entire main detecor."""
         #file size and decrease file write time    
         else:
         # Normal event mode with full detector binning
-        self._generic_scan(
+            self._generic_scan(
             wiring=r"C:\Instrument\Settings\config\NDXLARMOR\configurations\tables\wiring_dae3_event.dat",
             tcbs=[{"low": 5.0, "high": 100000.0, "step": self.get_tof_step(),
                    "trange": 1, "log": 0},
@@ -183,7 +177,7 @@ involves only having two spectra covering the entire main detecor."""
     def setup_dae_event_tshift(self):
         self._generic_scan(
         wiring="wiring_dae3_event.dat",
-        tcbs=[{"low": 7000.0, "high": 107000.0, "step": self._step,
+        tcbs=[{"low": 7000.0, "high": 107000.0, "step": self.get_tof_step(),
                    "trange": 1, "log": 0},
                   {"low": 0.0, "high": 0.0, "step": 0.0,
                    "trange": 2, "log": 0},
@@ -211,7 +205,7 @@ involves only having two spectra covering the entire main detecor."""
                   # 3rd time regime for monitors to allow flexible
                   # binning of detector to reduce file size and
                   # decrease file write time
-                  {"low": 5.0, "high": 100000.0, "step": self._step,
+                  {"low": 5.0, "high": 100000.0, "step": self.get_tof_step(),
                    "trange": 1, "log": 0, "regime": 3},
                   {"low": 0.0, "high": 0.0, "step": 0.0, "trange": 2,
                    "log": 0, "regime": 3}])
@@ -229,21 +223,21 @@ involves only having two spectra covering the entire main detecor."""
 
     @dae_setter("TRANS", "transmission")
     def setup_dae_transmission(self):
-        gen.change_sync('isis')
+        #gen.change_sync('isis')
         if self._lrange == "13-26":
             self._generic_scan(
-            "detector_monitors_only.dat",
-            "spectra_monitors_only.dat",
-            "wiring_dae3_monitors_only.dat",
+            r"C:\Instrument\Settings\config\NDXLARMOR\configurations\tables\detector_monitors_only.dat",
+            r"C:\Instrument\Settings\config\NDXLARMOR\configurations\tables\spectra_monitors_only.dat",
+            r"C:\Instrument\Settings\config\NDXLARMOR\configurations\tables\wiring_dae3_monitors_only.dat",
             [{"low": 100005.0, "high": 200000.0, "step": 100.0,
               "trange": 1, "log": 0},
              {"low": 0.0, "high": 0.0, "step": 0.0,
               "trange": 2, "log": 0}])
         else:
             self._generic_scan(
-            "detector_monitors_only.dat",
-            "spectra_monitors_only.dat",
-            "wiring_dae3_monitors_only.dat",
+            r"C:\Instrument\Settings\config\NDXLARMOR\configurations\tables\detector_monitors_only.dat",
+            r"C:\Instrument\Settings\config\NDXLARMOR\configurations\tables\spectra_monitors_only.dat",
+            r"C:\Instrument\Settings\config\NDXLARMOR\configurations\tables\wiring_dae3_monitors_only.dat",
             [{"low": 5.0, "high": 100000.0, "step": 100.0,
               "trange": 1, "log": 0},
              {"low": 0.0, "high": 0.0, "step": 0.0,
@@ -379,7 +373,7 @@ involves only having two spectra covering the entire main detecor."""
             gtotal=gen.get_pv("IN:LARMOR:DAE:RUNDURATION")
             up_state_frames=up_state_frames/10
             down_state_frames=down_state_frames/10
-            
+
         while gtotal < kwargs[key]:
             gen.change(period=1)
             info("Flipper On")
@@ -596,7 +590,7 @@ involves only having two spectra covering the entire main detecor."""
     @staticmethod
     def _begin_patrans():
         """Initialise a polarisation analysis SANS transmission run"""
-        LARMOR._begin_pasans()                 
+        Larmor._begin_pasans()                 
 
     @staticmethod
     def set_aperture(size):
@@ -613,12 +607,12 @@ involves only having two spectra covering the entire main detecor."""
     def _configure_sans_custom(self):
         # move the transmission monitor out
         gen.cset(m4trans=200.0)
-        waitfor_move()
+        gen.waitfor_move()
 
     def _configure_trans_custom(self):
         # move the transmission monitor in
         gen.cset(m4trans=0.0)
-        waitfor_move()
+        gen.waitfor_move()
 
     def _detector_is_on(self):
         """Is the detector currently on?"""
