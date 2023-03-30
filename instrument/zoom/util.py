@@ -12,9 +12,15 @@ from technique.sans.genie import gen
 
 
 def flipper1(state=None):
-    """Set the state of the spinflipper.  0 is flipper off, and 1 flipper is running"""
+    """Set the state of the spinflipper. """
+    """Spin flipper current switches between -2 and +2. Flipper +2V is Flipper On/Active."""
+    work_curr=2
     if state==0 or state ==1:
-        gen.set_pv("IN:LARMOR:SPINFLIPPER_01:FLIPSTATE:SP", state)
-    # time.sleep(5)
-    flipstate = gen.cget('flipper_onoff', state)
+        gen.cset('Spin_flipper', 2*(state-0.5)*work_curr)
+        gen.cset('flipper_onoff', state)
+    flipstate = gen.cget('flipper_onoff')
     debug("Flipstate=" + str(flipstate))
+
+
+
+
