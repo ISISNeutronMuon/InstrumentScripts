@@ -14,7 +14,8 @@ from typing import TYPE_CHECKING
 
 from abc import ABCMeta, abstractmethod
 # pylint: disable=no-name-in-module
-from collections import Iterable, OrderedDict
+from collections.abc import Iterable
+from collections import OrderedDict
 from contextlib import contextmanager
 from datetime import timedelta, datetime
 import time

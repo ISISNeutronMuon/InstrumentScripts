@@ -207,6 +207,9 @@ class RunActions:
             if do_auto_height:
                 movement.auto_height(laser_offset_block="KEYENCE", fine_height_block="HEIGHT", target=auto_height_target,
                                       continue_if_nan=continue_on_error, dry_run=dry_run)
+                g.waitfor_time(seconds=2)
+                movement.auto_height(laser_offset_block="KEYENCE", fine_height_block="HEIGHT", target=auto_height_target,
+                                      continue_if_nan=continue_on_error, dry_run=dry_run)
 
             if hgaps is None:
                 hgaps = sample.hgaps
@@ -379,7 +382,80 @@ class RunActions:
                 movement.update_title(title, "", None, smang_out, smblock_out, add_current_gaps=include_gaps_in_title)
                 movement.start_measurement(count_uamps, count_seconds, count_frames, osc_slit, osc_block, osc_gap,
                                            vgaps, hgaps)
+    
+    @staticmethod
+    @DryRun
+    def run_angle_store(sample, angle: float, count_uamps: float = None, count_seconds: float = None,
+                  count_frames: float = None, vgaps: dict = None, hgaps: dict = None, mode: str = None,
+                  dry_run: bool = False, include_gaps_in_title: bool = False, osc_slit: bool = False,
+                  osc_block: str = 'S2HG', osc_gap: float = None, store: bool = False, storerate: float = 120):
+        """
+        ** Function for testing store option.
+        Move to a given theta and smangle with slits set. If a current, time or frame count are given then take a
+        measurement.
+        Both supermirrors removed and all angle axes enabled.
 
+        Args:
+            sample (techniques.reflectometry.sample.Sample): The sample to measure
+            angle: The angle to measure at, theta and in liquid mode also the sm angle
+            count_uamps: the current to run the measurement for; None for use count_seconds
+            count_seconds: the time to run the measurement for if uamps not set; None for use count_frames
+            count_frames: the number of frames to wait for; None for don't count
+            vgaps: vertical gaps to be set; Where not defined uses sample footprint and resolution
+            hgaps: horizontal gaps to be set; Where not defined gap is unchanged
+            mode: mode to run in; None don't change modes
+            dry_run: If True just print what would happen; If False, run the experiment
+            include_gaps_in_title: Whether current slit gap sizes should be appended to the run title or not
+            osc_slit: whether slit oscillates during measurement; only osc if osc_gap < total gap extent setting.
+            osc_block: block to oscillate
+            osc_gap: gap of slit during oscillation. If None then takes defaults (see osc_slit_setup)
+            store: whether the run should regularly create a nxs file
+            storerate: frequency of stored runs in seconds.
+        TODO: this set of examples needs updating.
+        Examples:
+            The simplest scan is:
+            >>> my_sample = Sample("My title", "my subtitle", 0, 0, 0, 0, 0, 0.6, 3.0)
+            >>> run_angle(my_sample, 0.3, count_seconds=10)
+            This will use my_sample settings to perform a measurement at the theta angle of 0.3 for 10 seconds. It will set
+            slits 1 and 2 so that the resolution is 0.6 and the footprint is 3, then set slits 3 based on the fraction
+            of the the maximum theta allowed. It will remove all supermirrors from the beam. The mode will not be
+            changed and it will not use a height gun for auto-height mode.
+
+            >>> run_angle(my_sample, 0.5, vgaps={'s1vg': 0.1, 's2vg' 0.3}, mode="Solid")
+            In this evocation we are setting theta to 0.5 with s1 and s2 set to 0.1 and 0.3. The mode is also
+            changed to Solid. Depending on what this means on your instrument this may also set the offsets for components
+            back to 0. No count was specified so in this case the beamline is moved to the position and left there; no
+            data is captured.
+
+            >>> run_angle(my_sample, 0.0, dry_run=True)
+            In this run, dry_run is set to True so nothing will actually happen, it will only print the settings that would
+            be used for the run to the screen.
+        """
+
+        if dry_run:
+            if count_uamps:
+                return count_uamps / 40 * 60, f"({angle}, {count_uamps} uAmps)"  # value for TS2, needs instrument check
+            elif count_seconds:
+                return count_seconds / 60, f"({angle}, {count_seconds} s)"
+            elif count_frames:
+                return count_frames / 36000, f"({angle}, {count_frames} frames)"
+        else:
+            print("** Run angle {} **".format(sample.title))
+
+            movement = _Movement(dry_run)
+
+            constants, mode_out = movement.setup_measurement(mode)
+
+            movement.sample_setup(sample, angle, constants, mode_out)
+            if hgaps is None:
+                hgaps = sample.hgaps
+            movement.set_axis_dict(hgaps)
+            movement.set_slit_vgaps(angle, constants, vgaps, sample)
+            movement.wait_for_move()
+            movement.update_title(sample.title, sample.subtitle, angle, add_current_gaps=include_gaps_in_title)
+
+            movement.start_measurement_store(count_uamps, count_seconds, count_frames, osc_slit, osc_block, osc_gap, vgaps,
+                                       hgaps, store, storerate)
 
 # This means they can be typed directly into the IBEX python console:
 # _runaction_instance = RunActions()
@@ -503,6 +579,70 @@ class SEActions:
                 print("Please specify either Syringe_1 or Syringe_2")
                     #break
 
+    @staticmethod
+    @DryRun
+    def go_to_pressure(pressure, speed=15.0, hold=True, wait=True, dry_run=False, maxwait=1*60*60):
+        """
+        Move barriers in order to reach a certain surface pressure.
+        Args:
+            pressure: The desired surface pressure in mN/m
+            speed: Barrier speed in cm/min
+            hold: hold pressure after reaching target; otherwise barriers will
+                  not move, even if pressure changes
+            wait: True wait to reach pressure; False don't wait
+            dry_run: True don't do anything just print what it will do; False otherwise
+            maxwait: Maximum wait time for reaching requested value in seconds. Use None to be endless. Default 1hr.
+        """
+        print("** NIMA trough going to pressure = {} mN/m. Barrier speed = {} cm/min **".format(pressure, speed))
+        # need to add dryrun part.
+        #movement = _Movement(dry_run)
+        #movement.dry_run_warning()
+        
+        g.cset("Speed", 0.0) # set speed to 0 before going into run control
+        
+        g.cset("Nima_mode", "Pressure Control")  # 1 for PRESSURE control, 2 for AREA control
+        g.cset("Control", "START")
+
+        g.cset("Pressure", pressure)
+        g.cset("Speed", speed) # start barrie movement
+        g.waitfor_block("Target_reached", "NO")
+        if wait:
+            g.waitfor_block("Target_reached", "YES", maxwait=maxwait) # not sure what
+            
+        if not hold:
+            g.cset("Speed", 0.0) # set speed to 0 to stop barriers moving; pressure may change
+
+    @staticmethod
+    @DryRun
+    def go_to_area(area, speed=15.0, wait=True, dry_run=False, maxwait=1*60*60):
+        """
+        Move barriers in order to reach a certain area
+            area: The target area in cm^2
+            speed: Barrier speed in cm/min
+            wait: True wait to reach target area; False don't wait
+            dry_run: True don't do anything just print what it will do; False otherwise
+            maxwait: Maximum wait time for reaching requested value in seconds. Use None to be endless. Default 1hr.
+        """
+        print("** NIMA trough going to area = {} cm^2. Barrier speed = {} cm/min **".format(area, speed))
+        #need to add dry run part.
+        #movement = _Movement(dry_run)
+        #movement.dry_run_warning()
+
+        g.cset("Speed", 0.0)  # set speed to 0 before going into run control
+
+        g.cset("Nima_mode", "Area Control")  # 1 for PRESSURE control, 2 for AREA control
+        g.cset("Control", "START")
+
+        g.cset("Area", area)
+        g.cset("Speed", speed)  # start barrier movement
+        g.waitfor_block("Target_reached", "NO")
+        if wait:
+            g.waitfor_block("Target_reached", "YES", maxwait=maxwait)  # not sure what
+
+        g.cset("Speed", 0.0)  # set speed to 0 to stop barriers moving; pressure may change
+        
+
+
 # THIS MAY BECOME REDUNDANT.
 def slit_check(theta, footprint, resolution):
     """
@@ -523,3 +663,5 @@ def slit_check(theta, footprint, resolution):
 _SEaction_instance = SEActions()
 contrast_change = _SEaction_instance.contrast_change
 inject = _SEaction_instance.inject
+go_to_pressure = _SEaction_instance.go_to_pressure
+go_to_area = _SEaction_instance.go_to_area
