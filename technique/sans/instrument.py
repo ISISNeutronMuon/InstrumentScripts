@@ -629,7 +629,7 @@ class ScanningInstrument(object):
                       dae=dae, aperture=aperture, time=time,
                       period=period, _custom=True, dls_sample_changer=dls_sample_changer, **kwargs)
 
-    def _setup(self, title="", position=None, thickness=1.0, trans=False,
+    def _setup(self, title="", position=None, thickness=None, trans=False,
                dae=None, aperture="", period=None,
                _custom=True, dls_sample_changer=False, **kwargs):
         # Check detector for sans
@@ -658,7 +658,8 @@ class ScanningInstrument(object):
             info(f"Moving {arg} to {val}")
             gen.cset(arg, val)
         gen.waitfor_move()
-        gen.change_sample_par("Thick", thickness)
+        if thickness:
+            gen.change_sample_par("Thick", thickness)
         info("Using the following Sample Parameters")
         self.print_sample_pars()
         if period:
@@ -694,7 +695,7 @@ class ScanningInstrument(object):
         self._waitfor(**times)
         self._end()
 
-    def _measure(self, title="", position=None, thickness=1.0, trans=False,
+    def _measure(self, title="", position=None, thickness=None, trans=False,
                  dae=None, aperture="", period=None,
                  time=None, _custom=True, **kwargs):
 
@@ -706,7 +707,7 @@ class ScanningInstrument(object):
         if time or self.sanitised_timings(kwargs):
             self._do_measure(title=title, time=time, **kwargs)
 
-    def do_sans(self, title="", pos=None, thickness=1.0, dae=None,
+    def do_sans(self, title="", pos=None, thickness=None, dae=None,
                 aperture="", period=None, time=None, dls_sample_changer=False, **kwargs):
         """A wrapper around ``measure`` which ensures that the instrument is
         in sans mode before running the measurement if a title is given.
