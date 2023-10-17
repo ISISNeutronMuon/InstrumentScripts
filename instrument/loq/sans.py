@@ -15,7 +15,7 @@ class LOQ(ScanningInstrument):
         super().__init__()
         self._set_poslist_dls()
 
-    def do_sans_large(self, title=None, pos=None, thickness=1.0,
+    def do_sans_large(self, title=None, pos=None, thickness=None,
                       dae=None, uamps=None, time=None, **kwargs):
         """
         A wrapper around do_sans with aperture set to large
