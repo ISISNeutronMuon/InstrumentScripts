@@ -645,9 +645,10 @@ class ScanningInstrument(object):
 
         if title is None:
             full_title = gen.get_title()
+            part_title = title
             if full_title.endswith(self.title_footer):
-                title = full_title[:-len(self.title_footer)]
-            self.measurement_label = title
+                part_title = full_title[:-len(self.title_footer)]
+            self.measurement_label = part_title
             gen.change(title=full_title)
         else:
             self.measurement_label = title
