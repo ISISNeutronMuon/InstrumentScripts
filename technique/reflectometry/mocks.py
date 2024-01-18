@@ -6,16 +6,23 @@ on development or testing machines.
 
 from mock import Mock
 import numpy as np
+from random import *
 
 # Seed the random number generator so that unit tests always produce
 # the same images
 np.random.seed(0)
 
 g = Mock()
+g.__ge__ = lambda self, compare: True
 g.period = 0
 g.frames = 0
+g.uamps = 0
+g.runnumber = 1
+
 g.get_period.side_effect = lambda: g.period
 g.get_frames.side_effect = lambda: g.frames
+g.get_uamps.side_effect = lambda: randint(1, 100)
+g.get_runnumber.side_effect = range(1, 1000)
 
 
 def get_pv_from_block(name):
@@ -38,9 +45,21 @@ g.adv.get_pv_from_block.side_effect = get_pv_from_block
 # pylint: disable=protected-access
 g._genie_api.pv_exists.side_effect = pv_exists
 
-
 PVS = {"PV:THETA.EGU": "deg", "PV:TWO_THETA.EGU": "deg",
-       "CS:SB:Theta.RDBD": 1.5}
+       "CS:SB:Theta.RDBD": 1.5,
+       "REFL_01:CONST:S1_Z": -2300.0,
+       "REFL_01:CONST:S2_Z": -300.0,
+       "REFL_01:CONST:SM2_Z": -1000.0,
+       "REFL_01:CONST:SAMPLE_Z": 0.0,
+       "REFL_01:CONST:S3_Z": 50.0,
+       "REFL_01:CONST:S4_Z": 3000.0,
+       "REFL_01:CONST:PD_Z": 3010.0,
+       "REFL_01:CONST:S3_MAX": 100.0,
+       "REFL_01:CONST:S4_MAX": 10.0,
+       "REFL_01:CONST:MAX_THETA": 5.0,
+       "REFL_01:CONST:NATURAL_ANGLE": 2.3,
+       "REFL_01:CONST:HAS_HEIGHT2": "YES"
+       }
 
 
 def set_pv(pv_name, value, **kwargs):
@@ -81,8 +100,9 @@ def cset(block=None, value=None, **kwargs):
 g.cget.side_effect = cget
 g.cset.side_effect = cset
 
-
-instrument = {"Theta": 0, "Two_Theta": 0}
+instrument = {"Theta": 0, "Two_Theta": 0, "MODE": 'Solid',
+              "S1HC": 0, "S2HC": 0, "S3HC": 0, "S4HC": 0,
+              "S1AVG": 10.0}
 
 g.get_blocks.side_effect = instrument.keys
 
@@ -104,9 +124,9 @@ def fake_spectrum(channel, period):  # pragma: no cover
         print("Taking a count at theta=%0.2f and two theta=%0.2f" %
               (g.cget("Theta")["value"], g.cget("Two_Theta")["value"]))
         base += (1 + np.cos(g.cget("Theta")["value"])) * \
-            np.sqrt(g.cget("Theta")["value"]) + \
-            g.cget("Two_Theta")["value"] ** 2 + \
-            0.05 * np.random.rand()
+                np.sqrt(g.cget("Theta")["value"]) + \
+                g.cget("Two_Theta")["value"] ** 2 + \
+                0.05 * np.random.rand()
         # raise RuntimeError(str(base))
     return {"signal": base}
 
