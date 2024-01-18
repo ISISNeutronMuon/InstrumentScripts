@@ -148,7 +148,8 @@ class RunActions:
             In this run, dry_run is set to True so nothing will actually happen, it will only print the settings that would
             be used for the run to the screen.
         """
-
+        # TODO: Add in some optional arguments to work with all S3 beam blocker modes
+        # TODO: Streamline Run_angle to deal with all options.
         if dry_run:
             if count_uamps:
                 return count_uamps / 40 * 60, f"({angle}, {count_uamps} uAmps)"  # value for TS2, needs instrument check
@@ -169,7 +170,7 @@ class RunActions:
             movement.set_axis_dict(hgaps)
             movement.set_slit_vgaps(angle, constants, vgaps, sample)
             
-            # 
+            # TODO: Once set_beam_blocker has been sorted out, change this do deal with different options
             if use_beam_blocker:
                 movement.set_beam_blocker(angle, constants, s3_beam_blocker_offset, angle_for_s3_offset, s3_vgap)
             
@@ -319,6 +320,7 @@ class RunActions:
             The system will be record at least 1 frame of data.
         """
         # REVIEW: updated osc_slit default to False (better to explicitly as it to do this?)
+        # TODO: Add in a beamline constant to default to true or false oscillating slit gap.
         
         if dry_run:
             if count_uamps:
@@ -477,7 +479,7 @@ class SEActions:
             wait: True wait for completion; False don't wait
             dry_run: True don't do anything just print what it will do; False otherwise
         """
-        
+        # TODO: Depreciate this for exposure to users, and just use inject. 
         if dry_run:
             if isinstance(sample, int):
                 valvepos = sample
@@ -511,6 +513,7 @@ class SEActions:
             # completion" .format(valvepos, concentrations, flow, volume, seconds, waiting) )
             
             # REVIEW: Added in catch for 2 valve setup, assuming HPLC is always plugged into valve3... 
+            # TODO: Change block names on all instruments for kanuer0/knauer2 to be the same name....
             try:
                 g.cset("knauer2", 3)
             except:
@@ -546,7 +549,7 @@ class SEActions:
     @staticmethod
     @DryRun
     def inject(sample, liquid, flow=1.0, volume=None, wait=False, dry_run=False):
-
+        # TODO: Make this robust enough to work with one switch valve so that contrast change can be hidden away to remove options.
         if dry_run:
             if wait and volume:
                 return volume / flow, f"Line {sample.valve}, {liquid}, {volume}mL, {flow}mL/min"
@@ -565,8 +568,9 @@ class SEActions:
                 print("Incorrect form for valve - must be specified as integer or pre-defined sample")
 
             if isinstance(liquid, list):
-                g.cset("KNAUER2", 3)  # set to take HPLC input from channel 3
-                g.waitfor_time(1)
+                try:
+                    g.cset("KNAUER2", 3)  # set to take HPLC input from channel 3
+                    g.waitfor_time(1)
                 contrast_change(valvepos, liquid, flow=flow, volume=volume, wait=wait)
             elif isinstance(liquid, str) and liquid.upper() in ["SYRINGE_1", "SYRINGE_2"]:
                 g.cset("KNAUER", valvepos)
