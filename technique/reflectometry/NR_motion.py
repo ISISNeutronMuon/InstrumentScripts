@@ -130,7 +130,9 @@ class _Movement(object):
             # new_title = "{} VGs ({:.3g} {:.3g} {:.3g} {:.3g}) HGs ({:.3g} {:.3g} {:.3g} {:.3g})".format(new_title, *gaps)
             
             # REVIEW: Added Try Except to deal with instruments that don't have S1A - SCLH 9/12/23
-            # TODO: Add something to deal with S4 on SURF.
+            # TODO: All the instruments need to have the same constants file format.
+            # In there, we need to include a list of what slits are present. This would then get imported with instrument_constants.py.
+            # This function can then be changed to iterate through this list.
             try:
                 vgaps = self.get_gaps(vertical=True, slitrange=['1', '1A', '2', '3'])
             except:
@@ -773,8 +775,14 @@ class _Movement(object):
             angle_for_s3_offset: The angle at which s3_beam_blocker_offset will block the direct beam, used for scaling the position of S3S
                                  If None, will take value from instrument constants.
             vgap: S3vg before S3South is moved in.
+            
         '''
         # REVIEW: Check compatibility with other instruments
+        # TODO: Add in three S3 modes:
+        #        - normal tracking gap
+        #        - blocking direct beam (plus flare) to a certain definable extent (change this function to drive the individual blades, a la POLREF)
+        #        - lower blade only at scaling gap, top blade wide open
+        # TODO: Need two default parameters in constants.py to deal with this 'maximum s3 gap' and the original use for s3max
         offset = s3_beam_blocker_offset if s3_beam_blocker_offset is not None else constants.s3_beam_blocker_offset
         nominal_angle = angle_for_s3_offset if angle_for_s3_offset is not None else constants.angle_for_s3_offset
         vgap = vgap if vgap is not None else constants.s3max
