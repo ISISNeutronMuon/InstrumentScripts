@@ -340,7 +340,7 @@ class RunActions:
 
                 if vgaps is None:
                     vgaps = {}
-                if "S3VG".casefold() not in vgaps.keys():
+                if "S3VG" not in [gg.upper() for gg in vgaps.keys()]:
                     vgaps.update({"S3VG": constants.s3max})
 
                 if hgaps is None:
@@ -444,7 +444,7 @@ class RunActions:
 
                 if vgaps is None:
                     vgaps = {}
-                if "S3VG".casefold() not in vgaps.keys():
+                if "S3VG" not in [gg.upper() for gg in vgaps.keys()]:
                     vgaps.update({"S3VG": constants.s3max})
                 if hgaps is None:
                     hgaps = sample.hgaps
