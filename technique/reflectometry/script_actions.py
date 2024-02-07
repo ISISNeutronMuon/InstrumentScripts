@@ -18,7 +18,7 @@ except ImportError:
 # import general.utilities.io
 from .sample import Sample, SampleGenerator
 from .NR_motion import _Movement
-from .instrument_constants import get_instrument_constants
+from .instrument_constants import get_instrument_constants #TODO: update this path as required.
 
 os.system('color')
 
@@ -107,7 +107,7 @@ class RunActions:
     def run_angle(sample, angle: float, count_uamps: float = None, count_seconds: float = None,
                   count_frames: float = None, vgaps: dict = None, hgaps: dict = None, mode: str = None,
                   dry_run: bool = False, include_gaps_in_title: bool = False, osc_slit: bool = False,
-                  osc_block: str = 'S2HG', osc_gap: float = None, use_beam_blocker: bool = False,
+                  osc_block: str = constants.oscblock, osc_gap: float = None, use_beam_blocker: bool = False,
                   s3_beam_blocker_offset: float = None, angle_for_s3_offset: float = None, s3_vgap: float = None):
         """
         Move to a given theta and smangle with slits set. If a current, time or frame count are given then take a
@@ -193,7 +193,7 @@ class RunActions:
                      hgaps: dict = None, smangle=0.0, mode=None, do_auto_height=False, laser_offset_block="b.KEYENCE",
                      fine_height_block="HEIGHT", auto_height_target=0.0, continue_on_error=False, dry_run=False,
                      include_gaps_in_title=False,
-                     smblock='SM2', osc_slit: bool = False, osc_block: str = 'S2HG', osc_gap: float = None):
+                     smblock=constants.smblock, osc_slit: bool = False, osc_block: str = constants.oscblock, osc_gap: float = None):
         """
         Move to a given theta and smangle with slits set. If a current, time or frame count are given then take a
         measurement.
@@ -286,7 +286,8 @@ class RunActions:
     def transmission(sample, title: str = None, vgaps: dict = None, hgaps: dict = None, count_uamps: float = None,
                      count_seconds: float = None, count_frames: float = None, height_offset: float = 5,
                      mode: str = None, dry_run: bool = False, include_gaps_in_title: bool = True,
-                     osc_slit: bool = False, osc_block: str = 'S2HG', osc_gap: float = None, at_angle: float = 0.7):
+                     osc_slit: bool = False, osc_block: str = constants.oscblock, osc_gap: float = None,
+                     at_angle: float = constants.trans_angle):
 
         """
         Perform a transmission with both supermirrors removed. Args: sample (techniques.reflectometry.sample.Sample): The
@@ -377,8 +378,8 @@ class RunActions:
                         height_offset: float = 5, smangle: float = 0.0,
                         mode: str = None, dry_run: bool = False, include_gaps_in_title: bool = True,
                         osc_slit: bool = True,
-                        osc_block: str = 'S2HG', osc_gap: float = None, at_angle: float = 0.7,
-                        smblock: str = 'SM2'):
+                        osc_block: str = constants.oscblock, osc_gap: float = None, at_angle: float = constants.trans_angle,
+                        smblock: str = constants.smblock):
         """
         Perform a transmission. Smangle is set via smangle Arg and the mirror can be specified.
         Behaviour depends on mode:
