@@ -204,8 +204,8 @@ class _Movement(object):
         :return: slit 1 and slit 2 vertical gaps
         Added warnings and errors for s2 > s1 and negative values respectively.
         """
-        if constants.s1s2 is None or constants.s2sa is None:
-            print("Warning: Instrument distances not provided in default instrument constants.")
+        if constants.s1s2 is None or constants.s2sa is None or theta is None:
+            print("Warning: Default instrument constants not provided. Check s1s2, s1sa distances and trans_angle.")
             return None
         else:
             s1sa = constants.s1s2 + constants.s2sa
