@@ -244,6 +244,7 @@ class _Movement(object):
 
             self.set_axis(sample.ht_block, sample.height_offset, constants)
             self.set_axis("HEIGHT2", sample.height2_offset, constants) #only operates if has_height2 True so can be left like this.
+            #TODO: check ok with POLREF - probably need sample.height2_offset default to 0.
             self.wait_for_move()
 
         try:
@@ -519,7 +520,8 @@ class _Movement(object):
         print("Mode {}".format(mode_out))
         return constants, mode_out
 
-    def sample_setup(self, sample, angle, inst_constants, mode, trans_offset=0.0, smang=0.0, smblock=constants.smblock):
+    def sample_setup(self, sample, angle, inst_constants, mode, trans_offset=0.0, smang=0.0, smblock=constants.smblock,
+                     ht_block=sample.ht_block):
         """
         Moves to the sample position ready for a measurement.
         Does not set slits as this is not part of sample object, but could be changed.
@@ -532,6 +534,7 @@ class _Movement(object):
             trans_offset: value subtracted from height position default 0.0. Required for transmission.
             smang: angle for supermirror, default to 0.0 to keep out of beam
             smblock: supermirror blocks to use, can be a list for multiple mirrors. Defaults to entry in instrument constants file.
+            ht_block: motor to be used for height movement. If height offset greater than instrument-specific maximum height offset then height2 is used.
         """
         #TODO: check special mode label on SURF.
         self.set_axis("TRANS", sample.translation, constants=inst_constants)
@@ -542,14 +545,14 @@ class _Movement(object):
             self.set_axis("PSI", sample.psi_offset, constants=inst_constants)
             self.set_axis("PHI", sample.phi_offset + angle, constants=inst_constants)
         if inst_constants.has_height2:
-            if angle == 0 and trans_offset > 10:  # i.e. if transmission
+            if angle == 0 and abs(trans_offset) > constants.max_fine_trans:  # i.e. if transmission
                 self.set_axis("HEIGHT2", sample.height2_offset - trans_offset, constants=inst_constants)
-                self.set_axis(sample.ht_block, sample.height_offset, constants=inst_constants)
+                self.set_axis(ht_block, sample.height_offset, constants=inst_constants)
             else:
                 self.set_axis("HEIGHT2", sample.height2_offset, constants=inst_constants)
-                self.set_axis(sample.ht_block, sample.height_offset - trans_offset, constants=inst_constants)
+                self.set_axis(ht_block, sample.height_offset - trans_offset, constants=inst_constants)
         else:
-            self.set_axis(sample.ht_block, sample.height_offset - trans_offset, constants=inst_constants)
+            self.set_axis(ht_block, sample.height_offset - trans_offset, constants=inst_constants)
         self.wait_for_move()
         return smblock_out, smang_out
 
