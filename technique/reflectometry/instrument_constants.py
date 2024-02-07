@@ -33,13 +33,21 @@ class InstrumentConstant(object):
             smdefaults: default supermirrors and angles. Dict. (e.g. {'SM1': 0.0, 'SM2': 0.0})
             oscblock: default block used for oscillating slit.
             trans_angle: default angle used for setting s1vg and s2vg in transmission if not provided.
+            trans_offset: default height offset for transmission in mm. Positive value moves sample down.
+            max_fine_trans: default maximum height offset for transmission in mm using sample-defined height. Absolute greater than this will default to "height2".
         """
-        self.s1s2 = None
-        self.s2sa = None
-        self.max_theta = None
+
+        s1_z = get_reflectometry_value("S1_Z")
+        s2_z = get_reflectometry_value("S2_Z")
+        sample_z = get_reflectometry_value("SAMPLE_Z")
+
+        self.s1s2 = s2_z - s1_z
+        self.s2sa = sample_z - s2_z
+        self.max_theta = get_reflectometry_value("MAX_THETA")
+        self.s3max = get_reflectometry_value("S3_MAX")
+        self.has_height2 = get_reflectometry_value("HAS_HEIGHT2") == "YES"
+        #TODO: Think above are all defined the same across all instruments but need to check.
         self.s4max = None
-        self.s3max = None
-        self.has_height2 = None
         self.s3_beam_blocker_offset = None
         self.angle_for_s3_offset = None
         self.vslits = None
@@ -50,56 +58,21 @@ class InstrumentConstant(object):
         self.smdefaults = None
         self.oscblock = None
         self.trans_angle = None
+        self.trans_offset = None
+        self.max_fine_trans = None
         
     def __repr__(self):
         return "Constants: {}".format(self.__dict__)
 
-## Below section to be edited and moved to other file in instrument folder.
-# def get_instrument_constants():
-    # """
-    # Returns: constants for the current instrument from PVs defined in the refl server
-    # """
-    # try:
-        # s1_z = get_reflectometry_value("S1_Z")
-        # s2_z = get_reflectometry_value("S2_Z")
-        # sm_z = get_reflectometry_value("SM_Z") # set to SM2_Z for now, needs updating to include both.
-        # sample_z = get_reflectometry_value("SAMPLE_Z")
-        # s3_z = get_reflectometry_value("S3_Z")
-        # s4_z = get_reflectometry_value("S4_Z")
-        # pd_z = get_reflectometry_value("PD_Z")
-        # s3_max = get_reflectometry_value("S3_MAX")
-        # s4_max = get_reflectometry_value("S4_MAX")
-        # max_theta = get_reflectometry_value("MAX_THETA")
-        # natural_angle = get_reflectometry_value("NATURAL_ANGLE")
-        # has_height2 = get_reflectometry_value("HAS_HEIGHT2") == "YES"
-        # s3_beam_blocker_offset = get_reflectometry_value("S3_BEAM_BLOCKER_OFFS")
-        # angle_for_s3_offset = get_reflectometry_value("ANGLE_FOR_S3_OFFSET")
+def get_reflectometry_value(value_name, raise_on_not_found=True):
+    """
+    :param value_name: name of the value
+    :return: value for the value_name stored in the pv on the REFL server
+    :raises IOError: if PV does not exist
+    """
+    pv_name = "REFL_01:CONST:{}".format(value_name)
+    value = g.get_pv(pv_name, is_local=True)
+    if raise_on_not_found and value is None:
+        raise IOError("PV {} does not exist".format(pv_name))
 
-        # return InstrumentConstant(
-            # s1s2=s2_z - s1_z,
-            # s2sa=sample_z - s2_z,
-            # max_theta=max_theta,  # usual maximum angle
-            # s4max=s4_max,  # max s4_vg at max Theta
-            # s3max=s3_max,  # max s4_vg at max Theta
-            # sm_sa=sample_z - sm_z,
-            # incoming_beam_angle=natural_angle,
-            # has_height2=has_height2,
-            # s3_beam_blocker_offset=s3_beam_blocker_offset,
-            # angle_for_s3_offset=angle_for_s3_offset
-            # )
-    # except Exception as e:
-        # raise ValueError("No instrument value pvs to calculate requested result: {}".format(e))
-
-
-# def get_reflectometry_value(value_name, raise_on_not_found=True):
-    # """
-    # :param value_name: name of the value
-    # :return: value for the value_name stored in the pv on the REFL server
-    # :raises IOError: if PV does not exist
-    # """
-    # pv_name = "REFL_01:CONST:{}".format(value_name)
-    # value = g.get_pv(pv_name, is_local=True)
-    # if raise_on_not_found and value is None:
-        # raise IOError("PV {} does not exist".format(pv_name))
-
-    # return value
+    return value
