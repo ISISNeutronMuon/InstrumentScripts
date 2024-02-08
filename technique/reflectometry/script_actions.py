@@ -18,7 +18,7 @@ except ImportError:
 # import general.utilities.io
 from .sample import Sample, SampleGenerator
 from .NR_motion import _Movement
-from .instrument_constants import get_instrument_constants
+from .instrument_constants import get_instrument_constants #TODO: update this path as required.
 
 os.system('color')
 
@@ -107,8 +107,9 @@ class RunActions:
     def run_angle(sample, angle: float, count_uamps: float = None, count_seconds: float = None,
                   count_frames: float = None, vgaps: dict = None, hgaps: dict = None, mode: str = None,
                   dry_run: bool = False, include_gaps_in_title: bool = False, osc_slit: bool = False,
-                  osc_block: str = 'S2HG', osc_gap: float = None, use_beam_blocker: bool = False,
-                  s3_beam_blocker_offset: float = None, angle_for_s3_offset: float = None, s3_vgap: float = None):
+                  osc_block: str = constants.oscblock, osc_gap: float = None, use_beam_blocker: bool = False,
+                  s3_beam_blocker_offset: float = None, angle_for_s3_offset: float = None, s3_vgap: float = None,
+                  ht_block: str = sample.ht_block):
         """
         Move to a given theta and smangle with slits set. If a current, time or frame count are given then take a
         measurement.
@@ -128,6 +129,7 @@ class RunActions:
             osc_slit: whether slit oscillates during measurement; only osc if osc_gap < total gap extent setting.
             osc_block: block to oscillate
             osc_gap: gap of slit during oscillation. If None then takes defaults (see osc_slit_setup)
+            ht_block: height stage to be used for measurement. Defaults to stage defined for the sample.
         TODO: this set of examples needs updating.
         Examples:
             The simplest scan is:
@@ -164,7 +166,7 @@ class RunActions:
 
             constants, mode_out = movement.setup_measurement(mode)
 
-            movement.sample_setup(sample, angle, constants, mode_out)
+            movement.sample_setup(sample, angle, constants, mode_out, ht_block=ht_block)
             if hgaps is None:
                 hgaps = sample.hgaps
             movement.set_axis_dict(hgaps)
@@ -193,7 +195,8 @@ class RunActions:
                      hgaps: dict = None, smangle=0.0, mode=None, do_auto_height=False, laser_offset_block="b.KEYENCE",
                      fine_height_block="HEIGHT", auto_height_target=0.0, continue_on_error=False, dry_run=False,
                      include_gaps_in_title=False,
-                     smblock='SM2', osc_slit: bool = False, osc_block: str = 'S2HG', osc_gap: float = None):
+                     smblock=constants.smblock, osc_slit: bool = False, osc_block: str = constants.oscblock,
+                     osc_gap: float = None, ht_block: str = sample.ht_block):
         """
         Move to a given theta and smangle with slits set. If a current, time or frame count are given then take a
         measurement.
@@ -223,6 +226,7 @@ class RunActions:
             osc_slit: whether slit oscillates during measurement; only osc if osc_gap < total gap extent setting.
             osc_block: block to oscillate
             osc_gap: gap of slit during oscillation. If None then takes defaults (see osc_slit_setup)
+            ht_block: height stage to be used for measurement. Defaults to stage defined for the sample.
         Examples:
             The simplest scan is:
             >>> my_sample = Sample("My title", "my subtitle", 0, 0, 0, 0, 0, 0.6, 3.0)
@@ -257,7 +261,7 @@ class RunActions:
 
             constants, mode_out = movement.setup_measurement(mode)
             smblock_out, smang_out = movement.sample_setup(sample, angle, constants, mode_out, smang=smangle,
-                                                           smblock=smblock)
+                                                           smblock=smblock, ht_block=ht_block)
 
             if do_auto_height:  # TODO: remove KEYNCE and HEIGHT and make generic
                 movement.auto_height(laser_offset_block="KEYENCE", fine_height_block="HEIGHT",
@@ -284,9 +288,10 @@ class RunActions:
     @staticmethod
     @DryRun
     def transmission(sample, title: str = None, vgaps: dict = None, hgaps: dict = None, count_uamps: float = None,
-                     count_seconds: float = None, count_frames: float = None, height_offset: float = 5,
+                     count_seconds: float = None, count_frames: float = None, height_offset: float = constants.trans_offset,
                      mode: str = None, dry_run: bool = False, include_gaps_in_title: bool = True,
-                     osc_slit: bool = False, osc_block: str = 'S2HG', osc_gap: float = None, at_angle: float = 0.7):
+                     osc_slit: bool = False, osc_block: str = constants.oscblock, osc_gap: float = None,
+                     at_angle: float = constants.trans_angle, ht_block: str = sample.ht_block):
 
         """
         Perform a transmission with both supermirrors removed. Args: sample (techniques.reflectometry.sample.Sample): The
@@ -299,9 +304,10 @@ class RunActions:
         to the run title or not osc_slit: whether slit oscillates during measurement; only osc if osc_gap < total gap
         extent setting. Takes extent from equivalent gap Args if exists otherwise, goes into defaults in osc_slit_setup.
         osc_block: block to oscillate osc_gap: gap of slit during oscillation. If None then takes defaults (see
-        osc_slit_setup) at_angle: angle to calculate slit settings
+        osc_slit_setup) at_angle: angle to calculate slit settings. ht_block specifies height stage to be used for
+        transmission, will default to sample default.
 
-        TODO: Need to update examples with oscillation.
+        TODO: Need to update examples with oscillation. Add definitions of arguments.
         Examples:
             The simplest transmission is:
 
@@ -336,7 +342,7 @@ class RunActions:
             constants, mode_out = movement.setup_measurement(mode)
 
             with movement.reset_hgaps_and_sample_height_new(sample, constants):
-                movement.sample_setup(sample, 0.0, constants, mode_out, height_offset)
+                movement.sample_setup(sample, 0.0, constants, mode_out, height_offset, ht_block=ht_block)
 
                 if vgaps is None:
                     vgaps = {}
@@ -374,11 +380,11 @@ class RunActions:
     @DryRun
     def transmission_SM(sample, title: str, vgaps: dict = None, hgaps: dict = None,
                         count_uamps: float = None, count_seconds: float = None, count_frames: float = None,
-                        height_offset: float = 5, smangle: float = 0.0,
+                        height_offset: float = constants.trans_offset, smangle: float = 0.0,
                         mode: str = None, dry_run: bool = False, include_gaps_in_title: bool = True,
                         osc_slit: bool = True,
-                        osc_block: str = 'S2HG', osc_gap: float = None, at_angle: float = 0.7,
-                        smblock: str = 'SM2'):
+                        osc_block: str = constants.oscblock, osc_gap: float = None, at_angle: float = constants.trans_angle,
+                        smblock: str = constants.smblock, ht_block: str = sample.ht_block):
         """
         Perform a transmission. Smangle is set via smangle Arg and the mirror can be specified.
         Behaviour depends on mode:
@@ -404,6 +410,7 @@ class RunActions:
             at_angle: angle used in calculating slit settings
             smblock: prefix of supermirror block to be used; generally expect 'SM1' or 'SM2' for INTER or 'SM' for SURF.
                 List of strings can be provided to use multiple mirrors.
+            ht_block: height stage to be used for transmission. Defaults to stage associated with sample.
 
         TODO: Need to update examples with oscillation.
         Examples:
@@ -440,7 +447,7 @@ class RunActions:
             with _Movement.reset_hgaps_and_sample_height_new(movement, sample, constants):
 
                 smblock_out, smang_out = movement.sample_setup(sample, 0.0, constants, mode_out, height_offset, smangle,
-                                                               smblock)
+                                                               smblock, ht_block)
 
                 if vgaps is None:
                     vgaps = {}
