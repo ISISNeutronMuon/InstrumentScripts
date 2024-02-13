@@ -7,6 +7,8 @@ try:
 except ImportError:
     from mocks import g
 
+from ast import literal_eval
+
 
 class InstrumentConstant(object):
     """
@@ -80,7 +82,17 @@ def get_reflectometry_value(value_name):
     """
     pv_name = "REFL_01:CONST:{}".format(value_name)
     value = g.get_pv(pv_name, is_local=True)
-    if value is None:
-        raise IOError("PV {} does not exist".format(pv_name))
+
+    if isinstance(value, str)
+        try:
+            # this will try and convert from str to dict/list
+            value = literal_eval(value)
+        except ValueError:
+            # probably OK, just return the original string
+            return value
+        except SyntaxError:
+            # Not ok, raise here, a list has probably not been finished with a ] or similar
+            raise Exception(f"Constant {value_name} cannot be parsed, evaluating {value} threw an exception")
+
 
     return value
