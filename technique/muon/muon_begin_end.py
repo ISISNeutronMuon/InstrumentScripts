@@ -104,6 +104,9 @@ def set_geometry_beamline_par(beamline_pars):
     new_geometry = None
     while new_geometry not in {"", "L", "T"}:
         new_geometry = get_input("Geometry (L or T) [{}]?".format(old_geometry))
+        if old_geometry == "" and new_geometry == "":
+            print("No old default geometry - you must choose one")
+            new_geometry = "unknown"
     if new_geometry != "":
         g.change_beamline_par(geometry_par, new_geometry)
 
