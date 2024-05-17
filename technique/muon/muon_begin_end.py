@@ -1,6 +1,5 @@
 from __future__ import print_function
 from genie_python import genie as g
-from six.moves import input
 import time
 
 

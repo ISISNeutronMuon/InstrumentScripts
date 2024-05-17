@@ -22,8 +22,6 @@ from datetime import timedelta, datetime
 import time
 import warnings
 import numpy as np
-import six
-from six import add_metaclass
 import matplotlib.pyplot as plt
 
 if TYPE_CHECKING:
@@ -94,8 +92,7 @@ def get_input(prompt: str):
 
 
 
-@add_metaclass(ABCMeta)
-class Scan(object):
+class Scan(object, metaclass=ABCMeta):
     """The virtual class that represents all controlled scans.  This class
     should never be instantiated directly, but rather by one of its
     subclasses."""
@@ -729,7 +726,7 @@ class ParallelScan(Scan):
         self.defaults = self.first.defaults
 
     def __iter__(self):
-        for x, y in six.moves.zip(self.first, self.second):
+        for x, y in zip(self.first, self.second):
             yield merge_dicts(x, y)
 
     def __repr__(self):

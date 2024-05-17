@@ -15,8 +15,6 @@ try:
 except ImportError:
     from .mocks import g
 
-from six import text_type
-
 
 class Motion(object):
     # pylint: disable=too-many-instance-attributes
@@ -225,7 +223,7 @@ def get_motion(motion_or_block_name):
     """
     if isinstance(motion_or_block_name, Motion):
         motion = motion_or_block_name
-    elif isinstance(motion_or_block_name, (str, text_type)):
+    elif isinstance(motion_or_block_name, (str, str)):
         motion = BlockMotion(motion_or_block_name, get_units(motion_or_block_name))
     else:
         raise TypeError("Cannot run scan on axis {}. Try a string or a motion object instead.".format(

@@ -8,7 +8,6 @@ from contextlib import contextmanager
 from future.moves import itertools
 from math import tan, radians, sin
 
-from six.moves import input
 from genie_python import genie as g
 
 import general.utilities.io

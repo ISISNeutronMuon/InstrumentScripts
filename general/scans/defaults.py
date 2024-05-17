@@ -12,7 +12,6 @@ in the middle of a user run when a missing method is called.
 
 from abc import ABCMeta, abstractmethod
 import os
-from six import add_metaclass
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -29,8 +28,7 @@ except ImportError:
     from .mocks import g
 
 
-@add_metaclass(ABCMeta)
-class Defaults(object):
+class Defaults(object, metaclass=ABCMeta):
     """A defaults object to store the correct functions for this instrument"""
 
     SINGLE_FIGURE = False

@@ -9,15 +9,13 @@ from abc import ABCMeta, abstractmethod
 import warnings
 import numpy as np
 from scipy.stats import linregress
-from six import add_metaclass
 from scipy.special import erf  # pylint: disable=no-name-in-module
 
 # pylint: disable=wrong-import-position
 from scipy.optimize import curve_fit, OptimizeWarning  # noqa: E402
 
 
-@add_metaclass(ABCMeta)
-class Fit(object):
+class Fit(object, metaclass=ABCMeta):
     """The Fit class combines the common requirements needed for fitting.
     We need to be able to turn a set of data points into a set of
     parameters, get the simulated curve from a set of parameters, and
@@ -258,8 +256,7 @@ class PeakFit(Fit):
         return "Peak at {}".format(smart_number_format(center))
 
 
-@add_metaclass(ABCMeta)
-class CurveFit(Fit):
+class CurveFit(Fit, metaclass=ABCMeta):
     """
     A class for fitting models based on the scipy curve_fit optimizer
     """
