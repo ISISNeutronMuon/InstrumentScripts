@@ -11,11 +11,9 @@ information out of a combined measuremnts.
 
 from abc import ABCMeta, abstractmethod
 import numpy as np
-from six import add_metaclass
 
 
-@add_metaclass(ABCMeta)
-class Monoid(object):
+class Monoid(object, metaclass=ABCMeta):
     """
     The Monoid base class enforces the two laws: There must be a zero
     operation and a combining function (add).
