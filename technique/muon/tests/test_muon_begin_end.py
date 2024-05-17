@@ -4,13 +4,9 @@ os.environ["GENIE_SIMULATE"] = "1"
 
 # Imports come after to prevent import of genie python not in simulation
 import unittest
-import six.moves
 from technique.muon import muon_begin_end
 from genie_python import genie as g
-if six.PY3:
-    from unittest.mock import patch, MagicMock
-else:
-    from mock import patch, MagicMock
+from unittest.mock import patch, MagicMock
 
 
 class TestRunControl(unittest.TestCase):

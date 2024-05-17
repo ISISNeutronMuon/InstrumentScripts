@@ -6,12 +6,9 @@ os.environ["GENIE_SIMULATE"] = "1"
 # Imports come after to prevent import of genie python not in simulation
 import datetime
 import unittest
-import six.moves
 from technique.muon.background_plot import BackgroundPlot
-if six.PY3:
-    from unittest.mock import patch, mock_open
-else:
-    from mock import patch, mock_open
+from unittest.mock import patch, mock_open
+
 
 THIS_DIR = os.path.dirname(os.path.abspath(__file__))
 

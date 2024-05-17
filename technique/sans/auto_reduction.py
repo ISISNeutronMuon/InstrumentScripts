@@ -3,7 +3,6 @@
 from __future__ import print_function
 from xml.etree import ElementTree as ET
 from collections import defaultdict
-from six.moves import input
 
 SCHEMA = "{http://definition.nexusformat.org/schema/3.0}"
 

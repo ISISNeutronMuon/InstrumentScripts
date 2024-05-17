@@ -13,7 +13,6 @@ import ast
 import csv
 from logging import info, warning
 import os.path
-from six import add_metaclass
 from .genie import gen
 from .util import user_script
 
@@ -25,9 +24,8 @@ def _get_times(times):
     raise RuntimeError("No valid time found")
 
 
-@add_metaclass(ABCMeta)
 # pylint: disable=too-many-public-methods
-class ScanningInstrument(object):
+class ScanningInstrument(object, metaclass=ABCMeta):
     """
     The base class for scanning measurement instruments.
 
