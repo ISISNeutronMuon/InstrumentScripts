@@ -99,7 +99,19 @@ def runscript(dry_run=False):
     inject(sample_4, D2O, flow=2.0, volume=20)
 
     if dry_run:
-        print("\n=== Total time: ", str(int(DryRun.run_time / 60)) + "h " + str(int(DryRun.run_time % 60)) + "min ===")
+        # print("\n=== Total time: ", str(int(DryRun.run_time / 60)) + "h " + str(int(DryRun.run_time % 60)) + "min ===\n")
+
+        volumes = '\033[2;34m    Volumes used for contrast changes: ' + \
+                  str(DryRun.buffer_volumes) + " mL     \033[0;0m"
+        print('\n\t \u2554' + '\u2550' * (len(volumes) - 13) + '\u2557')
+        print('\t \u2551' + volumes + '\u2551')
+        total_time = "=== Total time: " + str(int(DryRun.run_time / 60)) + "h " + str(
+            int(DryRun.run_time % 60)) + "min ==="
+        left = int(len(volumes) / 2 - len(total_time))
+        right = len(volumes) - 17 - left - len(total_time)
+        print('\t \u2551' + '    ' + ' ' * left + total_time + ' ' * right + '\u2551')
+        print('\t \u255A' + '\u2550' * (len(volumes) - 13) + '\u255D')
+        print('\n')
         return DryRun.run_time
 
 

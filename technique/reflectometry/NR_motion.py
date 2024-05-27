@@ -17,8 +17,9 @@ except ImportError:
     from mocks import g
 
 # import general.utilities.io
-from .sample import Sample
-from .instrument_constants import get_instrument_constants ##TODO: need to update import
+from sample import Sample
+from instrument_constants import get_instrument_constants  # TODO: need to update import
+
 
 class _Movement(object):
     """
@@ -27,6 +28,7 @@ class _Movement(object):
 
     def __init__(self, dry_run):
         self.dry_run = dry_run
+        self.constants = get_instrument_constants()
 
     def change_to_mode_if_not_none(self, mode):
         """
@@ -49,17 +51,16 @@ class _Movement(object):
         if self.dry_run:
             print("Nothing will change this is a DRY RUN!!!")
 
-    def set_axis(self, axis: str, value: float, constants):
+    def set_axis(self, axis: str = "", value: float = 0):
         """
         Set an axis if not in dry run. If dry run will flag if axis does not exist.
         Special behaviour for height2_offset based on whether in instrument constants.
         Args:
             axis: axis block to set
             value: value to set axis to
-            constants: constants for the instrument to check height behaviour
         """
-        special_axes = ['HEIGHT2']  #left explicit for now as true for all but could be changed to instrument constants
-        if axis.upper() in special_axes and not constants.has_height2:
+        special_axes = ['HEIGHT2']  # left explicit for now as true for all but could be changed to instrument constants
+        if axis.upper() in special_axes and not self.constants.has_height2:
             # print(colored("ERROR: Height 2 offset is being ignored", "red"))
             logging.error("Height 2 offset is being ignored")
         else:
@@ -107,7 +108,7 @@ class _Movement(object):
             raise KeyError("Block {} does not exist".format(pv_name))
         return block_value["value"]
 
-    def update_title(self, title, subtitle, theta, smangle=None, smblock=constants.smblock, add_current_gaps=False):
+    def update_title(self, title, subtitle, theta, smangle=None, smblock=None, add_current_gaps=False):
         """
         Update the current title with or without gaps if not in dry run
         :param title: title to set
@@ -141,7 +142,7 @@ class _Movement(object):
             g.change_title(new_title)
         return new_title
 
-    def set_slit_vgaps(self, theta: float, constants, vgaps: dict, sample):
+    def set_slit_vgaps(self, theta: float, vgaps: dict, sample):
         """
         Set the vertical slit gaps either to user settings or calculated based on footprint and max slit size,
         if not in dry run
@@ -151,11 +152,11 @@ class _Movement(object):
             vgaps: user defined gaps
             sample: sample parameters
         """
-        calc_dict = self.calculate_slit_gaps(theta, sample.footprint, sample.resolution, constants)
+        calc_dict = self.calculate_slit_gaps(theta, sample.footprint, sample.resolution)
         ## TODO: Add None handling for when s1s2 and s2sa are not properly defined.
 
-        factor = theta / constants.max_theta
-        s3 = constants.s3max * factor
+        factor = theta / self.constants.max_theta
+        s3 = self.constants.s3max * factor
         calc_dict.update({'S3VG': s3})
 
         g.cset('S3VC', 0)
@@ -194,7 +195,7 @@ class _Movement(object):
                 except:
                     raise KeyError("Block {} does not exist".format(gap))
 
-    def calculate_slit_gaps(self, theta, footprint, resolution, constants):
+    def calculate_slit_gaps(self, theta, footprint, resolution):
         """
         Calculate the slit gaps
         :param theta: theta
@@ -204,24 +205,25 @@ class _Movement(object):
         :return: slit 1 and slit 2 vertical gaps
         Added warnings and errors for s2 > s1 and negative values respectively.
         """
-        if constants.s1s2 is None or constants.s2sa is None or theta is None:
+        if self.constants.s1s2 is None or self.constants.s2sa is None or theta is None:
             print("Warning: Default instrument constants not provided. Check s1s2, s1sa distances and trans_angle.")
             return None
         else:
-            s1sa = constants.s1s2 + constants.s2sa
+            s1sa = self.constants.s1s2 + self.constants.s2sa
             footprint_at_theta = footprint * sin(radians(theta))
             s1 = 2 * s1sa * tan(radians(resolution * theta)) - footprint_at_theta
-            s2 = (constants.s1s2 * (footprint_at_theta + s1) / s1sa) - s1
+            s2 = (self.constants.s1s2 * (footprint_at_theta + s1) / s1sa) - s1
             if s2 > s1:
                 print("Warning: Calculation gives s2vg larger than s1vg. The script will continue.")
             elif s1 < 0 or s2 < 0:
-                raise ValueError("The slit calculation gives a negative gap. Check the footprint and resolution values.")
+                raise ValueError(
+                    "The slit calculation gives a negative gap. Check the footprint and resolution values.")
             return {'S1VG': s1, 'S2VG': s2}
 
     # Horizontal gaps and height reset by with reset_gaps_and_sample_height
     # Added extra part for centres too.
     @contextmanager
-    def reset_hgaps_and_sample_height_new(self, sample, constants):
+    def reset_hgaps_and_sample_height_new(self, sample):
         """
         After the context is over reset the gaps back to the value before and set the height to the default sample height.
         Edited to reset the gap centres too.
@@ -232,8 +234,8 @@ class _Movement(object):
             constants: instrument constants
 
         """
-        horizontal_gaps = self.get_gaps(vertical=False, centres=False, slitrange=constants.hslits)
-        horizontal_cens = self.get_gaps(vertical=False, centres=True, slitrange=constants.hslits)
+        horizontal_gaps = self.get_gaps(vertical=False, centres=False, slitrange=self.constants.hslits)
+        horizontal_cens = self.get_gaps(vertical=False, centres=True, slitrange=self.constants.hslits)
 
         def _reset_gaps():
             print("Reset horizontal centres to {}".format(list(horizontal_cens.values())))
@@ -242,9 +244,10 @@ class _Movement(object):
             self.set_axis_dict(horizontal_gaps)
             # TODO join the above together?
 
-            self.set_axis(sample.ht_block, sample.height_offset, constants)
-            self.set_axis("HEIGHT2", sample.height2_offset, constants) #only operates if has_height2 True so can be left like this.
-            #TODO: check ok with POLREF - probably need sample.height2_offset default to 0.
+            self.set_axis(sample.ht_block, sample.height_offset)
+            self.set_axis("HEIGHT2",
+                          sample.height2_offset)  # only operates if has_height2 True so can be left like this.
+            # TODO: check ok with POLREF - probably need sample.height2_offset default to 0.
             self.wait_for_move()
 
         try:
@@ -282,17 +285,17 @@ class _Movement(object):
             print("\n\n PRESS ctl + c to get the prompt back \n\n")  # This is because there is a bug in pydev
             raise  # reraise the exception so that any running script will be aborted
 
-    def change_to_soft_period_count(self, count=constants.periods):
+    def change_to_soft_period_count(self):  # , count=self.constants.periods):
         """
         Change the number of soft periods if not in dry run
         :param count: number of periods
         """
-        if count is None:
+        if self.constants.periods is None:
             print("Periods not changed as no default periods set in instrument constants.")
         elif not self.dry_run:
-            g.change_number_soft_periods(count)
+            g.change_number_soft_periods(self.constants.periods)
         else:
-            print("Number of periods set to {}".format(count))
+            print("Number of periods set to {}".format(self.constants.periods))
 
     def wait_for_move(self):
         """
@@ -301,7 +304,7 @@ class _Movement(object):
         if not self.dry_run:
             g.waitfor_move()
 
-    def set_smangle_if_not_none(self, smangle, smblock=constants.smblock):
+    def set_smangle_if_not_none(self, smangle):
         """
         Set the super mirror angle and put it in the beam if not None and not dry run
         :param smangle: super mirror angle; None for do not set and leave it where it is
@@ -309,14 +312,14 @@ class _Movement(object):
         :param smblock: block to be set. Expect 'SM2' or 'SM1' (or 'SM' for non-INTER).
         :type smblock: str
         """
-        if smangle is not None and smblock is not None:
+        if smangle is not None and self.constants.smblock is not None:
             is_in_beam = "IN" if smangle > 0.0001 else "OUT"
-            print("{} angle (in beam?): {} ({})".format(smblock, smangle, is_in_beam))
+            print("{} angle (in beam?): {} ({})".format(self.constants.smblock, smangle, is_in_beam))
             if not self.dry_run:
-                g.cset("{}INBEAM".format(smblock), is_in_beam)
+                g.cset("{}INBEAM".format(self.constants.smblock), is_in_beam)
                 if smangle > 0.0001:
-                    g.cset("{}ANGLE".format(smblock), smangle)
-        elif smblock is None and smangle is not None:
+                    g.cset("{}ANGLE".format(self.constants.smblock), smangle)
+        elif self.constants.smblock is None and smangle is not None:
             print("Supermirror not set as block name not provided. Check instrument constants.")
 
     def wait_for_seconds(self, seconds):
@@ -495,7 +498,7 @@ class _Movement(object):
         print("Instrument mode set to: {}".format(mode))
         return mode
 
-    def setup_measurement(self, mode=None, periods=constants.periods):
+    def setup_measurement(self, mode=None):
         """
         Sets up the general instrument settings for the measurement.
         Args:
@@ -505,10 +508,9 @@ class _Movement(object):
             instrument constants, updated mode
         """
         self.dry_run_warning()
-        constants = get_instrument_constants()
         ##TODO: this constants path might need changing depending how constants setup. Does it need to be set separately here?
-        if periods is not None:
-            self.change_to_soft_period_count(count=periods)
+        if self.constants.periods is not None:
+            self.change_to_soft_period_count(count=self.constants.periods)
         else:
             print("Periods not changed as no default periods set in instrument constants.")
         try:
@@ -518,10 +520,9 @@ class _Movement(object):
 
         mode_out = self.change_to_mode_if_not_none(mode)
         print("Mode {}".format(mode_out))
-        return constants, mode_out
+        return self.constants, mode_out
 
-    def sample_setup(self, sample, angle, inst_constants, mode, trans_offset=0.0, smang=0.0, smblock=constants.smblock,
-                     ht_block=sample.ht_block):
+    def sample_setup(self, sample, angle, mode, trans_offset=0.0, smang=0.0):
         """
         Moves to the sample position ready for a measurement.
         Does not set slits as this is not part of sample object, but could be changed.
@@ -536,27 +537,27 @@ class _Movement(object):
             smblock: supermirror blocks to use, can be a list for multiple mirrors. Defaults to entry in instrument constants file.
             ht_block: motor to be used for height movement. If height offset greater than instrument-specific maximum height offset then height2 is used.
         """
-        #TODO: check special mode label on SURF.
-        self.set_axis("TRANS", sample.translation, constants=inst_constants)
-        smblock_out, smang_out = self._SM_setup(angle, inst_constants, smang, smblock, mode)
-        self.set_axis("THETA", angle, constants=inst_constants)
+        # TODO: check special mode label on SURF.
+        self.set_axis("TRANS", sample.translation)
+        smblock_out, smang_out = self._SM_setup(angle, smang, mode)
+        self.set_axis("THETA", angle)
         self.wait_for_move()
         if mode.upper() != "LIQUID":
-            self.set_axis("PSI", sample.psi_offset, constants=inst_constants)
-            self.set_axis("PHI", sample.phi_offset + angle, constants=inst_constants)
-        if inst_constants.has_height2:
-            if angle == 0 and abs(trans_offset) > constants.max_fine_trans:  # i.e. if transmission
-                self.set_axis("HEIGHT2", sample.height2_offset - trans_offset, constants=inst_constants)
-                self.set_axis(ht_block, sample.height_offset, constants=inst_constants)
+            self.set_axis("PSI", sample.psi_offset)
+            self.set_axis("PHI", sample.phi_offset + angle)
+        if self.constants.has_height2:
+            if angle == 0 and abs(self.constants.trans_offset) > self.constants.max_fine_trans:  # i.e. if transmission
+                self.set_axis("HEIGHT2", sample.height2_offset - trans_offset)
+                self.set_axis(sample.ht_block, sample.height_offset)
             else:
-                self.set_axis("HEIGHT2", sample.height2_offset, constants=inst_constants)
-                self.set_axis(ht_block, sample.height_offset - trans_offset, constants=inst_constants)
+                self.set_axis("HEIGHT2", sample.height2_offset)
+                self.set_axis(sample.ht_block, sample.height_offset - self.constants.trans_offset)
         else:
-            self.set_axis(ht_block, sample.height_offset - trans_offset, constants=inst_constants)
+            self.set_axis(sample.ht_block, sample.height_offset - self.constants.trans_offset)
         self.wait_for_move()
         return smblock_out, smang_out
 
-    def _SM_setup(self, angle, inst_constants, smangle=0.0, smblock=constants.smblock, mode=None):
+    def _SM_setup(self, angle, smangle=0.0, mode=None):
         """
         Setup mirrors in and out of beam and at correct angles.
         Args:
@@ -566,34 +567,35 @@ class _Movement(object):
             smblock: axis for mirror, can be a list for multiple mirrors. Defaults to entry in instrument constants file.
             mode: flag for liquid mode where smangle is determined from angle instead
         """
-        if smblock is None and smangle != 0.0:
+        if self.constants.smblock is None and smangle != 0.0:
             print("Supermirror not set as no block name provided. Check instrument constants file.")
             smang = smangle
         else:
             protect_modes = ["LIQUID", "OIL-WATER"]
-            #TODO: check this mode matches on SURF.
+            # TODO: check this mode matches on SURF.
             if mode.upper() in protect_modes and angle != 0.0:
                 # In liquid the sample is tilted by the incoming beam angle so that it is level, this is accounted for by
                 # adjusting the super mirror
-                smang = (inst_constants.incoming_beam_angle - angle) / 2
+                smang = (self.constants.incoming_beam_angle - angle) / 2
             else:
                 smang = smangle
             # TODO: Need to change the except statement to an error/warning?
-            SM_defaults = constants.smdefaults
-            if type(smblock) == str:
-                smblock = [smblock]
-            for mirrors in smblock:
+            SM_defaults = self.constants.smdefaults
+            if type(self.constants.smblock) is str:
+                smblock = [self.constants.smblock]
+            for mirrors in self.constants.smblock:
                 try:
-                    SM_defaults[mirrors.upper()] = smang / (len(smblock))
+                    SM_defaults[mirrors.upper()] = smang / (len(self.constants.smblock))
                 except:
                     print('Incorrect SM block given: {}'.format(mirrors.upper()))
             print('SM values to be set: {}'.format(SM_defaults))
             for mir in SM_defaults.keys():
-                self.set_smangle_if_not_none(SM_defaults[mir], mir)
-        return smblock, smang
+                self.set_smangle_if_not_none(SM_defaults[mir])
+        return self.constants.smblock, smang
 
     def start_measurement(self, count_uamps: float = None, count_seconds: float = None, count_frames: float = None,
-                          osc_slit: bool = False, osc_block: str = constants.oscblock, osc_gap: float = None, vgaps: dict = None,
+                          osc_slit: bool = False, osc_block: str = None, osc_gap: float = None,
+                          vgaps: dict = None,
                           hgaps: dict = None):
         """
         Starts a measurement based on count inputs and oscillating inputs.
@@ -614,15 +616,15 @@ class _Movement(object):
             # Otherwise carries None to osc input.
             hgaps.update(vgaps)
             try:
-                use_block = hgaps[osc_block.casefold()]
-                print('using block {}={}'.format(osc_block, use_block))
+                use_block = hgaps[self.constants.oscblock.casefold()]
+                print('using block {}={}'.format(self.constants.oscblock, use_block))
             except:
                 use_block = None
             # If the gap isn't specified, this is set to match the extent (i.e. not osc).
             if osc_gap is None:
                 osc_gap = use_block
-            print('Inputs: osc_block {}, osc_gap {},use_block {}'.format(osc_block, osc_gap, use_block))
-            self.count_osc_slit(osc_block, osc_gap, use_block, count_uamps, count_seconds, count_frames)
+            print('Inputs: osc_block {}, osc_gap {},use_block {}'.format(self.constants.oscblock, osc_gap, use_block))
+            self.count_osc_slit(self.constants.oscblock, osc_gap, use_block, count_uamps, count_seconds, count_frames)
             # TODO Add to title or leave?
         else:
             # Think this might be redundant but keep for safety.
@@ -656,7 +658,7 @@ class _Movement(object):
         if not self.dry_run:
             g.resume()
 
-    def auto_height(self, laser_offset_block: str, fine_height_block: str = sample.ht_block, target: float = 0.0,
+    def auto_height(self, laser_offset_block: str, fine_height_block: str = None, target: float = 0.0,
                     continue_if_nan: bool = False,
                     dry_run: bool = False):
         """
@@ -716,13 +718,12 @@ class _Movement(object):
         print("Target for fine height axis: {} (current {})".format(target_height, current_height))
         return target_height, current_height
 
-    def set_beam_blocker(self, angle, constants, s3_beam_blocker_offset, angle_for_s3_offset, vgap):
+    def set_beam_blocker(self, angle, s3_beam_blocker_offset, angle_for_s3_offset, vgap):
         '''
         Sets up the bottom blade of slit 3 as a beam blocker to block the direct beam.
 
         Args:
             angle: current theta position, used for scaling the position of S3S
-            contants: Pulls in the instrument constants from constants.py
             s3_beam_blocker_offset: The nominal offset of S3South. If None, will take value from instrument constants.
             angle_for_s3_offset: The angle at which s3_beam_blocker_offset will block the direct beam, used for scaling the position of S3S
                                  If None, will take value from instrument constants.
@@ -735,17 +736,15 @@ class _Movement(object):
         #        - blocking direct beam (plus flare) to a certain definable extent (change this function to drive the individual blades, a la POLREF)
         #        - lower blade only at scaling gap, top blade wide open
         # TODO: Need two default parameters in constants.py to deal with this 'maximum s3 gap' and the original use for s3max
-        offset = s3_beam_blocker_offset if s3_beam_blocker_offset is not None else constants.s3_beam_blocker_offset
-        nominal_angle = angle_for_s3_offset if angle_for_s3_offset is not None else constants.angle_for_s3_offset
-        vgap = vgap if vgap is not None else constants.s3max
+        offset = s3_beam_blocker_offset if s3_beam_blocker_offset is not None else self.constants.s3_beam_blocker_offset
+        nominal_angle = angle_for_s3_offset if angle_for_s3_offset is not None else self.constants.angle_for_s3_offset
+        vgap = vgap if vgap is not None else self.constants.s3max
 
-        s3s_value = abs(offset * angle / nominal_angle)*(-1)
+        s3s_value = abs(offset * angle / nominal_angle) * (-1)
 
         g.cset("S3VC", 0)
         # self.wait_for_move()
         g.waitfor_move()
-        g.cset("S3VG", vgap) # TODO: Change so directly drive S3N... g.cset('S3North', vgap / 2)
+        g.cset("S3VG", vgap)  # TODO: Change so directly drive S3N... g.cset('S3North', vgap / 2)
         g.waitfor_move()
         g.cset("S3South", s3s_value)
-
-
