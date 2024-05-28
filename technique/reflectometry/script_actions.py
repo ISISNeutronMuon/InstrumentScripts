@@ -7,6 +7,8 @@ from datetime import datetime
 from datetime import timedelta
 from math import fabs
 
+from termcolor import colored
+
 try:
     # pylint: disable=import-error
     from genie_python import genie as g
@@ -45,17 +47,25 @@ logging.addLevelName(GO_TO_AREA, 'GO_TO_AREA')
 
 
 def run_summary():
-    volumes = '\033[1;34;40m    Volumes used for contrast changes:' + \
-              str(DryRun.buffer_volumes) + " mL \033[0;0m"
-    print('\n')
-    print(' \u2554' + '\u2550' * (len(volumes) - 11) + '\u2557')
-    print(' \u2551' + volumes + ' ' * 5 + '\u2551')
-    total_time = "=== Total time: " + str(int(DryRun.run_time / 60)) + "h " + str(
-        int(DryRun.run_time % 60)) + "min ==="
-    left = int(len(volumes) / 2 - len(total_time))
-    right = len(volumes) - 20 - left - len(total_time)
-    print(' \u2551' + '    ' + ' ' * left + total_time + ' ' * right + ' ' * 5 + '\u2551')
-    print(' \u255A' + '\u2550' * (len(volumes) - 11) + '\u255D')
+    # print("\n=== Total time: ", str(int(DryRun.run_time / 60)) + "h " + str(int(DryRun.run_time % 60)) + "min ===\n")
+
+    # Add the scritp time to the current time
+    newtime = datetime.now() + timedelta(minutes=DryRun.run_time)
+    ETA = newtime.strftime("%d %b %Y, %H:%M")
+
+    volumes = '\033[2;34m Volumes used for contrast changes: ' + \
+              str([round(v) for v in DryRun.buffer_volumes]) + " mL \033[0;0m"
+    volumes = volumes.center(len(volumes))
+
+    print('\n\t \u2554' + '\u2550' * (len(volumes) - 13) + '\u2557')
+    print('\t \u2551' + volumes + '\u2551')
+    total_time = ("=== Total time: " + str(int(DryRun.run_time / 60)) + "h " +
+                  str(int(DryRun.run_time % 60)) + "min ===").center(len(volumes) - 13)
+
+    print('\t \u2551' + total_time + '\u2551')
+    finish = f'Script will finish {ETA}'.center(len(volumes) - 13)
+    print('\t \u2551' + finish + '\u2551')
+    print('\t \u255A' + '\u2550' * (len(volumes) - 13) + '\u255D')
     print('\n')
     return DryRun.run_time
 
@@ -225,7 +235,7 @@ class RunActions:
 
             movement = _Movement(dry_run)
 
-            constants, mode_out = movement.setup_measurement(mode)
+            constants, mode_out = movement.setup_measurement(mode)  # TODO: make sure we're not in 'LIQUID' mode?
             if ht_block is None:
                 movement.sample_setup(sample, angle, mode_out)
             if hgaps is None:

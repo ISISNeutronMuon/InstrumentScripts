@@ -7,6 +7,7 @@ import logging
 import sys
 import os
 
+
 try:
     # pylint: disable=import-error
     from genie_python import genie as g
@@ -207,6 +208,11 @@ def runscript(dry_run=False):
     run_angle(sample_2, 0.7, 15)
     run_angle(sample_2, 2.3, 25)
     inject(sample_2, D2O, flow=1, volume=18, wait=False)
+
+    # KEEP THIS:
+    if dry_run:
+        run_summary()
+        # return DryRun.run_time
 
 
 runscript(dry_run=True)
