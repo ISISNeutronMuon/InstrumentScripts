@@ -265,8 +265,7 @@ class RunActions:
     def run_angle_SM(sample, angle, count_uamps=None, count_seconds=None, count_frames=None, vgaps: dict = None,
                      hgaps: dict = None, smangle=0.0, mode=None, do_auto_height=False, laser_offset_block="b.KEYENCE",
                      fine_height_block="HEIGHT", auto_height_target=0.0, continue_on_error=False, dry_run=False,
-                     include_gaps_in_title=False,
-                     smblock=None, osc_slit: bool = False, osc_block: str = None,
+                     include_gaps_in_title=False, smblock=None, osc_slit: bool = False, osc_block: str = None,
                      osc_gap: float = None, ht_block: str = None):
         """
         Move to a given theta and smangle with slits set. If a current, time or frame count are given then take a
@@ -364,18 +363,24 @@ class RunActions:
                      include_gaps_in_title: bool = False):
 
         """
-        Perform a transmission with both supermirrors removed. Args: sample (techniques.reflectometry.sample.Sample): The
-        sample to measure title: Title to set vgaps: vertical gaps to be set; for each gap if not specified then
-        determined for angle at_angle hgaps: horizontal gaps to be set; for each gap if not specified then remains
-        unchanged count_seconds: time to count for in seconds count_uamps: number of micro amps to count for
-        count_frames: number of frames to count for height_offset: Height offset from normal to set the sample to (offset
-        is in negative direction) mode: mode to run in; None don't change mode dry_run: If True just print what would
-        happen; If False, run the transmission include_gaps_in_title: Whether current slit gap sizes should be appended
-        to the run title or not osc_slit: whether slit oscillates during measurement; only osc if osc_gap < total gap
-        extent setting. Takes extent from equivalent gap Args if exists otherwise, goes into defaults in osc_slit_setup.
-        osc_block: block to oscillate osc_gap: gap of slit during oscillation. If None then takes defaults (see
-        osc_slit_setup) at_angle: angle to calculate slit settings. ht_block specifies height stage to be used for
-        transmission, will default to sample default.
+        Perform a transmission with both supermirrors removed.
+        Args:
+            sample (techniques.reflectometry.sample.Sample): The sample to measure
+            title: Title to set
+            vgaps: vertical gaps to be set; for each gap if not specified then determined for angle at_angle
+            hgaps: horizontal gaps to be set; for each gap if not specified then remains unchanged
+            count_seconds: time to count for in seconds
+            count_uamps: number of micro amps to count for
+            count_frames: number of frames to count for
+            height_offset: Height offset from normal to set the sample to (positive offset lowers the sample)
+            mode: mode to run in; None don't change mode
+            dry_run: If True just print what would happen; If False, run the transmission
+            include_gaps_in_title: Whether current slit gap sizes should be appended to the run title or not
+            osc_slit: whether slit oscillates during measurement; only osc if osc_gap < total gap extent setting.
+                    Takes extent from equivalent gap Args if exists otherwise, goes into defaults in osc_slit_setup.
+            osc_block: block to oscillate osc_gap: gap of slit during oscillation. If None then takes defaults (see
+                    osc_slit_setup) at_angle: angle to calculate slit settings.
+            ht_block specifies height stage to be used for transmission, will default to sample default.
 
         TODO: Need to update examples with oscillation. Add definitions of arguments.
         Examples:
@@ -433,8 +438,7 @@ class RunActions:
                     new_title = movement.update_title(sample.title, "", None, add_current_gaps=include_gaps_in_title)
 
                 logging.log(TRANS,
-                            "{} | ** {} **".format(str(g.get_runnumber()),
-                                                   sample.title))  # TODO use 'coloredlogs' library
+                            "{} | ** {} **".format(str(g.get_runnumber()), sample.title))  # TODO use 'coloredlogs' library
 
                 movement.start_measurement(count_uamps, count_seconds, count_frames, osc_slit, osc_block, osc_gap,
                                            vgaps,
@@ -625,7 +629,8 @@ class SEActions:
     @staticmethod
     @DryRun
     def inject(sample, liquid, flow=1.0, volume=None, wait=False, dry_run=False):
-        # TODO: Make this robust enough to work with one switch valve so that contrast change can be hidden away to remove options.
+        # TODO: Make this robust enough to work with one switch valve so that contrast change can be hidden away to
+        #  remove options.
         if dry_run:
             if wait and volume:
                 return volume / flow, f"Line {sample.valve}, {liquid}, {volume}mL, {flow}mL/min"
