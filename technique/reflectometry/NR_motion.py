@@ -520,6 +520,7 @@ class _Movement(object):
 
         mode_out = self.change_to_mode_if_not_none(mode)
         print("Mode {}".format(mode_out))
+        return mode_out
 
     def sample_setup(self, sample, angle, mode, trans_offset=0.0, smang=0.0):
         """

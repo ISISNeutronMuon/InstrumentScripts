@@ -1,63 +1,63 @@
-2024-05-29 00:03:06 | RUN | 1 | ** S3 Nat-HCyt-DPer, th=0.7, uamps=10 **
-2024-05-29 00:03:06 | RUN | 2 | ** S3 Nat-HCyt-DPer, th=2.3, uamps=25 **
-2024-05-29 00:03:06 | CONTRASTCHANGE | Valve 3, concentrations [0, 100, 0, 0], flow 1.5,  volume 18, time None, and wait 
-2024-05-29 00:03:06 | RUN | 3 | ** S3 Nat-HCyt-DPer, th=0.7, uamps=10 **
-2024-05-29 00:03:06 | RUN | 4 | ** S3 Nat-HCyt-DPer, th=2.3, uamps=25 **
-2024-05-29 00:03:06 | CONTRASTCHANGE | Valve 3, concentrations [100, 0, 0, 0], flow 1.5,  volume 18, time None, and wait 
-2024-05-29 00:03:06 | INJECT |  SYRINGE_1 valve 2, flow 1,  volume 7, time 420.0, and Truewait
-2024-05-29 00:03:06 | RUN | 5 | ** S2 EAE-Dcyt-HPer, th=0.7, sec=900 **
-2024-05-29 00:03:06 | CONTRASTCHANGE | Valve 2, concentrations [100, 0, 0, 0], flow 1,  volume 18, time None, and wait 
-2024-05-29 00:03:06 | INJECT |  SYRINGE_1 valve 3, flow 1,  volume 7, time 420.0, and Truewait
-2024-05-29 00:03:06 | RUN | 6 | ** S3 Nat-HCyt-DPer, th=0.7, sec=900 **
-2024-05-29 00:03:06 | CONTRASTCHANGE | Valve 3, concentrations [100, 0, 0, 0], flow 1,  volume 18, time None, and NO wait 
-2024-05-29 00:03:06 | RUN | 7 | ** S1 Repeat Nat-Dcyt-HPer, th=0.7, uamps=7 **
-2024-05-29 00:03:06 | RUN | 8 | ** S1 Repeat Nat-Dcyt-HPer, th=2.3, uamps=20 **
-2024-05-29 00:03:06 | CONTRASTCHANGE | Valve 1, concentrations [71, 29, 0, 0], flow 1,  volume 18, time None, and NO wait 
-2024-05-29 00:03:06 | RUN | 9 | ** S3 Nat-HCyt-DPer, th=0.7, uamps=7 **
-2024-05-29 00:03:06 | RUN | 10 | ** S3 Nat-HCyt-DPer, th=2.3, uamps=20 **
-2024-05-29 00:03:06 | CONTRASTCHANGE | Valve 3, concentrations [71, 29, 0, 0], flow 1,  volume 18, time None, and NO wait 
-2024-05-29 00:03:06 | RUN | 11 | ** S1 Repeat Nat-Dcyt-HPer, th=0.7, uamps=7 **
-2024-05-29 00:03:06 | RUN | 12 | ** S1 Repeat Nat-Dcyt-HPer, th=2.3, uamps=20 **
-2024-05-29 00:03:06 | CONTRASTCHANGE | Valve 1, concentrations [38, 62, 0, 0], flow 1,  volume 18, time None, and NO wait 
-2024-05-29 00:03:06 | RUN | 13 | ** S3 Nat-HCyt-DPer, th=0.7, uamps=7 **
-2024-05-29 00:03:06 | RUN | 14 | ** S3 Nat-HCyt-DPer, th=2.3, uamps=20 **
-2024-05-29 00:03:06 | CONTRASTCHANGE | Valve 3, concentrations [38, 62, 0, 0], flow 1,  volume 18, time None, and NO wait 
-2024-05-29 00:03:06 | RUN | 15 | ** S1 Repeat Nat-Dcyt-HPer, th=0.7, uamps=15 **
-2024-05-29 00:03:06 | RUN | 16 | ** S1 Repeat Nat-Dcyt-HPer, th=2.3, uamps=25 **
-2024-05-29 00:03:06 | CONTRASTCHANGE | Valve 1, concentrations [0, 100, 0, 0], flow 1,  volume 18, time None, and NO wait 
-2024-05-29 00:03:06 | RUN | 17 | ** S3 Nat-HCyt-DPer, th=0.7, uamps=15 **
-2024-05-29 00:03:06 | RUN | 18 | ** S3 Nat-HCyt-DPer, th=2.3, uamps=25 **
-2024-05-29 00:03:06 | CONTRASTCHANGE | Valve 3, concentrations [0, 100, 0, 0], flow 1,  volume 18, time None, and NO wait 
-2024-05-29 00:03:06 | RUN | 19 | ** S1 Repeat Nat-Dcyt-HPer, th=0.7, uamps=10 **
-2024-05-29 00:03:06 | RUN | 20 | ** S1 Repeat Nat-Dcyt-HPer, th=2.3, uamps=25 **
-2024-05-29 00:03:06 | CONTRASTCHANGE | Valve 1, concentrations [100, 0, 0, 0], flow 1,  volume 18, time None, and NO wait 
-2024-05-29 00:03:06 | RUN | 21 | ** S3 Nat-HCyt-DPer, th=0.7, uamps=10 **
-2024-05-29 00:03:06 | RUN | 22 | ** S3 Nat-HCyt-DPer, th=2.3, uamps=25 **
-2024-05-29 00:03:06 | CONTRASTCHANGE | Valve 3, concentrations [100, 0, 0, 0], flow 1,  volume 18, time None, and NO wait 
-2024-05-29 00:03:06 | INJECT |  SYRINGE_1 valve 1, flow 1,  volume 7, time 420.0, and Truewait
-2024-05-29 00:03:06 | RUN | 23 | ** S1 Repeat Nat-Dcyt-HPer, th=0.7, sec=900 **
-2024-05-29 00:03:06 | CONTRASTCHANGE | Valve 1, concentrations [100, 0, 0, 0], flow 1,  volume 18, time None, and wait 
-2024-05-29 00:03:06 | RUN | 24 | ** S1 Repeat Nat-Dcyt-HPer, th=0.7, uamps=7 **
-2024-05-29 00:03:06 | RUN | 25 | ** S1 Repeat Nat-Dcyt-HPer, th=2.3, uamps=20 **
-2024-05-29 00:03:06 | CONTRASTCHANGE | Valve 1, concentrations [71, 29, 0, 0], flow 1,  volume 18, time None, and NO wait 
-2024-05-29 00:03:06 | RUN | 26 | ** S2 EAE-Dcyt-HPer, th=0.7, uamps=7 **
-2024-05-29 00:03:06 | RUN | 27 | ** S2 EAE-Dcyt-HPer, th=2.3, uamps=20 **
-2024-05-29 00:03:06 | CONTRASTCHANGE | Valve 2, concentrations [71, 29, 0, 0], flow 1,  volume 18, time None, and NO wait 
-2024-05-29 00:03:06 | RUN | 28 | ** S1 Repeat Nat-Dcyt-HPer, th=0.7, uamps=7 **
-2024-05-29 00:03:06 | RUN | 29 | ** S1 Repeat Nat-Dcyt-HPer, th=2.3, uamps=20 **
-2024-05-29 00:03:06 | CONTRASTCHANGE | Valve 1, concentrations [38, 62, 0, 0], flow 1,  volume 18, time None, and NO wait 
-2024-05-29 00:03:06 | RUN | 30 | ** S2 EAE-Dcyt-HPer, th=0.7, uamps=7 **
-2024-05-29 00:03:06 | RUN | 31 | ** S2 EAE-Dcyt-HPer, th=2.3, uamps=20 **
-2024-05-29 00:03:06 | CONTRASTCHANGE | Valve 2, concentrations [38, 62, 0, 0], flow 1,  volume 18, time None, and NO wait 
-2024-05-29 00:03:06 | RUN | 32 | ** S1 Repeat Nat-Dcyt-HPer, th=0.7, uamps=15 **
-2024-05-29 00:03:06 | RUN | 33 | ** S1 Repeat Nat-Dcyt-HPer, th=2.3, uamps=25 **
-2024-05-29 00:03:06 | CONTRASTCHANGE | Valve 1, concentrations [0, 100, 0, 0], flow 1,  volume 18, time None, and NO wait 
-2024-05-29 00:03:06 | RUN | 34 | ** S2 EAE-Dcyt-HPer, th=0.7, uamps=15 **
-2024-05-29 00:03:06 | RUN | 35 | ** S2 EAE-Dcyt-HPer, th=2.3, uamps=25 **
-2024-05-29 00:03:06 | CONTRASTCHANGE | Valve 2, concentrations [0, 100, 0, 0], flow 1,  volume 18, time None, and NO wait 
-2024-05-29 00:03:06 | RUN | 36 | ** S1 Repeat Nat-Dcyt-HPer, th=0.7, uamps=15 **
-2024-05-29 00:03:06 | RUN | 37 | ** S1 Repeat Nat-Dcyt-HPer, th=2.3, uamps=25 **
-2024-05-29 00:03:06 | CONTRASTCHANGE | Valve 1, concentrations [100, 0, 0, 0], flow 1,  volume 18, time None, and NO wait 
-2024-05-29 00:03:06 | RUN | 38 | ** S2 EAE-Dcyt-HPer, th=0.7, uamps=15 **
-2024-05-29 00:03:06 | RUN | 39 | ** S2 EAE-Dcyt-HPer, th=2.3, uamps=25 **
-2024-05-29 00:03:06 | CONTRASTCHANGE | Valve 2, concentrations [100, 0, 0, 0], flow 1,  volume 18, time None, and NO wait 
+2024-06-11 11:59:11 | RUN | 1 | ** S3 Nat-HCyt-DPer, th=0.7, uamps=10 **
+2024-06-11 11:59:11 | RUN | 2 | ** S3 Nat-HCyt-DPer, th=2.3, uamps=25 **
+2024-06-11 11:59:11 | CONTRASTCHANGE | Valve 3, concentrations [0, 100, 0, 0], flow 1.5,  volume 18, time None, and wait 
+2024-06-11 11:59:11 | RUN | 3 | ** S3 Nat-HCyt-DPer, th=0.7, uamps=10 **
+2024-06-11 11:59:11 | RUN | 4 | ** S3 Nat-HCyt-DPer, th=2.3, uamps=25 **
+2024-06-11 11:59:11 | CONTRASTCHANGE | Valve 3, concentrations [100, 0, 0, 0], flow 1.5,  volume 18, time None, and wait 
+2024-06-11 11:59:11 | INJECT |  SYRINGE_1 valve 2, flow 1,  volume 7, time 420.0, and Truewait
+2024-06-11 11:59:11 | RUN | 5 | ** S2 EAE-Dcyt-HPer, th=0.7, sec=900 **
+2024-06-11 11:59:11 | CONTRASTCHANGE | Valve 2, concentrations [100, 0, 0, 0], flow 1,  volume 18, time None, and wait 
+2024-06-11 11:59:11 | INJECT |  SYRINGE_1 valve 3, flow 1,  volume 7, time 420.0, and Truewait
+2024-06-11 11:59:11 | RUN | 6 | ** S3 Nat-HCyt-DPer, th=0.7, sec=900 **
+2024-06-11 11:59:11 | CONTRASTCHANGE | Valve 3, concentrations [100, 0, 0, 0], flow 1,  volume 18, time None, and NO wait 
+2024-06-11 11:59:11 | RUN | 7 | ** S1 Repeat Nat-Dcyt-HPer, th=0.7, uamps=7 **
+2024-06-11 11:59:11 | RUN | 8 | ** S1 Repeat Nat-Dcyt-HPer, th=2.3, uamps=20 **
+2024-06-11 11:59:11 | CONTRASTCHANGE | Valve 1, concentrations [71, 29, 0, 0], flow 1,  volume 18, time None, and NO wait 
+2024-06-11 11:59:11 | RUN | 9 | ** S3 Nat-HCyt-DPer, th=0.7, uamps=7 **
+2024-06-11 11:59:11 | RUN | 10 | ** S3 Nat-HCyt-DPer, th=2.3, uamps=20 **
+2024-06-11 11:59:11 | CONTRASTCHANGE | Valve 3, concentrations [71, 29, 0, 0], flow 1,  volume 18, time None, and NO wait 
+2024-06-11 11:59:11 | RUN | 11 | ** S1 Repeat Nat-Dcyt-HPer, th=0.7, uamps=7 **
+2024-06-11 11:59:11 | RUN | 12 | ** S1 Repeat Nat-Dcyt-HPer, th=2.3, uamps=20 **
+2024-06-11 11:59:11 | CONTRASTCHANGE | Valve 1, concentrations [38, 62, 0, 0], flow 1,  volume 18, time None, and NO wait 
+2024-06-11 11:59:11 | RUN | 13 | ** S3 Nat-HCyt-DPer, th=0.7, uamps=7 **
+2024-06-11 11:59:11 | RUN | 14 | ** S3 Nat-HCyt-DPer, th=2.3, uamps=20 **
+2024-06-11 11:59:11 | CONTRASTCHANGE | Valve 3, concentrations [38, 62, 0, 0], flow 1,  volume 18, time None, and NO wait 
+2024-06-11 11:59:11 | RUN | 15 | ** S1 Repeat Nat-Dcyt-HPer, th=0.7, uamps=15 **
+2024-06-11 11:59:11 | RUN | 16 | ** S1 Repeat Nat-Dcyt-HPer, th=2.3, uamps=25 **
+2024-06-11 11:59:11 | CONTRASTCHANGE | Valve 1, concentrations [0, 100, 0, 0], flow 1,  volume 18, time None, and NO wait 
+2024-06-11 11:59:11 | RUN | 17 | ** S3 Nat-HCyt-DPer, th=0.7, uamps=15 **
+2024-06-11 11:59:11 | RUN | 18 | ** S3 Nat-HCyt-DPer, th=2.3, uamps=25 **
+2024-06-11 11:59:11 | CONTRASTCHANGE | Valve 3, concentrations [0, 100, 0, 0], flow 1,  volume 18, time None, and NO wait 
+2024-06-11 11:59:11 | RUN | 19 | ** S1 Repeat Nat-Dcyt-HPer, th=0.7, uamps=10 **
+2024-06-11 11:59:11 | RUN | 20 | ** S1 Repeat Nat-Dcyt-HPer, th=2.3, uamps=25 **
+2024-06-11 11:59:11 | CONTRASTCHANGE | Valve 1, concentrations [100, 0, 0, 0], flow 1,  volume 18, time None, and NO wait 
+2024-06-11 11:59:11 | RUN | 21 | ** S3 Nat-HCyt-DPer, th=0.7, uamps=10 **
+2024-06-11 11:59:11 | RUN | 22 | ** S3 Nat-HCyt-DPer, th=2.3, uamps=25 **
+2024-06-11 11:59:11 | CONTRASTCHANGE | Valve 3, concentrations [100, 0, 0, 0], flow 1,  volume 18, time None, and NO wait 
+2024-06-11 11:59:11 | INJECT |  SYRINGE_1 valve 1, flow 1,  volume 7, time 420.0, and Truewait
+2024-06-11 11:59:11 | RUN | 23 | ** S1 Repeat Nat-Dcyt-HPer, th=0.7, sec=900 **
+2024-06-11 11:59:11 | CONTRASTCHANGE | Valve 1, concentrations [100, 0, 0, 0], flow 1,  volume 18, time None, and wait 
+2024-06-11 11:59:11 | RUN | 24 | ** S1 Repeat Nat-Dcyt-HPer, th=0.7, uamps=7 **
+2024-06-11 11:59:11 | RUN | 25 | ** S1 Repeat Nat-Dcyt-HPer, th=2.3, uamps=20 **
+2024-06-11 11:59:11 | CONTRASTCHANGE | Valve 1, concentrations [71, 29, 0, 0], flow 1,  volume 18, time None, and NO wait 
+2024-06-11 11:59:11 | RUN | 26 | ** S2 EAE-Dcyt-HPer, th=0.7, uamps=7 **
+2024-06-11 11:59:11 | RUN | 27 | ** S2 EAE-Dcyt-HPer, th=2.3, uamps=20 **
+2024-06-11 11:59:11 | CONTRASTCHANGE | Valve 2, concentrations [71, 29, 0, 0], flow 1,  volume 18, time None, and NO wait 
+2024-06-11 11:59:11 | RUN | 28 | ** S1 Repeat Nat-Dcyt-HPer, th=0.7, uamps=7 **
+2024-06-11 11:59:11 | RUN | 29 | ** S1 Repeat Nat-Dcyt-HPer, th=2.3, uamps=20 **
+2024-06-11 11:59:11 | CONTRASTCHANGE | Valve 1, concentrations [38, 62, 0, 0], flow 1,  volume 18, time None, and NO wait 
+2024-06-11 11:59:11 | RUN | 30 | ** S2 EAE-Dcyt-HPer, th=0.7, uamps=7 **
+2024-06-11 11:59:11 | RUN | 31 | ** S2 EAE-Dcyt-HPer, th=2.3, uamps=20 **
+2024-06-11 11:59:11 | CONTRASTCHANGE | Valve 2, concentrations [38, 62, 0, 0], flow 1,  volume 18, time None, and NO wait 
+2024-06-11 11:59:11 | RUN | 32 | ** S1 Repeat Nat-Dcyt-HPer, th=0.7, uamps=15 **
+2024-06-11 11:59:11 | RUN | 33 | ** S1 Repeat Nat-Dcyt-HPer, th=2.3, uamps=25 **
+2024-06-11 11:59:11 | CONTRASTCHANGE | Valve 1, concentrations [0, 100, 0, 0], flow 1,  volume 18, time None, and NO wait 
+2024-06-11 11:59:11 | RUN | 34 | ** S2 EAE-Dcyt-HPer, th=0.7, uamps=15 **
+2024-06-11 11:59:11 | RUN | 35 | ** S2 EAE-Dcyt-HPer, th=2.3, uamps=25 **
+2024-06-11 11:59:11 | CONTRASTCHANGE | Valve 2, concentrations [0, 100, 0, 0], flow 1,  volume 18, time None, and NO wait 
+2024-06-11 11:59:11 | RUN | 36 | ** S1 Repeat Nat-Dcyt-HPer, th=0.7, uamps=15 **
+2024-06-11 11:59:11 | RUN | 37 | ** S1 Repeat Nat-Dcyt-HPer, th=2.3, uamps=25 **
+2024-06-11 11:59:11 | CONTRASTCHANGE | Valve 1, concentrations [100, 0, 0, 0], flow 1,  volume 18, time None, and NO wait 
+2024-06-11 11:59:11 | RUN | 38 | ** S2 EAE-Dcyt-HPer, th=0.7, uamps=15 **
+2024-06-11 11:59:11 | RUN | 39 | ** S2 EAE-Dcyt-HPer, th=2.3, uamps=25 **
+2024-06-11 11:59:11 | CONTRASTCHANGE | Valve 2, concentrations [100, 0, 0, 0], flow 1,  volume 18, time None, and NO wait 

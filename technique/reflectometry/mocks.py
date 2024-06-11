@@ -117,7 +117,7 @@ g.cset.side_effect = cset
 
 instrument = {"Theta": 0, "Two_Theta": 0, "MODE": 'Solid',
               "S1HC": 0, "S2HC": 0, "S3HC": 0, "S4HC": 0, "S1AVG": 10.0,
-              "S3_BEAM_BLOCKER_OFFS": 0}
+              "S3_BEAM_BLOCKER_OFFS": 0, "MODE": "SOLID"}
 
 SE = {  # HPLC blocks:
     "knauer2": 3, "KNAUER": 1, "Component_A": 100, "Component_B": 0, "Component_C": 0, "Component_D": 0,
