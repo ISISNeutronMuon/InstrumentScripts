@@ -4,6 +4,7 @@ from contextlib2 import contextmanager
 
 from future.moves import itertools
 from math import tan, radians, sin
+import time
 
 from six.moves import input
 
@@ -115,7 +116,10 @@ class _Movement(object):
         new_title = "{} {}".format(title, subtitle)
         
         if theta is not None:
-            new_title = "{} th={:.4g}".format(new_title, theta)
+            if theta > 0.0:
+                new_title = "{} th={:.4g}".format(new_title, theta)
+            else:
+                new_title = "{} neg_th={:.4g}".format(new_title, abs(theta))
         else:
             new_title = "{} transmission".format(new_title)
         if smangle is not None:
@@ -151,21 +155,46 @@ class _Movement(object):
         """
         calc_dict = self.calculate_slit_gaps(theta, sample.footprint, sample.resolution, constants)
 
-        factor = theta / constants.max_theta
-        s3 = constants.s3max * factor
-        calc_dict.update({'S3VG': s3})
+        if self._get_block_value("S3Block") == 'No':
+            factor = theta / constants.max_theta
+            s3 = constants.s3max * factor
+            calc_dict.update({'S3VG': s3})
+            print("S3 not in beam blocker mode")
+            calc_dict.update({'S3VC': -self._get_block_value('DOFF_PARALLEL')+8.459})
+            removes=['S3S','S3N']
+            # try:
+                # del vgaps['S3S']
+            # except:
+                # print('No need to remove S3S')
+            # try:
+                # del vgaps['S3N']
+            # except:
+                # print('No need to remove S3N')
+        else:
+            print("S3 in Beam blocker mode")
+            calc_dict.update({'S3N':20, 'S3S':3}) ##set some defaults.
+            removes=['S3VG','S3VC']
+            # try:
+                # del vgaps['S3VG']
+            # except:
+                # print('No need to remove S3VG')
+            # try:
+                # del vgaps['S3VC']
+            # except:
+                # print('No need to remove S£Vc')
         
         if vgaps is None:
             vgaps = {}
         ## Look at inputs. Might not need to deal with None...?
         for key, value in vgaps.items():
             calc_dict.update({} if value is None else {key.upper(): value})
-
-        print("Slit gaps set to: {}".format(calc_dict))
-        for key, value in calc_dict.items():
+            
+        calc_dict2={key: val for key, val in calc_dict.items() if key.upper() not in removes}
+        print("Slit gaps set to: {}".format(calc_dict2))
+        for key, value in calc_dict2.items():
             if value < 0.0:
                 sys.stderr.write("Vertical slit gaps are being set to less than 0!\n")
-        self.set_axis_dict(calc_dict)
+        self.set_axis_dict(calc_dict2)
 
     def set_axis_dict(self, axes_to_set: dict):
         """
@@ -198,6 +227,7 @@ class _Movement(object):
         :return: slit 1 and slit 2 vertical gaps
         Added warnings and errors for s2 > s1 and negative values respectively.
         """
+        theta = abs(theta)
         s1sa = constants.s1s2 + constants.s2sa
         footprint_at_theta = footprint * sin(radians(theta))
         s1 = 2 * s1sa * tan(radians(resolution * theta)) - footprint_at_theta
@@ -299,11 +329,16 @@ class _Movement(object):
         :type smblock: str
         TODO: Tie block options to instrument constants.
         """
+        
+        prior_status = g.cget("{}INBEAM".format(smblock))['value']
         if smangle is not None:
             is_in_beam = "IN" if smangle > 0.0001 else "OUT"
             print("{} angle (in beam?): {} ({})".format(smblock, smangle, is_in_beam))
             if not self.dry_run:
                 g.cset("{}INBEAM".format(smblock), is_in_beam)
+                if is_in_beam != prior_status:
+                    print("Pause for mirror status change")
+                    time.sleep(20)
                 if smangle > 0.0001:
                     g.cset("{}ANGLE".format(smblock), smangle)
 

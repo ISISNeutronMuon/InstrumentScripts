@@ -35,9 +35,9 @@ class InterDefaultScan(Defaults):
                             create_spectra_definition(3, 6410.0, 70000.0),
                             create_spectra_definition(4, 9600.0, 40000.0)]
 
-    _multi_det_spectra = [create_spectra_definition(i, 6410.0, 90000.0) for i in range(5, 242)]  # linear detector
+    _multi_det_spectra = [create_spectra_definition(i, 6410.0, 90000.0) for i in range(5, 2060)]  # linear detector
 
-    detector = NormalisedIntensityDetector(default_monitor=3, default_detector=82,
+    detector = NormalisedIntensityDetector(default_monitor=3, default_detector=854,
                                            spectra_definitions=_single_det_spectra + _multi_det_spectra)
 
     def __init__(self):

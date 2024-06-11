@@ -279,7 +279,7 @@ class RunActions:
 
                 if vgaps is None:
                     vgaps = {}
-                if "S3VG".casefold() not in vgaps.keys():
+                if "S3VG" not in [g.upper() for g in vgaps.keys()]:
                     vgaps.update({"S3VG": constants.s3max})
 
                 if hgaps is None:
@@ -370,7 +370,7 @@ class RunActions:
 
                 if vgaps is None:
                     vgaps = {}
-                if "S3VG".casefold() not in vgaps.keys():
+                if "S3VG" not in [g.upper() for g in vgaps.keys()]:
                     vgaps.update({"S3VG": constants.s3max})
                 if hgaps is None:
                     hgaps = sample.hgaps
@@ -518,7 +518,7 @@ class SEActions:
             g.cset("Component_A", concentrations[0])
             g.cset("Component_B", concentrations[1])
             g.cset("Component_C", concentrations[2])
-            g.cset("Component_D", concentrations[3])
+            #g.cset("Component_D", concentrations[3])
             g.cset("hplcflow", flow)
             if volume is not None:
                 g.cset("pump_for_volume", volume)
@@ -529,10 +529,10 @@ class SEActions:
             else:
                 print("Error concentration not set neither volume or time set!")
                 return
-            g.waitfor_block("pump_is_on", "IDLE")
+            g.waitfor_block("pump_is", "Pumping")
 
             if wait:
-                g.waitfor_block("pump_is_on", "OFF")
+                g.waitfor_block("pump_is", "Off")
 
     @staticmethod
     @DryRun

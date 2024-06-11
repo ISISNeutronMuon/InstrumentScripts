@@ -12,7 +12,7 @@ class InstrumentConstant(object):
     """
     Set of constants for a given instrument
     """
-    def __init__(self, s1s2, s2sa, max_theta, s4max, sm_sa, incoming_beam_angle, s3max=None, has_height2=True):
+    def __init__(self, s1s2, s2sa, max_theta, sm_sa, incoming_beam_angle, s3max=None, has_height2=True):
         """
         Instrument constants
         Args:
@@ -28,7 +28,6 @@ class InstrumentConstant(object):
         self.s1s2 = s1s2
         self.s2sa = s2sa
         self.max_theta = max_theta
-        self.s4max = s4max
         self.sm_sa = sm_sa
         self.s3max = s4max if s3max is None else s3max
         self.has_height2 = has_height2
@@ -51,10 +50,10 @@ def get_instrument_constants():
         sm_z = get_reflectometry_value("SM2_Z") # set to SM2_Z for now, needs updating to include both.
         sample_z = get_reflectometry_value("SAMPLE_Z")
         s3_z = get_reflectometry_value("S3_Z")
-        s4_z = get_reflectometry_value("S4_Z")
-        pd_z = get_reflectometry_value("PD_Z")
+        # s4_z = get_reflectometry_value("S4_Z")
+        #pd_z = get_reflectometry_value("PD_Z")
         s3_max = get_reflectometry_value("S3_MAX")
-        s4_max = get_reflectometry_value("S4_MAX")
+        # s4_max = get_reflectometry_value("S4_MAX")
         max_theta = get_reflectometry_value("MAX_THETA")
         natural_angle = get_reflectometry_value("NATURAL_ANGLE")
         has_height2 = get_reflectometry_value("HAS_HEIGHT2") == "YES"
@@ -63,7 +62,7 @@ def get_instrument_constants():
             s1s2=s2_z - s1_z,
             s2sa=sample_z - s2_z,
             max_theta=max_theta,  # usual maximum angle
-            s4max=s4_max,  # max s4_vg at max Theta
+            #s4max=s4_max,  # max s4_vg at max Theta
             s3max=s3_max,  # max s4_vg at max Theta
             sm_sa=sample_z - sm_z,
             incoming_beam_angle=natural_angle,
