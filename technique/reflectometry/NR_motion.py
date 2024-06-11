@@ -148,12 +148,11 @@ class _Movement(object):
         if not in dry run
         Args:
             theta: angle theta is set to
-            constants: machine constants
             vgaps: user defined gaps
             sample: sample parameters
         """
         calc_dict = self.calculate_slit_gaps(theta, sample.footprint, sample.resolution)
-        ## TODO: Add None handling for when s1s2 and s2sa are not properly defined.
+        # TODO: Add None handling for when s1s2 and s2sa are not properly defined.
 
         factor = theta / self.constants.max_theta
         s3 = self.constants.s3max * factor
@@ -508,7 +507,8 @@ class _Movement(object):
             instrument constants, updated mode
         """
         self.dry_run_warning()
-        ##TODO: this constants path might need changing depending how constants setup. Does it need to be set separately here?
+        # #TODO: this constants path might need changing depending how constants setup. Does it need to be set
+        #  separately here?
         if self.constants.periods is not None:
             self.change_to_soft_period_count(count=self.constants.periods)
         else:
@@ -520,7 +520,6 @@ class _Movement(object):
 
         mode_out = self.change_to_mode_if_not_none(mode)
         print("Mode {}".format(mode_out))
-        return self.constants, mode_out
 
     def sample_setup(self, sample, angle, mode, trans_offset=0.0, smang=0.0):
         """

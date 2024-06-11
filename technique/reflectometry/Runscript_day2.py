@@ -91,7 +91,7 @@ def runscript(dry_run=False):
         # inject(sample_3, D2O, flow=1.5, volume=18, wait=True)
 
         sample_3.subtitle = f"{temp}C D2O"
-        run_angle(sample_3, 0.7, 10)
+        run_angle(sample_3, 0.7, 10, vgaps={"S2VG": 2.0, "S3VG": 3.0})
         run_angle(sample_3, 2.3, 25)
 
         inject(sample_3, H2O, flow=1.5, volume=18, wait=True)
@@ -205,7 +205,7 @@ def runscript(dry_run=False):
     inject(sample_1, D2O, flow=1, volume=18, wait=False)
 
     sample_2.subtitle = '10C + MPB Flush H2O'
-    run_angle(sample_2, 0.7, 15)
+    run_angle(sample_2, 0.7, 15, vgaps={"S2VG": 2.0, "S3VG": 3.0})
     run_angle(sample_2, 2.3, 25)
     inject(sample_2, D2O, flow=1, volume=18, wait=False)
 

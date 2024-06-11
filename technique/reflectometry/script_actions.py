@@ -235,7 +235,7 @@ class RunActions:
 
             movement = _Movement(dry_run)
 
-            constants, mode_out = movement.setup_measurement(mode)  # TODO: make sure we're not in 'LIQUID' mode?
+            mode_out = movement.setup_measurement(mode)  # TODO: make sure we're not in 'LIQUID' mode?
             if ht_block is None:
                 movement.sample_setup(sample, angle, mode_out)
             if hgaps is None:
@@ -329,7 +329,7 @@ class RunActions:
 
             movement = _Movement(dry_run)
 
-            constants, mode_out = movement.setup_measurement(mode)
+            mode_out = movement.setup_measurement(mode)
             smblock_out, smang_out = movement.sample_setup(sample, angle, mode_out, smang=smangle)
 
             if do_auto_height:  # TODO: remove KEYNCE and HEIGHT and make generic
@@ -414,15 +414,15 @@ class RunActions:
             # print(colored("** Transmission {} **".format(title), 'light_red', attrs=['bold']))
 
             movement = _Movement(dry_run)
-            constants, mode_out = movement.setup_measurement(mode)
+            mode_out = movement.setup_measurement(mode)
 
             with movement.reset_hgaps_and_sample_height_new(sample):
                 movement.sample_setup(sample, 0.0, mode_out, height_offset)
 
-                if vgaps is None:
-                    vgaps = {}
-                if "S3VG" not in [gg.upper() for gg in vgaps.keys()]:
-                    vgaps.update({"S3VG": constants.s3max}) # TODO: remove constants somehow
+                # if vgaps is None:
+                #     vgaps = {}
+                # if "S3VG" not in [gg.upper() for gg in vgaps.keys()]:
+                #     vgaps.update({"S3VG": constants.s3max}) # TODO: remove constants somehow
 
                 if hgaps is None:
                     hgaps = sample.hgaps
@@ -516,16 +516,16 @@ class RunActions:
             # print(colored("** Transmission {} **".format(title), 'light_red', attrs=['bold']))
 
             movement = _Movement(dry_run)
-            constants, mode_out = movement.setup_measurement(mode)
+            mode_out = movement.setup_measurement(mode)
 
             with _Movement.reset_hgaps_and_sample_height_new(movement, sample):
 
                 smblock_out, smang_out = movement.sample_setup(sample, 0.0, mode_out, height_offset, smangle)
 
-                if vgaps is None:
-                    vgaps = {}
-                if "S3VG" not in [gg.upper() for gg in vgaps.keys()]:
-                    vgaps.update({"S3VG": constants.s3max}) # TODO: remove reference to constants
+                # if vgaps is None:
+                #     vgaps = {}
+                # if "S3VG" not in [gg.upper() for gg in vgaps.keys()]:
+                #     vgaps.update({"S3VG": constants.s3max}) # TODO: remove reference to constants
                 if hgaps is None:
                     hgaps = sample.hgaps
                 movement.set_axis_dict(hgaps)
