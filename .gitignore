@@ -11,4 +11,4 @@
 
 /.coverage
 /htmlcov
-technique/reflectometry/example.log
+technique/reflectometry/*.log
