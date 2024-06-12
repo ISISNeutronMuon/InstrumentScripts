@@ -1,16 +1,16 @@
 coverage
-numpy~=1.20.1
-matplotlib~=3.3.4
+numpy
+matplotlib
 pylint
 flake8
-scipy~=1.6.0
-six~=1.15.0
+scipy
+six
 sphinx
-mock~=5.1.0
-parameterized~=0.9.0
+mock
+parameterized
 pyparsing==2.4.7 # Errors out if not this version.
 PyHamcrest
-future~=0.18.2
-requests~=2.25.1
-Pillow~=8.1.0
-contextlib2~=21.6.0
+future
+requests
+Pillow
+contextlib2
