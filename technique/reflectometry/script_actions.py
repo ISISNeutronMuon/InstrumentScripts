@@ -7,8 +7,6 @@ from datetime import datetime
 from datetime import timedelta
 from math import fabs
 
-from termcolor import colored
-
 try:
     # pylint: disable=import-error
     from genie_python import genie as g
