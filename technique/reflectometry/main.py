@@ -1,16 +1,27 @@
 # This is a sample Python script.
 
-# Press Shift+F10 to execute it or replace it with your code.
-# Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
+import sys
+from collections import OrderedDict
+from contextlib2 import contextmanager
+# from termcolor import colored
 
+from future.moves import itertools
+from math import tan, radians, sin
 
-def print_hi(name):
-    # Use a breakpoint in the code line below to debug your script.
-    print(f'Hi, {name}')  # Press Ctrl+F8 to toggle the breakpoint.
+from six.moves import input
 
+import logging
 
-# Press the green button in the gutter to run the script.
-if __name__ == '__main__':
-    print_hi('PyCharm')
+try:
+    # pylint: disable=import-error
+    from genie_python import genie as g
+except ImportError:
+    from mocks import g
 
-# See PyCharm help at https://www.jetbrains.com/help/pycharm/
+# import general.utilities.io
+from sample import Sample
+from instrument_constants import InstrumentConstant
+
+const = InstrumentConstant()
+
+print(const)
