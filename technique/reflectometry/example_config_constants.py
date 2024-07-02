@@ -14,16 +14,16 @@ def inst_script_constants():
 
     #constants.s3_beam_blocker_offset = None ##Correct arguments for new beamblocker setup need to be added here.
     #constants.angle_for_s3_offset = None
-    constants.vslits = ["1", "1a", "2", "3"]
-    constants.hslits = ["1", "2", "3"]
+    constants.VSLITS_INDICES = ["1", "1a", "2", "3"]
+    constants.HSLITS_INDICES = ["1", "2", "3"]
     constants.periods = 1
-    constants.smblock = "SM2"
-    constants.hgdefaults = {'S1HG': 50, 'S2HG': 30, 'S3HG': 60}
-    constants.smdefaults = {'SM1': 0.0, 'SM2': 0.0}
-    constants.oscblock = 'S2HG'
+    constants.SM_BLOCK = "SM2"
+    constants.HG_DEFAULTS = {'S1HG': 50, 'S2HG': 30, 'S3HG': 60}
+    constants.SM_DEFAULTS = {'SM1': 0.0, 'SM2': 0.0}
+    constants.OSC_BLOCK = 'S2HG'
     constants.trans_angle = 0.7
-    constants.trans_offset = 5
-    constants.max_fine_trans = 10
+    constants.TRANSMISSION_HEIGHT_OFFSET = 5
+    constants.TRANSMISSION_FINE_Z_OFFSET_MAX = 10
 
     return constants
 

@@ -259,7 +259,7 @@ class RunActions:
                                        hgaps)
 
     @staticmethod
-    @DryRun  # TODO: remove b.KEYENCE, SM2, "HEIGHT"
+    @DryRun  # TODO: remove b.KEYENCE, SM2, "HEIGHT"; FINE_HEIGHT_BLOCK should/could be the main height?
     def run_angle_SM(sample, angle, count_uamps=None, count_seconds=None, count_frames=None, vgaps: dict = None,
                      hgaps: dict = None, smangle=0.0, mode=None, do_auto_height=False, laser_offset_block="b.KEYENCE",
                      fine_height_block="HEIGHT", auto_height_target=0.0, continue_on_error=False, dry_run=False,
@@ -447,6 +447,8 @@ class RunActions:
 
                 # Horizontal gaps and height reset by with reset_gaps_and_sample_height
 
+    # TODO: ht_block to default to main height
+    # TODO: height_offset to default to TRANSMISSON_HEIGHT_OFFSET
     # TODO: Do we want to change the order of the arguments here?
     @staticmethod
     @DryRun

@@ -520,7 +520,7 @@ class _Movement(object):
             constants: constants for the instrument to check height behaviour
         """
         special_axes = ['HEIGHT2']  # This could link to an instrument specific function?
-        if axis.upper() in special_axes and not constants.has_height2:
+        if axis.upper() in special_axes and not constants.HAS_HEIGHT2:
             print("ERROR: Height 2 off set is being ignored")
         else:
             print("{} set to: {}".format(axis, value))
@@ -613,7 +613,7 @@ class _Movement(object):
         """
         calc_dict = self.calculate_slit_gaps(theta, sample.footprint, sample.resolution, constants)
 
-        factor = theta / constants.max_theta
+        factor = theta / constants.MAX_THETA
         s3 = constants.s3max * factor
         calc_dict.update({'S3VG': s3})
         
@@ -896,7 +896,7 @@ class _Movement(object):
         if mode.upper() != "LIQUID":
             self.set_axis("PSI", sample.psi_offset, constants=inst_constants)
             self.set_axis("PHI", sample.phi_offset + angle, constants=inst_constants)
-        if inst_constants.has_height2:
+        if inst_constants.HAS_HEIGHT2:
             if angle == 0 and trans_offset > 10:  #i.e. if transmission
                 self.set_axis("HEIGHT2", sample.height2_offset - trans_offset, constants=inst_constants)
                 self.set_axis("HEIGHT", sample.height_offset, constants=inst_constants)
