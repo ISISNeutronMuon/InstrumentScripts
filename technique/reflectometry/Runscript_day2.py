@@ -2,7 +2,6 @@
 ### with ScriptMaker (c) Maximilian Skoda 2020 
 ### Enjoy and use at your own risk. 
 
-from technique.reflectometry import *  # __all__ defined in __init__.py
 import logging
 import sys
 import os
@@ -12,7 +11,10 @@ try:
     # pylint: disable=import-error
     from genie_python import genie as g
 except ImportError:
-    from technique.reflectometry.mocks import g
+    os.environ['instrument'] = "POLREF"
+    from mocks import g
+
+from technique.reflectometry import *  # __all__ defined in __init__.py
 
 # Remove all handlers associated with the root logger object.
 for handler in logging.root.handlers[:]:
