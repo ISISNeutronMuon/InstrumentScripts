@@ -522,7 +522,7 @@ class _Movement(object):
         print("Mode {}".format(mode_out))
         return mode_out
 
-    def sample_setup(self, sample, angle, mode, trans_offset=0.0, smang=0.0):
+    def sample_setup(self, sample, angle, mode, trans_offset=0.0, sm_ang=0.0, sm_block='Default', ht_block='Default'):
         """
         Moves to the sample position ready for a measurement.
         Does not set slits as this is not part of sample object, but could be changed.
@@ -538,8 +538,15 @@ class _Movement(object):
             ht_block: motor to be used for height movement. If height offset greater than instrument-specific maximum height offset then height2 is used.
         """
         # TODO: check special mode label on SURF.
+
+        # overwrite to instrument constants where required:
+        # TODO: check if this is the best place:
+        htblock = ht_block if ht_block != 'Default' else sample.ht_block
+        smblock = sm_block if sm_block != 'Default' else self.constants.SM_BLOCK
+        transoffset = trans_offset if trans_offset != 0.0 else self.constants.TRANSMISSION_HEIGHT_OFFSET
+
         self.set_axis("TRANS", sample.translation)
-        smblock_out, smang_out = self._SM_setup(angle, smang, mode)
+        smblock_out, smang_out = self._SM_setup(angle, sm_ang, mode)
         self.set_axis("THETA", angle)
         self.wait_for_move()
         if mode.upper() != "LIQUID":
@@ -595,7 +602,7 @@ class _Movement(object):
         return self.constants.SM_BLOCK, smang
 
     def start_measurement(self, count_uamps: float = None, count_seconds: float = None, count_frames: float = None,
-                          osc_slit: bool = False, osc_block: str = None, osc_gap: float = None,
+                          osc_slit: bool = False, osc_block: str = 'Default', osc_gap: float = None,
                           vgaps: dict = None,
                           hgaps: dict = None):
         """
@@ -610,22 +617,26 @@ class _Movement(object):
             vgaps: vertical gap dict to check for osc_extent
             hgaps: horizonal gap dict to check for osc_extent
         """
+
+        # set to defaults as required - TODO: decide whether this is correct place:
+        oscblock = osc_block if osc_block != 'Default' else self.constants.OSC_BLOCK
+
         if count_seconds is None and count_uamps is None and count_frames is None:
             print("Setup only - no measurement")
         elif osc_slit:
             # Tries to take the extent for oscillation from the equivalent param e.g. s2hg.
             # Otherwise carries None to osc input.
-            hgaps.update(vgaps)
+            hgaps.update(vgaps) # TODO: what happens if vgaps is None and why vgaps?
             try:
-                use_block = hgaps[self.constants.OSC_BLOCK.casefold()]
-                print('using block {}={}'.format(self.constants.OSC_BLOCK, use_block))
+                use_block = hgaps[oscblock.casefold()]
+                print('using block {}={}'.format(oscblock, use_block))
             except:
                 use_block = None
             # If the gap isn't specified, this is set to match the extent (i.e. not osc).
             if osc_gap is None:
                 osc_gap = use_block
-            print('Inputs: osc_block {}, osc_gap {},use_block {}'.format(self.constants.OSC_BLOCK, osc_gap, use_block))
-            self.count_osc_slit(self.constants.OSC_BLOCK, osc_gap, use_block, count_uamps, count_seconds, count_frames)
+            print('Inputs: osc_block {}, osc_gap {},use_block {}'.format(oscblock, osc_gap, use_block))
+            self.count_osc_slit(oscblock, osc_gap, use_block, count_uamps, count_seconds, count_frames)
             # TODO Add to title or leave?
         else:
             # Think this might be redundant but keep for safety.
