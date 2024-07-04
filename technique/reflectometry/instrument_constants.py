@@ -48,8 +48,8 @@ def get_reflectometry_value(value_name):
     :raises IOError: if PV does not exist
     """
     pv_name = "REFL_01:CONST:{}".format(value_name)
-    value = g.get_pv(pv_name, is_local=True)  # TODO: Need some kine of try block here
-    # except UnableToConnectToPVException:??
+    value = g.get_pv(pv_name, is_local=True)  # TODO: Need some kind of try block here
+    # except UnableToConnectToPVException:?? This may actually return None - really not sure
 
     if value == "":  # or whatever gets returned from the above exception
         return None
