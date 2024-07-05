@@ -82,8 +82,8 @@ def runscript(dry_run=False):
     SiMW = [38, 62, 0, 0]
     H2O = [0, 100, 0, 0]
 
-    # transmission(sample_1, "S1 Si osc_gap=5", count_uamps=20, at_angle=0.7, osc_gap=5)
-    # transmission(sample_1, "S1 Si", count_uamps=20, at_angle=0.7)
+    transmission(sample_1, "S1 Si osc_gap=5", count_uamps=20, at_angle=0.7, osc_gap=5)
+    transmission(sample_1, "S1 Si", count_uamps=20, at_angle=0.7)
     #
 
     temperatures_to_measure = [38]

@@ -172,9 +172,9 @@ class RunActions:
     def run_angle(sample, angle: float, count_uamps: float = None, count_seconds: float = None,
                   count_frames: float = None, vgaps: dict = None, hgaps: dict = None, mode: str = None,
                   dry_run: bool = False, include_gaps_in_title: bool = False, osc_slit: bool = False,
-                  osc_block: str = None, osc_gap: float = None, use_beam_blocker: bool = False,
+                  osc_block: str = 'Default', osc_gap: float = None, use_beam_blocker: bool = False,
                   s3_beam_blocker_offset: float = None, angle_for_s3_offset: float = None, s3_vgap: float = None,
-                  ht_block: str = None):
+                  ht_block: str = 'Default'):
         """
         Move to a given theta and smangle with slits set. If a current, time or frame count are given then take a
         measurement.
@@ -259,12 +259,12 @@ class RunActions:
                                        hgaps)
 
     @staticmethod
-    @DryRun  # TODO: remove b.KEYENCE, SM2, "HEIGHT"
+    @DryRun  # TODO: remove b.KEYENCE, SM2, "HEIGHT"; FINE_HEIGHT_BLOCK should/could be the main height?
     def run_angle_SM(sample, angle, count_uamps=None, count_seconds=None, count_frames=None, vgaps: dict = None,
                      hgaps: dict = None, smangle=0.0, mode=None, do_auto_height=False, laser_offset_block="b.KEYENCE",
                      fine_height_block="HEIGHT", auto_height_target=0.0, continue_on_error=False, dry_run=False,
-                     include_gaps_in_title=False, smblock=None, osc_slit: bool = False, osc_block: str = None,
-                     osc_gap: float = None, ht_block: str = None):
+                     include_gaps_in_title=False, smblock: str ='Default', osc_slit: bool = False, osc_block: str = 'Default',
+                     osc_gap: float = None, ht_block: str = 'Default'):
         """
         Move to a given theta and smangle with slits set. If a current, time or frame count are given then take a
         measurement.
@@ -356,8 +356,8 @@ class RunActions:
     @DryRun
     def transmission(sample, title: str = None, vgaps: dict = None, hgaps: dict = None, count_uamps: float = None,
                      count_seconds: float = None, count_frames: float = None, height_offset: float = None,
-                     osc_slit: bool = False, osc_block: str = None, osc_gap: float = None, mode: str = None,
-                     at_angle: float = None, ht_block: str = None, dry_run: bool = False,
+                     osc_slit: bool = False, osc_block: str = 'Default', osc_gap: float = None, mode: str = None,
+                     at_angle: float = None, ht_block: str = 'Default', dry_run: bool = False,
                      include_gaps_in_title: bool = False):
 
         """
@@ -447,6 +447,8 @@ class RunActions:
 
                 # Horizontal gaps and height reset by with reset_gaps_and_sample_height
 
+    # TODO: ht_block to default to main height
+    # TODO: height_offset to default to TRANSMISSON_HEIGHT_OFFSET
     # TODO: Do we want to change the order of the arguments here?
     @staticmethod
     @DryRun
@@ -455,8 +457,8 @@ class RunActions:
                         height_offset: float = None, smangle: float = 0.0,
                         mode: str = None, dry_run: bool = False, include_gaps_in_title: bool = True,
                         osc_slit: bool = True,
-                        osc_block: str = None, osc_gap: float = None, at_angle: float = None,
-                        smblock: str = None, ht_block: str = None):
+                        osc_block: str = 'Default', osc_gap: float = None, at_angle: float = None,
+                        smblock: str = 'Default', ht_block: str = 'Default'):
         """
         Perform a transmission. Smangle is set via smangle Arg and the mirror can be specified.
         Behaviour depends on mode:
