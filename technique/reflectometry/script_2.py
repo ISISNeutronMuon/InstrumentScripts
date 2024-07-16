@@ -71,6 +71,9 @@ def runscript(dry_run=False):
                                            phi_offset=0.853 - 0.702,
                                            psi_offset=-0.0,
                                            valve=4)
+    sample_5 = sample_generator.new_sample(title="D2O",
+                                           translation=0,
+                                           height_offset=50.99)
 
     D2O = [100, 0, 0, 0]
     H2O = [0, 100, 0, 0]
@@ -97,6 +100,10 @@ def runscript(dry_run=False):
     go_to_pressure(28, speed=30)
 
     inject(sample_4, D2O, flow=2.0, volume=20)
+
+    sample_5.subtitle = "air repeat"
+    run_angle_SM(sample_5, 0.4, 40)
+    run_angle_SM(sample_5, 1.0, 60)
 
     if dry_run:
         # print("\n=== Total time: ", str(int(DryRun.run_time / 60)) + "h " + str(int(DryRun.run_time % 60)) + "min ===\n")

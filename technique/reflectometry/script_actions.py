@@ -263,8 +263,8 @@ class RunActions:
     def run_angle_SM(sample, angle, count_uamps=None, count_seconds=None, count_frames=None, vgaps: dict = None,
                      hgaps: dict = None, smangle=0.0, mode=None, do_auto_height=False, laser_offset_block="b.KEYENCE",
                      fine_height_block="HEIGHT", auto_height_target=0.0, continue_on_error=False, dry_run=False,
-                     include_gaps_in_title=False, smblock: str ='Default', osc_slit: bool = False, osc_block: str = 'Default',
-                     osc_gap: float = None, ht_block: str = 'Default'):
+                     include_gaps_in_title=False, smblock: str = 'Default', osc_slit: bool = False,
+                     osc_block: str = 'Default', osc_gap: float = None, ht_block: str = 'Default'):
         """
         Move to a given theta and smangle with slits set. If a current, time or frame count are given then take a
         measurement.
@@ -328,7 +328,7 @@ class RunActions:
             movement = _Movement(dry_run)
 
             mode_out = movement.setup_measurement(mode)
-            smblock_out, smang_out = movement.sample_setup(sample, angle, mode_out, smang=smangle)
+            smblock_out, smang_out = movement.sample_setup(sample, angle, mode_out, trans_offset=None, sm_ang=smangle)
 
             if do_auto_height:  # TODO: remove KEYNCE and HEIGHT and make generic
                 movement.auto_height(laser_offset_block="KEYENCE", fine_height_block="HEIGHT",

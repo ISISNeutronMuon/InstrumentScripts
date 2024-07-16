@@ -522,7 +522,7 @@ class _Movement(object):
         print("Mode {}".format(mode_out))
         return mode_out
 
-    def sample_setup(self, sample, angle, mode, trans_offset=0.0, sm_ang=0.0, sm_block='Default', ht_block='Default'):
+    def sample_setup(self, sample, angle, mode, trans_offset, sm_ang=0.0, sm_block='Default', ht_block='Default'):
         """
         Moves to the sample position ready for a measurement.
         Does not set slits as this is not part of sample object, but could be changed.
@@ -543,7 +543,12 @@ class _Movement(object):
         # TODO: check if this is the best place:
         htblock = ht_block if ht_block != 'Default' else sample.ht_block
         smblock = sm_block if sm_block != 'Default' else self.constants.SM_BLOCK
-        transoffset = trans_offset if trans_offset != 0.0 else self.constants.TRANSMISSION_HEIGHT_OFFSET
+        if trans_offset is None:  # this is then a normal run
+            transoffset = 0.0
+        elif trans_offset == 0.0:  # this is transmission run but height_offset was not specified (is 0.0 from calling function)
+            transoffset = self.constants.TRANSM_HT_OFFS
+        else:  # non default height offset is specified and should be used
+            transoffset = trans_offset
 
         self.set_axis("TRANS", sample.translation)
         smblock_out, smang_out = self._SM_setup(angle, sm_ang, mode)
@@ -552,15 +557,17 @@ class _Movement(object):
         if mode.upper() != "LIQUID":
             self.set_axis("PSI", sample.psi_offset)
             self.set_axis("PHI", sample.phi_offset + angle)
+
         if self.constants.HAS_HEIGHT2:
-            if angle == 0 and abs(self.constants.TRANSMISSION_HEIGHT_OFFSET) > self.constants.TRANSMISSION_FINE_Z_OFFSET_MAX:  # i.e. if transmission
-                self.set_axis("HEIGHT2", sample.height2_offset - trans_offset)
+            if angle == 0 and abs(
+                    self.constants.TRANSM_HT_OFFS) > self.constants.TRANSM_FIN_Z_OFF_M:  # i.e. if transmission
+                self.set_axis("HEIGHT2", sample.height2_offset - transoffset)
                 self.set_axis(sample.ht_block, sample.height_offset)
             else:
                 self.set_axis("HEIGHT2", sample.height2_offset)
-                self.set_axis(sample.ht_block, sample.height_offset - self.constants.TRANSMISSION_HEIGHT_OFFSET)
+                self.set_axis(sample.ht_block, sample.height_offset - transoffset)
         else:
-            self.set_axis(sample.ht_block, sample.height_offset - self.constants.TRANSMISSION_HEIGHT_OFFSET)
+            self.set_axis(sample.ht_block, sample.height_offset - transoffset)
         self.wait_for_move()
         return smblock_out, smang_out
 
@@ -626,7 +633,7 @@ class _Movement(object):
         elif osc_slit:
             # Tries to take the extent for oscillation from the equivalent param e.g. s2hg.
             # Otherwise carries None to osc input.
-            hgaps.update(vgaps) # TODO: what happens if vgaps is None and why vgaps?
+            hgaps.update(vgaps)  # TODO: what happens if vgaps is None and why vgaps?
             try:
                 use_block = hgaps[oscblock.casefold()]
                 print('using block {}={}'.format(oscblock, use_block))
