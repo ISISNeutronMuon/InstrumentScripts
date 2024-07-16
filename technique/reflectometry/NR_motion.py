@@ -510,7 +510,7 @@ class _Movement(object):
         # #TODO: this constants path might need changing depending how constants setup. Does it need to be set
         #  separately here?
         if self.constants.periods is not None:
-            self.change_to_soft_period_count(count=self.constants.periods)
+            self.change_to_soft_period_count()
         else:
             print("Periods not changed as no default periods set in instrument constants.")
         try:

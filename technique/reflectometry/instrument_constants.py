@@ -31,9 +31,9 @@ class InstrumentConstants:
     OSC_BLOCK: float = field(default_factory=lambda: get_reflectometry_value("OSC_BLOCK"))
     trans_angle: float = field(default_factory=lambda: get_reflectometry_value("TRANS_ANGLE"))
     TRANSMISSION_HEIGHT_OFFSET: float = field(
-        default_factory=lambda: get_reflectometry_value("TRANSMISSION_HEIGHT_OFFSET"))
+        default_factory=lambda: get_reflectometry_value("TRANSM_HT_OFFS"))
     TRANSMISSION_FINE_Z_OFFSET_MAX: float = field(
-        default_factory=lambda: get_reflectometry_value("TRANSMISSION_FINE_Z_OFFSET_MAX"))
+        default_factory=lambda: get_reflectometry_value("TRANSM_FIN_Z_OFFS_M"))
     periods: int = field(default_factory=lambda: get_reflectometry_value("PERIODS"))
 
 
