@@ -1,71 +1,44 @@
 """
 Instrument specific constants
 """
-from genie_python import genie as g
+from ast import literal_eval
+from dataclasses import dataclass, field
+
+try:
+    # pylint: disable=import-error
+    from genie_python import genie as g
+except ImportError:
+    from mocks import g
 
 
-class InstrumentConstant(object):
-    """
-    Set of constants for a given instrument
-    """
-    def __init__(self, s1s2, s2sa, max_theta, s4max, sm_sa, incoming_beam_angle, s3max=None, has_height2=True):
-        """
-        Instrument constants
-        Args:
-            s1s2: distance from s1 to s2
-            s2sa: distance from s2 to sample
-            max_theta: maximum allowed theta
-            s4max: slit 4 maximum vertical gap
-            sm_sa: distance from super mirror to sample
-            incoming_beam_angle: the incoming beam angle used to make the sample level
-            s3max: slit 3 maximum vertical gap
-            has_height2: has a height2 stage so height 2 tracks but height doesn't
-        """
-        self.s1s2 = s1s2
-        self.s2sa = s2sa
-        self.max_theta = max_theta
-        self.s4max = s4max
-        self.sm_sa = sm_sa
-        self.s3max = s4max if s3max is None else s3max
-        self.has_height2 = has_height2
-        self.incoming_beam_angle = incoming_beam_angle
+@dataclass
+class InstrumentConstants:
+    MAX_THETA: float = field(default_factory=lambda: get_reflectometry_value("MAX_THETA"))
+    HAS_HEIGHT2: str = field(default_factory=lambda: get_reflectometry_value("HAS_HEIGHT2"))
+    VSLITS_INDICES: list = field(default_factory=lambda: get_reflectometry_value("VSLITS_INDICES"))
+    HSLITS_INDICES: dict = field(default_factory=lambda: get_reflectometry_value("HSLITS_INDICES"))
 
-    def __repr__(self):
-        return "s1s2={}, s2sa={}, sm_sa={}, max_theta={}, s3max={}, s4max={}, has_height_2={}, natural_angle={}".format(
-            self.s1s2, self.s2sa, self.sm_sa, self.max_theta, self.s3max, self.s4max, self.has_height2,
-            self.incoming_beam_angle
-        )
+    s1s2: float = field(default_factory=lambda: get_reflectometry_value("S2_Z") - get_reflectometry_value("S1_Z"))
+    s2sa: float = field(default_factory=lambda: get_reflectometry_value("SAMPLE_Z") - get_reflectometry_value("S2_Z"))
+    s3max: float = field(default_factory=lambda: get_reflectometry_value("S3_MAX"))
+    s4max: float = field(default_factory=lambda: get_reflectometry_value("S4_MAX"))
+    s3_beam_blocker_offset: float = field(default_factory=lambda: get_reflectometry_value("S3_BEAM_BLOCKER_OFFS"))
+    angle_for_s3_offset: float = 0.7
+
+    SM_BLOCK: str = field(default_factory=lambda: get_reflectometry_value("SM_BLOCK"))
+    HG_DEFAULTS: dict = field(default_factory=lambda: get_reflectometry_value("HG_DEFAULTS"))
+    SM_DEFAULTS: dict = field(default_factory=lambda: get_reflectometry_value("SM_DEFAULTS"))
+    OSC_BLOCK: float = field(default_factory=lambda: get_reflectometry_value("OSC_BLOCK"))
+    trans_angle: float = field(default_factory=lambda: get_reflectometry_value("TRANS_ANGLE"))
+    TRANSMISSION_HEIGHT_OFFSET: float = field(
+        default_factory=lambda: get_reflectometry_value("TRANSM_HT_OFFS"))
+    TRANSMISSION_FINE_Z_OFFSET_MAX: float = field(
+        default_factory=lambda: get_reflectometry_value("TRANSM_FIN_Z_OFFS_M"))
+    periods: int = field(default_factory=lambda: get_reflectometry_value("PERIODS"))
 
 
 def get_instrument_constants():
-    """
-    Returns: constants for the current instrument from PVs defined in the refl server
-    """
-    try:
-        s1_z = get_reflectometry_value("S1_Z")
-        s2_z = get_reflectometry_value("S2_Z")
-        sm_z = get_reflectometry_value("SM_Z")
-        sample_z = get_reflectometry_value("SAMPLE_Z")
-        s3_z = get_reflectometry_value("S3_Z")
-        s4_z = get_reflectometry_value("S4_Z")
-        pd_z = get_reflectometry_value("PD_Z")
-        s3_max = get_reflectometry_value("S3_MAX")
-        s4_max = get_reflectometry_value("S4_MAX")
-        max_theta = get_reflectometry_value("MAX_THETA")
-        natural_angle = get_reflectometry_value("NATURAL_ANGLE")
-        has_height2 = get_reflectometry_value("HAS_HEIGHT2") == "YES"
-
-        return InstrumentConstant(
-            s1s2=s2_z - s1_z,
-            s2sa=sample_z - s2_z,
-            max_theta=max_theta,  # usual maximum angle
-            s4max=s4_max,  # max s4_vg at max Theta
-            s3max=s3_max,  # max s4_vg at max Theta
-            sm_sa=sample_z - sm_z,
-            incoming_beam_angle=natural_angle,
-            has_height2=has_height2)
-    except Exception as e:
-        raise ValueError("No instrument value pvs to calculated requested result: {}".format(e))
+    return InstrumentConstants()
 
 
 def get_reflectometry_value(value_name):
@@ -75,8 +48,20 @@ def get_reflectometry_value(value_name):
     :raises IOError: if PV does not exist
     """
     pv_name = "REFL_01:CONST:{}".format(value_name)
-    value = g.get_pv(pv_name, is_local=True)
-    if value is None:
-        raise IOError("PV {} does not exist".format(pv_name))
+    value = g.get_pv(pv_name, is_local=True)  # TODO: Need some kind of try block here
+    # except UnableToConnectToPVException:?? This may actually return None - really not sure
 
-    return value
+    if value == "":  # or whatever gets returned from the above exception
+        return None
+    elif isinstance(value, str):
+        try:
+            # this will try and convert from str to dict/list
+            value = literal_eval(value)
+        except ValueError:
+            # probably OK, just return the original string
+            return value
+        except SyntaxError:
+            # Not ok, raise here, a list has probably not been finished with a ] or similar
+            raise Exception(f"Constant {value_name} cannot be parsed, evaluating {value} threw an exception")
+    else:
+        return value
