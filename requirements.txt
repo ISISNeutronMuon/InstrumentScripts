@@ -1,11 +1,14 @@
 coverage
-numpy
-matplotlib
+numpy~=1.20.1
+matplotlib~=3.3.4
 pylint
 flake8
-scipy
-six
+scipy~=1.6.0
+six~=1.15.0
 sphinx
+requests~=2.25.1
+contextlib2~=21.6.0
+termcolor~=2.3.0
 mock
 parameterized
 pyparsing==2.4.7 # Errors out if not this version.

@@ -1,18 +1,14 @@
 """
 Instrument specific constants
 """
-try:
-    # pylint: disable=import-error
-    from genie_python import genie as g
-except ImportError:
-    from mocks import g
+from genie_python import genie as g
 
 
 class InstrumentConstant(object):
     """
     Set of constants for a given instrument
     """
-    def __init__(self, s1s2, s2sa, max_theta, s4max, sm_sa, incoming_beam_angle, s3max=None, has_height2=True, s3_beam_blocker_offset=None, angle_for_s3_offset=None):
+    def __init__(self, s1s2, s2sa, max_theta, s4max, sm_sa, incoming_beam_angle, s3max=None, has_height2=True):
         """
         Instrument constants
         Args:
@@ -33,9 +29,6 @@ class InstrumentConstant(object):
         self.s3max = s4max if s3max is None else s3max
         self.has_height2 = has_height2
         self.incoming_beam_angle = incoming_beam_angle
-        self.s3_beam_blocker_offset = s3_beam_blocker_offset
-        self.angle_for_s3_offset = angle_for_s3_offset
-        
 
     def __repr__(self):
         return "s1s2={}, s2sa={}, sm_sa={}, max_theta={}, s3max={}, s4max={}, has_height_2={}, natural_angle={}".format(
@@ -51,7 +44,7 @@ def get_instrument_constants():
     try:
         s1_z = get_reflectometry_value("S1_Z")
         s2_z = get_reflectometry_value("S2_Z")
-        sm_z = get_reflectometry_value("SM_Z") # set to SM2_Z for now, needs updating to include both.
+        sm_z = get_reflectometry_value("SM2_Z") # set to SM2_Z for now, needs updating to include both.
         sample_z = get_reflectometry_value("SAMPLE_Z")
         s3_z = get_reflectometry_value("S3_Z")
         s4_z = get_reflectometry_value("S4_Z")
@@ -61,8 +54,6 @@ def get_instrument_constants():
         max_theta = get_reflectometry_value("MAX_THETA")
         natural_angle = get_reflectometry_value("NATURAL_ANGLE")
         has_height2 = get_reflectometry_value("HAS_HEIGHT2") == "YES"
-        s3_beam_blocker_offset = get_reflectometry_value("S3_BEAM_BLOCKER_OFFS")
-        angle_for_s3_offset = get_reflectometry_value("ANGLE_FOR_S3_OFFSET")
 
         return InstrumentConstant(
             s1s2=s2_z - s1_z,
@@ -72,15 +63,12 @@ def get_instrument_constants():
             s3max=s3_max,  # max s4_vg at max Theta
             sm_sa=sample_z - sm_z,
             incoming_beam_angle=natural_angle,
-            has_height2=has_height2,
-            s3_beam_blocker_offset=s3_beam_blocker_offset,
-            angle_for_s3_offset=angle_for_s3_offset
-            )
+            has_height2=has_height2)
     except Exception as e:
-        raise ValueError("No instrument value pvs to calculate requested result: {}".format(e))
+        raise ValueError("No instrument value pvs to calculated requested result: {}".format(e))
 
 
-def get_reflectometry_value(value_name, raise_on_not_found=True):
+def get_reflectometry_value(value_name):
     """
     :param value_name: name of the value
     :return: value for the value_name stored in the pv on the REFL server
@@ -88,7 +76,7 @@ def get_reflectometry_value(value_name, raise_on_not_found=True):
     """
     pv_name = "REFL_01:CONST:{}".format(value_name)
     value = g.get_pv(pv_name, is_local=True)
-    if raise_on_not_found and value is None:
+    if value is None:
         raise IOError("PV {} does not exist".format(pv_name))
 
     return value

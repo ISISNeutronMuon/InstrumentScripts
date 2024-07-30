@@ -14,7 +14,7 @@ class Sans2d(ScanningInstrument):
         super().__init__()
         self._set_poslist_dls()
 
-    def do_sans_large(self, title=None, pos=None, thickness=None, dae=None,
+    def do_sans_large(self, title="", pos=None, thickness=1.0, dae=None,
                       period=None, time=None, dls_sample_changer=False, **kwargs):
         """
         A wrapper around do_sans with aperture set to large

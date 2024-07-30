@@ -79,6 +79,7 @@ class SampleGenerator:
             valve = self.valve
         if hgaps is None:
             hgaps = self.hgaps
+            
 
         return Sample(title, subtitle, translation, height2_offset, phi_offset, psi_offset,
                       height_offset, resolution, footprint, sample_length, valve, hgaps)
@@ -92,7 +93,6 @@ class Sample:
     A sample definition
 
     """
-
     def __init__(self, title, subtitle, translation, height2_offset, phi_offset, psi_offset, height_offset,
                  resolution, footprint, sample_length, valve, hgaps):
         """
@@ -121,6 +121,6 @@ class Sample:
         self.sample_length = float(sample_length)
         self.valve = int(valve)
         self.hgaps = dict(hgaps)
-
+        
     def __repr__(self):
         return "Sample: {}".format(self.__dict__)

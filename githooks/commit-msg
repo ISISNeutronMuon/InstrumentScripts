@@ -1,0 +1,5 @@
+#!/bin/sh
+echo "Commit author: $(git var GIT_AUTHOR_IDENT)"
+echo "$(git var GIT_AUTHOR_IDENT)" | grep -Eq "spudulike" || exit 0
+echo "Disallowing commit as spudulike. Please use 'git commit --author \"Your Name <email@domain>\"' to commit."
+exit 1
