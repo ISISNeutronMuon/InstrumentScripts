@@ -8,7 +8,7 @@ try:
     # pylint: disable=import-error
     from genie_python import genie as g
 except ImportError:
-    from mocks import g
+    from .mocks import g
 
 
 @dataclass
@@ -30,10 +30,8 @@ class InstrumentConstants:
     SM_DEFAULTS: dict = field(default_factory=lambda: get_reflectometry_value("SM_DEFAULTS"))
     OSC_BLOCK: float = field(default_factory=lambda: get_reflectometry_value("OSC_BLOCK"))
     trans_angle: float = field(default_factory=lambda: get_reflectometry_value("TRANS_ANGLE"))
-    TRANSMISSION_HEIGHT_OFFSET: float = field(
-        default_factory=lambda: get_reflectometry_value("TRANSM_HT_OFFS"))
-    TRANSMISSION_FINE_Z_OFFSET_MAX: float = field(
-        default_factory=lambda: get_reflectometry_value("TRANSM_FIN_Z_OFFS_M"))
+    TRANSM_HT_OFFS: float = field(default_factory=lambda: get_reflectometry_value("TRANSM_HT_OFFS"))
+    TRANSM_FIN_Z_OFF_M: float = field(default_factory=lambda: get_reflectometry_value("TRANSM_FIN_Z_OFF_M"))
     periods: int = field(default_factory=lambda: get_reflectometry_value("PERIODS"))
 
 

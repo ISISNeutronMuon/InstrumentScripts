@@ -5,7 +5,7 @@ import time
 
 from technique.reflectometry import *  # __all__ defined in __init__.py
 import logging
-import sys
+import sys, io
 import os
 
 try:
@@ -38,18 +38,18 @@ def runscript(dry_run=False):
         phi_offset=0.0,
         psi_offset=0.0,
         height_offset=0.0,
-        resolution=0.035,
+        resolution=0.04,
         sample_length=80,
         valve=1,
         footprint=60,
-        hgaps={'S1HG': 47.9, 'S2HG': 30, 'S3HG': 60})
+        hgaps={'S1HG': 30, 'S2HG': 35, 'S3HG': 40})
 
-    sample_1 = sample_generator.new_sample(title="Si1-C19",
-                                           translation=605.0,
-                                           height_offset=-8.57,
-                                           phi_offset=0.900 - 0.697,
-                                           psi_offset=-0.0,
-                                           valve=1)
+    sample_1 = sample_generator.new_sample(title = "S1 Si ",
+                                           translation = -238,
+                                           height_offset = 13.802,
+                                           phi_offset = 0.483 - 0.5,
+                                           psi_offset = -0.038,
+                                           valve = 1)
 
     sample_2 = sample_generator.new_sample(title="Si2-P52",
                                            translation=505.0,
@@ -80,30 +80,33 @@ def runscript(dry_run=False):
     SMW = [38, 62, 0, 0]
 
     DryRun.dry_run = dry_run
+    
     samp = sample_1
-    samp.subtitle = "D2O vesicle rinsing"
-    run_angle(samp, 0.7, count_uamps=10)
-    run_angle(samp, 2.3, 30)
-    contrast_change(samp, SMW, flow=1.0, volume=15, wait=True)
+    samp.subtitle = "H2O Script Test"
+    run_angle(samp, 0.7)#, count_uamps=5)
+    run_angle(samp, 2.3)#, count_uamps=10)
+    
+    # inject(samp, D2O, flow=1.5, volume=15, wait=True)
+    # contrast_change(samp, SMW, flow=1.0, volume=15, wait=True)
 
     # time.sleep(30)
 
-    for samp in [sample_1, sample_3, sample_4]:
-        samp.subtitle = "H2O"
-        run_angle(samp, 0.7, count_seconds=300)
-        run_angle(samp, 2.3, 30)
-        contrast_change(samp, D2O, flow=1.0, volume=15)
+    # for samp in [sample_1, sample_3, sample_4]:
+        # samp.subtitle = "H2O"
+        # run_angle(samp, 0.7, count_seconds=300)
+        # run_angle(samp, 2.3, 30)
+        # contrast_change(samp, D2O, flow=1.0, volume=15)
 
-    transmission(sample_3, "Si3-unmarked", at_angle=0.7, count_uamps=20, hgaps={'S1HG': 10, 'S2HG': 6})
-    transmission(sample_3, "Si3-unmarked", at_angle=0.7, count_uamps=20, hgaps={'S1HG': 50, 'S2HG': 30})
+    # transmission(sample_3, "Si3-unmarked", at_angle=0.7, count_uamps=20, hgaps={'S1HG': 10, 'S2HG': 6})
+    # transmission(sample_3, "Si3-unmarked", at_angle=0.7, count_uamps=20, hgaps={'S1HG': 50, 'S2HG': 30})
 
     # go_to_pressure(28, speed=30)
 
-    inject(sample_4, D2O, flow=2.0, volume=20)
+    # inject(sample_4, D2O, flow=2.0, volume=20)
 
-    sample_5.subtitle = "air repeat"
-    run_angle_SM(sample_5, 0.4, 40)
-    run_angle_SM(sample_5, 1.0, 60)
+    # sample_5.subtitle = "air repeat"
+    # run_angle_SM(sample_5, 0.4, 40)
+    # run_angle_SM(sample_5, 1.0, 60)
 
     if dry_run:
         # print("\n=== Total time: ", str(int(DryRun.run_time / 60)) + "h " + str(int(DryRun.run_time % 60)) + "min ===\n")

@@ -11,12 +11,12 @@ try:
     # pylint: disable=import-error
     from genie_python import genie as g
 except ImportError:
-    from mocks import g
+    from .mocks import g
 
 # import general.utilities.io
-from sample import Sample
-from NR_motion import _Movement
-from instrument_constants import get_instrument_constants #TODO: update this path as required.
+from .sample import Sample
+from .NR_motion import _Movement
+from .instrument_constants import get_instrument_constants #TODO: update this path as required.
 
 os.system('color')
 
@@ -90,8 +90,11 @@ class DryRun:
             if len(absent_blocks):
                 # print("The following blocks were not found in config: ", absent_blocks)
                 print("\033[1;31;40m>>The following blocks were not found in config: ", absent_blocks, "\033[0;0m")
-
-            rt, summary = self.f(*args, **kwargs)
+            try:
+                rt, summary = self.f(*args, **kwargs)
+            except TypeError:
+                rt = 0
+                summary = "Only setup"
 
             # check contrast_change and add to total volume
             list_pattern = r'\[\s*\d+(?:\.\d+)?\s*,\s*\d+(?:\.\d+)?\s*,\s*\d+(?:\.\d+)?\s*,\s*\d+(?:\.\d+)?\s*\]'
@@ -234,8 +237,9 @@ class RunActions:
             movement = _Movement(dry_run)
 
             mode_out = movement.setup_measurement(mode)  # TODO: make sure we're not in 'LIQUID' mode?
-            if ht_block is None:
-                movement.sample_setup(sample, angle, mode_out)
+            
+            movement.sample_setup(sample, angle, mode_out, trans_offset=None, ht_block=ht_block)
+                
             if hgaps is None:
                 hgaps = sample.hgaps
             movement.set_axis_dict(hgaps)
@@ -248,11 +252,12 @@ class RunActions:
             movement.wait_for_move()
             new_title = movement.update_title(sample.title, sample.subtitle, angle,
                                               add_current_gaps=include_gaps_in_title)
-
-            dur_dict = {'uamps': count_uamps, 'sec': count_seconds, 'frames': count_frames}
-            duration = [[dur_dict[dur], dur] for dur in dur_dict if dur_dict[dur] is not None][0]
-            logging.log(RUN, "{} | ** {}, th={}, {}={} **".
-                        format(str(g.get_runnumber()), sample.title, angle, duration[1], duration[0]))
+            
+            # TODO: Breaks if no count time set (ie setup only)
+            # dur_dict = {'uamps': count_uamps, 'sec': count_seconds, 'frames': count_frames}
+            # duration = [[dur_dict[dur], dur] for dur in dur_dict if dur_dict[dur] is not None][0]
+            # logging.log(RUN, "{} | ** {}, th={}, {}={} **".
+                        # format(str(g.get_runnumber()), sample.title, angle, duration[1], duration[0]))
             # TODO use 'coloredlogs' library
 
             movement.start_measurement(count_uamps, count_seconds, count_frames, osc_slit, osc_block, osc_gap, vgaps,

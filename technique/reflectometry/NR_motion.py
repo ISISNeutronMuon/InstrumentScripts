@@ -14,11 +14,11 @@ try:
     # pylint: disable=import-error
     from genie_python import genie as g
 except ImportError:
-    from mocks import g
+    from .mocks import g
 
 # import general.utilities.io
-from sample import Sample
-from instrument_constants import get_instrument_constants  # TODO: need to update import
+from .sample import Sample
+from .instrument_constants import get_instrument_constants  # TODO: need to update import
 
 
 class _Movement(object):
@@ -513,9 +513,9 @@ class _Movement(object):
             self.change_to_soft_period_count()
         else:
             print("Periods not changed as no default periods set in instrument constants.")
-        try:
+        if "MONITOR" in g.get_blocks():
             g.cset("MONITOR", "IN")
-        except:
+        else:
             print("Monitor not found")
 
         mode_out = self.change_to_mode_if_not_none(mode)
@@ -548,30 +548,33 @@ class _Movement(object):
         elif trans_offset == 0.0:  # this is transmission run but height_offset was not specified (is 0.0 from calling function)
             transoffset = self.constants.TRANSM_HT_OFFS
         else:  # non default height offset is specified and should be used
-            transoffset = trans_offset
-
+            transoffset = trans_offset 
+        
         self.set_axis("TRANS", sample.translation)
-        smblock_out, smang_out = self._SM_setup(angle, sm_ang, mode)
+        # TODO: Should _SM_setup be called if there is no smblock defined.
+        smblock_out, smang_out = self._SM_setup(angle, sm_ang, sm_block, mode)
         self.set_axis("THETA", angle)
         self.wait_for_move()
         if mode.upper() != "LIQUID":
             self.set_axis("PSI", sample.psi_offset)
             self.set_axis("PHI", sample.phi_offset + angle)
 
+        if mode.upper() != "LIQUID":
+            self.set_axis("PSI", sample.psi_offset)
+            self.set_axis("PHI", sample.phi_offset + angle)
         if self.constants.HAS_HEIGHT2:
-            if angle == 0 and abs(
-                    self.constants.TRANSM_HT_OFFS) > self.constants.TRANSM_FIN_Z_OFF_M:  # i.e. if transmission
+            if angle == 0 and abs(transoffset) > constants.max_fine_trans:  # i.e. if transmission
                 self.set_axis("HEIGHT2", sample.height2_offset - transoffset)
-                self.set_axis(sample.ht_block, sample.height_offset)
+                self.set_axis(htblock, sample.height_offset)
             else:
                 self.set_axis("HEIGHT2", sample.height2_offset)
-                self.set_axis(sample.ht_block, sample.height_offset - transoffset)
+                self.set_axis(htblock, sample.height_offset - transoffset)
         else:
-            self.set_axis(sample.ht_block, sample.height_offset - transoffset)
+            self.set_axis(htblock, sample.height_offset - transoffset)
         self.wait_for_move()
         return smblock_out, smang_out
 
-    def _SM_setup(self, angle, smangle=0.0, mode=None):
+    def _SM_setup(self, angle, smangle=0.0, smblock=None, mode=None):
         """
         Setup mirrors in and out of beam and at correct angles.
         Args:
@@ -581,7 +584,7 @@ class _Movement(object):
             smblock: axis for mirror, can be a list for multiple mirrors. Defaults to entry in instrument constants file.
             mode: flag for liquid mode where smangle is determined from angle instead
         """
-        if self.constants.SM_BLOCK is None and smangle != 0.0:
+        if smblock is None and smangle != 0.0:
             print("Supermirror not set as no block name provided. Check instrument constants file.")
             smang = smangle
         else:
@@ -595,18 +598,20 @@ class _Movement(object):
                 smang = smangle
             # TODO: Need to change the except statement to an error/warning?
             SM_defaults = self.constants.SM_DEFAULTS
-            if type(self.constants.SM_BLOCK) is str:
-                smblock = [self.constants.SM_BLOCK]
+            if type(smblock) is str:
+                smblock = [smblock]
 
             for mirrors in smblock:
                 try:
-                    SM_defaults[mirrors.upper()] = smang / (len(self.constants.SM_BLOCK))
+                    SM_defaults[mirrors.upper()] = smang / (len(smblock))
                 except:
                     print('Incorrect SM block given: {}'.format(mirrors.upper()))
             print('SM values to be set: {}'.format(SM_defaults))
-            for mir in SM_defaults.keys():
-                self.set_smangle_if_not_none(SM_defaults[mir])
-        return self.constants.SM_BLOCK, smang
+            
+            if SM_defaults is not None:
+                for mir in SM_defaults.keys():
+                    self.set_smangle_if_not_none(SM_defaults[mir])
+        return smblock, smang
 
     def start_measurement(self, count_uamps: float = None, count_seconds: float = None, count_frames: float = None,
                           osc_slit: bool = False, osc_block: str = 'Default', osc_gap: float = None,
