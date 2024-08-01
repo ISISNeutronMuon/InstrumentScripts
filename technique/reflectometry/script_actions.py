@@ -360,7 +360,7 @@ class RunActions:
     @staticmethod
     @DryRun
     def transmission(sample, title: str = None, vgaps: dict = None, hgaps: dict = None, count_uamps: float = None,
-                     count_seconds: float = None, count_frames: float = None, height_offset: float = None,
+                     count_seconds: float = None, count_frames: float = None, height_offset: float = 0.0,
                      osc_slit: bool = False, osc_block: str = 'Default', osc_gap: float = None, mode: str = None,
                      at_angle: float = None, ht_block: str = 'Default', dry_run: bool = False,
                      include_gaps_in_title: bool = False):
@@ -459,7 +459,7 @@ class RunActions:
     @DryRun
     def transmission_SM(sample, title: str, vgaps: dict = None, hgaps: dict = None,
                         count_uamps: float = None, count_seconds: float = None, count_frames: float = None,
-                        height_offset: float = None, smangle: float = 0.0,
+                        height_offset: float = 0.0, smangle: float = 0.0,
                         mode: str = None, dry_run: bool = False, include_gaps_in_title: bool = True,
                         osc_slit: bool = True,
                         osc_block: str = 'Default', osc_gap: float = None, at_angle: float = None,

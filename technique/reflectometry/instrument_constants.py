@@ -49,12 +49,14 @@ def get_reflectometry_value(value_name):
     value = g.get_pv(pv_name, is_local=True)  # TODO: Need some kind of try block here
     # except UnableToConnectToPVException:?? This may actually return None - really not sure
 
+    # print(pv_name, value, type(value))
     if value == "":  # or whatever gets returned from the above exception
         return None
     elif isinstance(value, str):
         try:
             # this will try and convert from str to dict/list
             value = literal_eval(value)
+            return value
         except ValueError:
             # probably OK, just return the original string
             return value

@@ -233,6 +233,8 @@ class _Movement(object):
             constants: instrument constants
 
         """
+        
+        
         horizontal_gaps = self.get_gaps(vertical=False, centres=False, slitrange=self.constants.HSLITS_INDICES)
         horizontal_cens = self.get_gaps(vertical=False, centres=True, slitrange=self.constants.HSLITS_INDICES)
 
@@ -563,7 +565,7 @@ class _Movement(object):
             self.set_axis("PSI", sample.psi_offset)
             self.set_axis("PHI", sample.phi_offset + angle)
         if self.constants.HAS_HEIGHT2:
-            if angle == 0 and abs(transoffset) > constants.max_fine_trans:  # i.e. if transmission
+            if angle == 0 and abs(transoffset) > self.constants.TRANSM_FIN_Z_OFF_M:  # i.e. if transmission
                 self.set_axis("HEIGHT2", sample.height2_offset - transoffset)
                 self.set_axis(htblock, sample.height_offset)
             else:

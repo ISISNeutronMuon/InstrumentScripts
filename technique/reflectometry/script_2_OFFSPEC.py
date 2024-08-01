@@ -19,15 +19,15 @@ for handler in logging.root.handlers[:]:
     logging.root.removeHandler(handler)
 
 # Set up new logger
-logging.basicConfig(
-    handlers=[
-        logging.StreamHandler(sys.stdout),
-        logging.FileHandler("example.log", mode="w"),
-    ],
-    level=logging.DEBUG,
-    format="%(asctime)s | %(levelname)s | %(message)s",     # %(name)s -
-    datefmt="%Y-%m-%d %H:%M:%S",
-)
+# logging.basicConfig(
+    # handlers=[
+        # logging.StreamHandler(sys.stdout),
+        # logging.FileHandler("example.log", mode="w"),
+    # ],
+    # level=logging.DEBUG,
+    # format="%(asctime)s | %(levelname)s | %(message)s",     # %(name)s -
+    # datefmt="%Y-%m-%d %H:%M:%S",
+# )
 
 
 def runscript(dry_run=False):
@@ -41,8 +41,7 @@ def runscript(dry_run=False):
         resolution=0.04,
         sample_length=80,
         valve=1,
-        footprint=60,
-        hgaps={'S1HG': 30, 'S2HG': 35, 'S3HG': 40})
+        footprint=60)
 
     sample_1 = sample_generator.new_sample(title = "S1 Si ",
                                            translation = -238,
@@ -81,10 +80,17 @@ def runscript(dry_run=False):
 
     DryRun.dry_run = dry_run
     
-    samp = sample_1
-    samp.subtitle = "H2O Script Test"
-    run_angle(samp, 0.7)#, count_uamps=5)
-    run_angle(samp, 2.3)#, count_uamps=10)
+    # samp = sample_1
+    # samp.subtitle = "H2O Script Test"
+    # run_angle(samp, 0.7)#, count_uamps=5)
+    # run_angle(samp, 2.3)#, count_uamps=10)
+    
+    
+    non_saturating_hgaps = {'S2HG': 7}
+    default_hgaps = {'S1HG': 30, 'S2HG': 35, 'S3HG': 40}
+    # transmission(sample_1, at_angle=0.6, count_uamps=20, hgaps=non_saturating_hgaps, vgaps=my_vgaps)
+    transmission(sample_1, at_angle=0.6, height_offset=1)
+            
     
     # inject(samp, D2O, flow=1.5, volume=15, wait=True)
     # contrast_change(samp, SMW, flow=1.0, volume=15, wait=True)
