@@ -41,7 +41,8 @@ def runscript(dry_run=False):
         resolution=0.04,
         sample_length=80,
         valve=1,
-        footprint=60)
+        footprint=60,
+        hgaps = {})
 
     sample_1 = sample_generator.new_sample(title = "S1 Si ",
                                            translation = -238,
@@ -89,7 +90,8 @@ def runscript(dry_run=False):
     non_saturating_hgaps = {'S2HG': 7}
     default_hgaps = {'S1HG': 30, 'S2HG': 35, 'S3HG': 40}
     # transmission(sample_1, at_angle=0.6, count_uamps=20, hgaps=non_saturating_hgaps, vgaps=my_vgaps)
-    transmission(sample_1, at_angle=0.6, height_offset=1)
+    transmission(sample_1, at_angle=0.6, osc_gap=7, count_uamps=10)
+    
             
     
     # inject(samp, D2O, flow=1.5, volume=15, wait=True)
