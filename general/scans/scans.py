@@ -10,12 +10,13 @@ treated as private.
 """
 from __future__ import absolute_import, print_function
 
+import pdb
 from typing import TYPE_CHECKING
 
 from abc import ABCMeta, abstractmethod
 # pylint: disable=no-name-in-module
-from collections.abc import Iterable
 from collections import OrderedDict
+from collections.abc import Iterable
 from contextlib import contextmanager
 from datetime import timedelta, datetime
 import time
@@ -30,6 +31,8 @@ if TYPE_CHECKING:
 from .monoid import ListOfMonoids, Monoid, Average, Exact
 from .detector import DetectorManager
 from .fit import Fit, ExactFit
+from pathlib import Path
+import os
 
 try:
     # pylint: disable=import-error
@@ -55,7 +58,7 @@ def _plot_range(array):
     if not (np.isfinite(low) and np.isfinite(high)):
         return (-1, 1)
     if not np.isfinite(low):
-        low = high-1
+        low = high - 1
     if not np.isfinite(high):
         high = low + 1
     diff = high - low
@@ -85,6 +88,10 @@ def estimate(seconds=None, minutes=None, hours=None,
         return 90 * uamps
 
     return 0
+
+def get_input(prompt: str):
+    return input(prompt)
+
 
 
 @add_metaclass(ABCMeta)
@@ -181,37 +188,52 @@ class Scan(object):
         acc = None
         action_remainder = None
         log_filename = self.defaults.log_file(self.log_file_info())
-        print("Writing data to: {}".format(log_filename))
-        with open(log_filename, "w") as logfile, \
-                detector(self, save=save, **kwargs) as detect:
-            for x in self:
-                # FIXME: Handle multidimensional plots
-                ((label, unit), position) = next(iter(x.items()))
 
-                # perform measurement
-                acc, value = detect(acc, **kwargs)
+        path = Path(log_filename)
+        log_path = path.parent
 
-                if isinstance(value, float):
-                    value = Average(value)
-                if not xs:
-                    logfile.write(
-                        "{} ({})\t{}\tUncertainty\n".format(
-                            label, unit, detector.unit))
-                if position in xs:
-                    ys[xs.index(position)] += value
-                else:
-                    xs.append(position)
-                    ys.append(value)
-                logfile.write("{}\t{}\t{}\n".format(xs[-1], str(ys[-1]),
-                                                    str(ys[-1].err())))
+        path_exists = os.path.isdir(log_path)
 
-                plot_functions.setup_plot(self.min(), self.max(), label, unit, y_unit=detector.unit)
-                plot_functions.plot_data_with_errors(xs, ys)
-                if action:
-                    action_remainder = action(xs, ys, plot_functions, action_remainder)
-                plot_functions.draw()
+        if path_exists:
+            print("Writing data to: {}".format(log_path))
+            with open(log_filename, "w") as logfile, \
+                    detector(self, save=save, **kwargs) as detect:
+                for x in self:
+                    # FIXME: Handle multidimensional plots
+                    ((label, unit), position) = next(iter(x.items()))
 
-        plot_functions.save(save)
+                    # perform measurement
+                    acc, value = detect(acc, **kwargs)
+
+                    if isinstance(value, float):
+                        value = Average(value)
+                    if not xs:
+                        logfile.write(
+                            "{} ({})\t{}\tUncertainty\n".format(
+                                label, unit, detector.unit))
+                    if position in xs:
+                        ys[xs.index(position)] += value
+                    else:
+                        xs.append(position)
+                        ys.append(value)
+                    logfile.write("{}\t{}\t{}\n".format(xs[-1], str(ys[-1]),
+                                                        str(ys[-1].err())))
+
+                    plot_functions.setup_plot(self.min(), self.max(), label, unit, y_unit=detector.unit)
+                    plot_functions.plot_data_with_errors(xs, ys)
+                    if action:
+                        action_remainder = action(xs, ys, plot_functions, action_remainder)
+                    plot_functions.draw()
+
+            plot_functions.save(save)
+
+        else:
+            print(f"Folder " + log_filename + " doesn't exist.")
+            user_input = get_input("Would you like this folder created (y) or the scan to be aborted (n)?")
+            if user_input == "y":
+                g.set_user_script_dir(log_path)
+            elif user_input == "n":
+                print("Abort")
 
         return action_remainder
 
@@ -248,8 +270,8 @@ class Scan(object):
             raise RuntimeError(
                 "Could not get result from plot. Perhaps the fit failed?")
         if isinstance(result[0], Iterable) and \
-           not isinstance(fit, ExactFit) and \
-           not isinstance(result, tuple):
+                not isinstance(fit, ExactFit) and \
+                not isinstance(result, tuple):
             result = np.array([x for x in result if x is not None])
             result = np.median(result, axis=0)
 

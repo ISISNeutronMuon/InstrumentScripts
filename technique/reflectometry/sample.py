@@ -2,6 +2,7 @@
 Sample classes for reflectometry
 """
 
+from .instrument_constants import get_instrument_constants
 
 class SampleGenerator:
     """
@@ -9,7 +10,7 @@ class SampleGenerator:
     """
 
     def __init__(self, translation, height2_offset, phi_offset, psi_offset, height_offset, resolution, footprint,
-                 sample_length, valve, hgaps, title="", subtitle=""):
+                 sample_length, valve, hgaps=None, title="", subtitle="", ht_block="HEIGHT"):
         """
         Initialiser.
         Args:
@@ -23,7 +24,9 @@ class SampleGenerator:
             footprint: footprint of beam on sample
             title: main title for the sample; defaults to blank
             subtitle: subtitle for the sample; defaults to blank
+            ht_block: motor to be used for height movement.
         """
+        self.constants = get_instrument_constants()
         self.subtitle = subtitle
         self.title = title
         self.footprint = float(footprint)
@@ -35,11 +38,16 @@ class SampleGenerator:
         self.height2_offset = float(height2_offset)
         self.sample_length = float(sample_length)
         self.valve = int(valve)
-        self.hgaps = dict(hgaps)
+        if hgaps is None:
+            self.hgaps = self.constants.HG_DEFAULTS
+        else:
+            self.hgaps = dict(hgaps)
+        self.ht_block = ht_block
+
 
     def new_sample(self, title=None, subtitle=None, translation=None, height2_offset=None, phi_offset=None,
                    psi_offset=None, height_offset=None, resolution=None, footprint=None,
-                   sample_length=None, valve=None, hgaps=None):
+                   sample_length=None, valve=None, hgaps=None, ht_block="HEIGHT"):
         """
         Create a new sample with given values; if no value defined use defaults
         Args:
@@ -54,6 +62,7 @@ class SampleGenerator:
             footprint: footprint of beam on sample
             title: main title for the sample; defaults to blank
             subtitle: subtitle for the sample; defaults to blank
+            ht_block: motor to be used for height motion
         """
         if title is None:
             title = self.title
@@ -79,10 +88,11 @@ class SampleGenerator:
             valve = self.valve
         if hgaps is None:
             hgaps = self.hgaps
-            
+        if ht_block is None:
+            ht_block = self.ht_block
 
         return Sample(title, subtitle, translation, height2_offset, phi_offset, psi_offset,
-                      height_offset, resolution, footprint, sample_length, valve, hgaps)
+                      height_offset, resolution, footprint, sample_length, valve, hgaps, ht_block)
 
     def __repr__(self):
         return "Sample generator: {}".format(self.__dict__)
@@ -93,8 +103,9 @@ class Sample:
     A sample definition
 
     """
+
     def __init__(self, title, subtitle, translation, height2_offset, phi_offset, psi_offset, height_offset,
-                 resolution, footprint, sample_length, valve, hgaps):
+                 resolution, footprint, sample_length, valve, hgaps, ht_block):
         """
         Initialiser.
         Args:
@@ -108,6 +119,7 @@ class Sample:
             footprint: footprint of beam on sample
             title: main title for the sample; defaults to blank
             subtitle: subtitle for the sample; defaults to blank
+            ht_block: motor to be used for sample height motion
         """
         self.subtitle = subtitle
         self.title = title
@@ -121,6 +133,7 @@ class Sample:
         self.sample_length = float(sample_length)
         self.valve = int(valve)
         self.hgaps = dict(hgaps)
-        
+        self.ht_block = ht_block
+
     def __repr__(self):
         return "Sample: {}".format(self.__dict__)

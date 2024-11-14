@@ -23,23 +23,19 @@ from general.scans.detector import NormalisedIntensityDetector, create_spectra_d
 
 
 # pylint: disable=no-name-in-module
-class PolrefDefaultScan(Defaults):
+class OffspecDefaultScan(Defaults):
     """
     This class represents a scan of a block. This is not a thread safe class.
     """
 
     # spectra definition based on gcl script.
-    _single_det_spectra = [create_spectra_definition(1, 100.0, 50000.0),   # Chopper pit
-                           create_spectra_definition(2, 100.0, 60000.0),   # Front of Blockhouse
-                           create_spectra_definition(3, 3000.0, 70000.0),  # Before Sample
-                           create_spectra_definition(4, 3000.0, 70000.0)]  # Point detector
-    _multi_det_spectra = [create_spectra_definition(i, 3800.0, 90000.0) for i in range(5, 646)]  # linear detector
+    _spectra = [create_spectra_definition(i, 15.0, 99992.5) for i in range(1, 772)]  # linear detector
 
-    detector = NormalisedIntensityDetector(default_monitor=2, default_detector=280,
-                                           spectra_definitions=_single_det_spectra + _multi_det_spectra)
+    detector = NormalisedIntensityDetector(default_monitor=2, default_detector=345,
+                                           spectra_definitions=_spectra)
 
     def __init__(self):
-        super(PolrefDefaultScan, self).__init__()
+        super(OffspecDefaultScan, self).__init__()
 
     def scan(self, motion, start=None, stop=None, count=None, frames=None, det=None, mon=None,
              **kwargs):
@@ -93,34 +89,9 @@ class PolrefDefaultScan(Defaults):
         return super().scan(motion, start=start, stop=stop, count=count, frames=frames, det=det,
                             mon=mon, **kwargs)
 
-    @staticmethod
-    def log_file(info):
-        """
-        Parameters
-        ----------
-            info
-              dictionary containing useful keys to help form paths. It may contain no keys at all.
-                    possible keys are action_title - the name of the action requested
-        Returns
-        -------
-            Name for the log file
-        """
-        from datetime import datetime
-        now = datetime.now()
-        action_title = info.get("action_title", "unknown")
-        # Proposed Modification - to get and use the os.cwd() so the user
-        #  just sets the working directory and all scans are saved in there
-        #  (we could also add an extra option to set the save dir on running of the scan)
-        # current_dir = os.cwd()
-        # return os.path.join("{}", "{}_{}_{}_{}_{}_{}_{}.dat".format(
-        #    current_dir,
-        #    action_title, now.year, now.month,
-        #    now.day, now.hour, now.minute, now.second))
-        return os.path.join("U:\\", "TEST", "Feb2024\\Scans", "{}_{}_{}_{}_{}_{}_{}.dat".format(
-            action_title, now.year, now.month, now.day, now.hour, now.minute, now.second))
 
 
-_scan_instance = PolrefDefaultScan()
+_scan_instance = OffspecDefaultScan()
 scan = _scan_instance.scan
 ascan = _scan_instance.ascan
 dscan = _scan_instance.dscan

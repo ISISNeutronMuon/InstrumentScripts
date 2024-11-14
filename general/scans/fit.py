@@ -610,7 +610,7 @@ class CentreOfMassFit(Fit):
         return {"Centre_of_mass": fit[0]}
 
     def fit_plot_action(self):
-        def action(x, y, plot_functions, _):
+        def action(x, y, axis, _):
             """Fit and plot the data within the plotting loop
 
             Parameters
@@ -619,8 +619,7 @@ class CentreOfMassFit(Fit):
               The x positions measured thus far
             y : Array of Float
               The y positions measured thus far
-            plot_functions : general.scans.plot_functions.PlotFunctions
-              plot_functions which allows items to be plotted
+            axis : the display axis
 
             Returns
             -------
@@ -632,7 +631,9 @@ class CentreOfMassFit(Fit):
             values = np.array(y.values())
             errs = np.array(y.err())
             params = self.fit(x, values, errs)
-            plot_functions.plot_vertical_fit_line(params[0], self.title(params))
+            axis.axvline(x=params[0])
+            axis.legend([self.title(params)], bbox_to_anchor=(0, 1.02, 1, 0.2), loc="lower left", mode="expand",
+                          borderaxespad=0, ncol=3)
 
             return params
         return action

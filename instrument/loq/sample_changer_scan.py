@@ -22,7 +22,7 @@ class LoqSampleChanger(Defaults):
     """
     This class represents the default functions for the Loq instrument.
     """
-    detector = BlockDetector("sample_changer_scan_intensity",
+    detector = BlockDetector("changer_scan_intensity",
                              "Diode Intensity")
 
     @staticmethod
@@ -56,6 +56,7 @@ class LoqSampleChanger(Defaults):
             iterations (optional): the number of times to repeat the moves
 
         """
+        self.create_fig()
         # pylint: disable=arguments-differ
         if isinstance(motion, str):
             motion = BlockMotion(motion, "mm")

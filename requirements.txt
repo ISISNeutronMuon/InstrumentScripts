@@ -7,3 +7,10 @@ scipy
 six
 sphinx
 mock
+parameterized
+pyparsing==2.4.7 # Errors out if not this version.
+PyHamcrest
+future
+requests
+Pillow
+contextlib2

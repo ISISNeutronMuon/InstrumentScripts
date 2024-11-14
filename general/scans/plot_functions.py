@@ -90,6 +90,8 @@ class PlotFunctions:
                 self._axis.errorbar(xs, ys.values(), yerr=ys.err(), color=self.color_cycle[0],
                                     marker=self.data_markers[0], markersize=self.data_marker_size, linestyle="None")
 
+        self.draw()
+
     def _plot_range(self, points):
         """
         Calculate the plot range for the points.
@@ -171,6 +173,9 @@ class PlotFunctions:
             x_max = x_max[0]
         range_min, range_max = self._add_space_to_range(x_min, x_max)
         self._axis.set_xlim(range_min, range_max)
+        # Adjust plot so that x-axis is not cut off
+        self._fig.subplots_adjust(bottom=0.225)
+        self.draw()
 
     def _create_axis_title(self, label, unit):
         """
@@ -201,7 +206,9 @@ class PlotFunctions:
         """
         Draw the plot.
         """
+        plt.ion()
         plt.draw()
+        plt.pause(0.001)
 
     def save(self, save):
         """
@@ -231,6 +238,8 @@ class PlotFunctions:
         self._axis.plot(plot_x, fit_y, "-", label=fit_label, color=self.fit_colour)
         self._axis.legend(bbox_to_anchor=(0, 1.02, 1, 0.2), loc="lower left", mode="expand", borderaxespad=0, ncol=3)
 
+        self.draw()
+
     def plot_vertical_fit_line(self, x_pos, fit_label):
         """
         Plot a fit line vertically
@@ -245,3 +254,5 @@ class PlotFunctions:
         self._axis.axvline(x=x_pos, color=self.fit_colour)
         self._axis.legend([fit_label], bbox_to_anchor=(0, 1.02, 1, 0.2), loc="lower left", mode="expand",
                           borderaxespad=0, ncol=3)
+
+        self.draw()

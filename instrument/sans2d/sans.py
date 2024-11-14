@@ -1,59 +1,69 @@
 """This is the instrument implementation for the Sans2d beamline."""
 from technique.sans.genie import gen
 from technique.sans.instrument import ScanningInstrument
-# pylint: disable=unused-import
-from technique.sans.util import set_metadata  # noqa: F401
+from technique.sans.util import dae_setter
 from general.scans.util import local_wrapper
-from genie_python import genie as g
+from general.utilities.io import alert_on_error
+from logging import warning
 
 
 class Sans2d(ScanningInstrument):
     """This class handles the SANS2D beamline"""
-    _PV_BASE = g.my_pv_prefix
 
-    @set_metadata("SCAN", "scan")
-    def setup_dae_scanning(self):
-        raise NotImplementedError("Scanning tables not yet set")
+    def __init__(self):
+        super().__init__()
+        self._set_poslist_dls()
 
-    @set_metadata("SCAN", "scan")
-    def setup_dae_nr(self):
-        raise NotImplementedError("Neutron reflectivity tables not yet set")
+    def do_sans_large(self, title=None, pos=None, thickness=None, dae=None,
+                      period=None, time=None, dls_sample_changer=False, **kwargs):
+        """
+        A wrapper around do_sans with aperture set to large
+        Please see measure for full documentation of parameters
+        """
+        self.do_sans(title=title, pos=pos, thickness=thickness, dae=dae,
+                     period=period, aperture="LARGE", time=time, dls_sample_changer=dls_sample_changer, **kwargs)
 
-    @set_metadata("SCAN", "scan")
-    def setup_dae_nrscanning(self):
+    def _generic_scan(self, detector, spectra, wiring, tcbs=None):
+        if tcbs is None:
+            tcbs = [
+                {"low": 5.5, "high":50.0, "step": 44.5, "log": 0, "trange":1, "regime":1},
+                {"low": 50.0, "high":2500.0, "step": 50.0, "log": 0, "trange":2, "regime":1},
+                {"low": 2500.0, "high":14000.0, "step": 0.02, "log": 1, "trange":3, "regime":1},
+                {"low": 14000.0, "high":99750.0, "step": 250.0, "log": 0, "trange":4, "regime":1},
+                {"low": 99750.0, "high":100005.0, "step": 255.0, "log": 0, "trange":5, "regime":1},
+                {"low": 5.5, "high":100005.0, "step": 5.0, "log": 0, "trange":1, "regime":2},
+                {"low": 0.0, "high":0.0, "step": 0.0, "log": 0, "trange":2, "regime":2},
+                {"low": 0.0, "high":0.0, "step": 0.0, "log": 0, "trange":3, "regime":2},
+                {"low": 0.0, "high":0.0, "step": 0.0, "log": 0, "trange":4, "regime":2},
+                {"low": 0.0, "high":0.0, "step": 0.0, "log": 0, "trange":5, "regime":2}
+            ]
+        ScanningInstrument._generic_scan(self, detector, spectra, wiring, tcbs)
+
+    @dae_setter("SANS", "sans")
+    def setup_dae_event(self):
+        self._generic_scan(
+            detector="detector_gastubes_01.dat",
+            spectra="spectrum_gastubes_01.dat",
+            wiring="wiring_gastubes_01_event.dat")
+
+    @dae_setter("SANS", "sans")
+    def setup_dae_histogram(self):
+        # self._generic_scan(
+        #     detector=r"detector_gastubes_02.dat",
+        #     spectra=r"spectrum_gastubes_02.dat",
+        #     wiring=r"wiring_gastubes_02_hist.dat",
+        #     tcbs=None)
         raise NotImplementedError(
             "Neutron reflectivity scanning tables not yet set")
 
-    @set_metadata("SANS", "sans")
-    def setup_dae_event(self):
-        self._generic_scan(
-            detector=r"detector_gastubes_01.dat",
-            spectra=r"spectrum_gastubes_01.dat",
-            wiring=r"wiring_gastubes_01_event.dat",
-            tcbs=[])
-
-    @set_metadata("SANS", "sans")
-    def setup_dae_histogram(self):
-        self._generic_scan(
-            detector=r"wiring_gastubes_02_hist.dat",
-            spectra=r"spectrum_gastubes_02.dat",
-            wiring=r"detector_gastubes_02.dat",
-            tcbs=[])
-
-    @set_metadata("TRANS", "transmission")
+    @dae_setter("TRANS", "transmission")
     def setup_dae_transmission(self):
         self._generic_scan(
-            spectra=r"spectra_trans8.dat",
-            wiring=r"wiring_trans8.dat",
-            detector=r"detector_trans8.dat",
-            tcbs=[])
+            detector="detector_trans8.dat",
+            spectra="spectra_trans8.dat",
+            wiring="wiring_trans8.dat")
 
-    @set_metadata("SANS", "sans")
-    def setup_dae_bsalignment(self):
-        raise NotImplementedError("Beam Stop Alignment tables not yet set")
-
-    @staticmethod
-    def set_aperture(size):
+    def set_aperture(self, size):
         """
         Set the beam aperture to the desired size.
 
@@ -62,19 +72,27 @@ class Sans2d(ScanningInstrument):
         size : str
           The aperture size.  e.g. "Small" or "Medium"
           A blank string (the default value) results in
-          the aperture not being changed."""
-        if size == "":
-            pass
+          the aperture not being changed.
+        """
+        if not size:
+            # Empty string means keep the current position
+            print("Aperture unchanged")
+            return
+        size = size.upper()
+        if size not in ["SMALL", "MEDIUM", "LARGE", "XLARGE"]:
+            raise ValueError(f"Unknown slit size: {size}")
         gen.set_pv("LKUP:SCRAPER:POSN:SP", size, is_local=True)
+        gen.waitfor_move()
 
     def _detector_is_on(self):
-        return True
+        """Is the detector currently on?"""
+        return all(self.get_pv(f"CAEN:hv0:1:{x}:status").lower() == "on" for x in range(10))
 
     def _detector_turn_on(self, delay=True):
-        raise NotImplementedError("Detector toggling is not supported Sans2d")
+        alert_on_error("SANS2D Detectors must be turned on manually", False)
 
     def _detector_turn_off(self, delay=True):
-        raise NotImplementedError("Detector toggling is not supported on Sans2d")
+        alert_on_error("SANS2D Detectors must be turned off manually", False)
 
     def _configure_sans_custom(self):
         # move the transmission monitor out
