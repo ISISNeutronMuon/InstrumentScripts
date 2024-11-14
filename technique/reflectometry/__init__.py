@@ -5,7 +5,7 @@
 # from .script_actions import *
 #from .contrast_change import contrast_change, inject
 from .sample import SampleGenerator, Sample
-from .script_actions import RunActions, SEActions, DryRun, slit_check
+from .script_actions import RunActions, SEActions, DryRun, slit_check, autoheight
 from .NR_motion import _Movement
 
 
@@ -19,6 +19,7 @@ go_to_pressure = SEActions.go_to_pressure
 go_to_area = SEActions.go_to_area
 run_angle_store = RunActions.run_angle_store
 auto_height = _Movement.auto_height
+#autoheight = SEActions.autoheight
 
-__all__ = ['RunActions', 'SEActions', 'DryRun', 'run_angle', 'run_angle_SM', 'slit_check', 'transmission', 'transmission_SM', 'contrast_change', 'inject', 'go_to_pressure','go_to_area', 'run_angle_store', 'auto_height']
+__all__ = ['RunActions', 'SEActions', 'DryRun', 'run_angle', 'run_angle_SM', 'slit_check', 'transmission', 'transmission_SM', 'contrast_change', 'inject', 'go_to_pressure','go_to_area', 'run_angle_store', 'auto_height', 'autoheight']
 

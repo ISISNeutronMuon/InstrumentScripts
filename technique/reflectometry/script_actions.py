@@ -628,7 +628,7 @@ class SEActions:
         #movement = _Movement(dry_run)
         #movement.dry_run_warning()
 
-        g.cset("Speed", 0.0)  # set speed to 0 before going into run control
+        #g.cset("Speed", 0.0)  # set speed to 0 before going into run control
 
         g.cset("Nima_mode", "Area Control")  # 1 for PRESSURE control, 2 for AREA control
         g.cset("Control", "START")
@@ -639,8 +639,37 @@ class SEActions:
         if wait:
             g.waitfor_block("Target_reached", "YES", maxwait=maxwait)  # not sure what
 
-        g.cset("Speed", 0.0)  # set speed to 0 to stop barriers moving; pressure may change
+        #g.cset("Speed", 0.0)  # set speed to 0 to stop barriers moving; pressure may change
         
+def autoheight(laser_offset_block: str = 'KEYENCE', fine_height_block: str = 'HEIGHT', target: float = 0.0, settle_time = 0):
+    """
+    Version for in console window.
+    Moves the sample fine height axis so that it is centred on the beam, based on the readout of a laser height gun.
+
+    Args:
+        laser_offset_block: The name of the block for the laser offset from centre
+        fine_height_block: The name of the block for the sample fine height axis
+        target: The target laser offset
+
+        >>> auto_height(b.KEYENCE, b.HEIGHT2)
+
+        Moves HEIGHT2 by (KEYENCE * (-1))
+
+        >>> auto_height(b.KEYENCE, b.HEIGHT2, target=0.5, continue_if_nan=True)
+
+        Moves HEIGHT2 by (target - b.KEYENCE) and does not interrupt script execution if an invalid value is read.
+    """
+    g.waitfor_time(seconds=settle_time)
+    current_laser_offset = g.cget(laser_offset_block)["value"]
+    difference = target - current_laser_offset
+
+    current_height = g.cget(fine_height_block)["value"]
+    target_height = current_height + difference
+
+    print("Target for fine height axis: {} (current {})".format(target_height, current_height))
+    
+    g.cset(fine_height_block, target_height)
+    g.waitfor_move()
 
 
 # THIS MAY BECOME REDUNDANT.
@@ -658,6 +687,10 @@ def slit_check(theta, footprint, resolution):
     calc_dict = movement.calculate_slit_gaps(theta, footprint, resolution, constants)
     print("For a footprint of {} and resolution of {} at an angle {}:".format(footprint, resolution, theta))
     print(calc_dict)
+    
+
+
+
 
 # This means they can be typed directly into the IBEX python console:
 _SEaction_instance = SEActions()
