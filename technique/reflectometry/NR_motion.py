@@ -457,7 +457,7 @@ class _Movement(object):
 
         Returns: block to be used as the centre point, prior centre point for resetting, min and max of movement.
         """
-        HG_defaults = constants.hg_defaults
+        HG_defaults = self.constants.HG_DEFAULTS
         if not slit_extent:
             try:
                 slit_extent = HG_defaults[slit_block]
