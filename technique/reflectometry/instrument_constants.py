@@ -13,6 +13,7 @@ except ImportError:
 
 @dataclass
 class InstrumentConstants:
+    NATURAL_ANGLE: float = field(default_factory=lambda: get_reflectometry_value("NATURAL_ANGLE"))
     MAX_THETA: float = field(default_factory=lambda: get_reflectometry_value("MAX_THETA"))
     HAS_HEIGHT2: str = field(default_factory=lambda: get_reflectometry_value("HAS_HEIGHT2"))
     VSLITS_INDICES: list = field(default_factory=lambda: get_reflectometry_value("VSLITS_INDICES"))
@@ -22,7 +23,7 @@ class InstrumentConstants:
     s2sa: float = field(default_factory=lambda: get_reflectometry_value("SAMPLE_Z") - get_reflectometry_value("S2_Z"))
     s3max: float = field(default_factory=lambda: get_reflectometry_value("S3_MAX"))
     s4max: float = field(default_factory=lambda: get_reflectometry_value("S4_MAX"))
-    s3_beam_blocker_offset: float = field(default_factory=lambda: get_reflectometry_value("S3_BEAM_BLOCKER_OFFS"))
+    s3_beam_blocker_offset: float = field(default_factory=lambda: get_reflectometry_value("S3_BEAM_BLOCK_OFFS"))
     angle_for_s3_offset: float = 0.7
 
     SM_BLOCK: str = field(default_factory=lambda: get_reflectometry_value("SM_BLOCK"))

@@ -156,8 +156,8 @@ class _Movement(object):
         # TODO: Add None handling for when s1s2 and s2sa are not properly defined.
 
         if self._get_block_value("S3Block") == 'No':
-            factor = theta / constants.max_theta
-            s3 = constants.s3max * factor
+            factor = theta / self.constants.MAX_THETA
+            s3 = self.constants.s3max * factor
             calc_dict.update({'S3VG': s3})
             print("S3 not in beam blocker mode")
             calc_dict.update({'S3VC': -self._get_block_value('DOFF_PARALLEL')+8.459})
@@ -539,7 +539,7 @@ class _Movement(object):
 
         Returns: block to be used as the centre point, prior centre point for resetting, min and max of movement.
         """
-        HG_defaults = constants.hg_defaults
+        HG_defaults = self.constants.HG_DEFAULTS
         if not slit_extent:
             try:
                 slit_extent = HG_defaults[slit_block]
@@ -677,7 +677,7 @@ class _Movement(object):
             if mode.upper() in protect_modes and angle != 0.0:
                 # In liquid the sample is tilted by the incoming beam angle so that it is level, this is accounted for by
                 # adjusting the super mirror
-                smang = (self.constants.incoming_beam_angle - angle) / 2
+                smang = (self.constants.NATURAL_ANGLE - angle) / 2
             else:
                 smang = smangle
             # TODO: Need to change the except statement to an error/warning?
@@ -722,7 +722,7 @@ class _Movement(object):
         elif osc_slit:
             # Tries to take the extent for oscillation from the equivalent param e.g. s2hg.
             # Otherwise carries None to osc input.
-            hgaps.update(vgaps)  # TODO: what happens if vgaps is None and why vgaps?
+            hgaps.update(hgaps)  # TODO: what happens if vgaps is None and why vgaps?
             try:
                 use_block = hgaps[oscblock.casefold()]
                 print('using block {}={}'.format(oscblock, use_block))

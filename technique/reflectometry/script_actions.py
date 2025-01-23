@@ -423,8 +423,8 @@ class RunActions:
             with movement.reset_hgaps_and_sample_height_new(sample):
                 movement.sample_setup(sample, 0.0, mode_out, height_offset)
 
-                # if vgaps is None:
-                #     vgaps = {}
+                if vgaps is None:
+                    vgaps = {}
                 # if "S3VG" not in [gg.upper() for gg in vgaps.keys()]:
                 #     vgaps.update({"S3VG": constants.s3max}) # TODO: remove constants somehow
 
@@ -528,8 +528,8 @@ class RunActions:
 
                 smblock_out, smang_out = movement.sample_setup(sample, 0.0, mode_out, height_offset, smangle)
 
-                # if vgaps is None:
-                #     vgaps = {}
+                if vgaps is None:
+                    vgaps = {}
                 # if "S3VG" not in [gg.upper() for gg in vgaps.keys()]:
                 #     vgaps.update({"S3VG": constants.s3max}) # TODO: remove reference to constants
                 if hgaps is None:
@@ -701,7 +701,7 @@ class SEActions:
                 print("Error concentration not set neither volume or time set!")
                 return
             #g.waitfor_block("pump_is_on", "IDLE")
-            g.waitfor_block("pump_is_on", "Pumping") # JASCO MODIFICATION
+            g.waitfor_block("pump_is", "Pumping") # JASCO MODIFICATION
 
             logging.log(CONTRASTCHANGE,
                         "Valve {}, concentrations {}, flow {},  volume {}, time {}, and {}wait "
@@ -710,7 +710,7 @@ class SEActions:
 
             if wait:
                 # g.waitfor_block("pump_is_on", "OFF")
-                g.waitfor_block("pump_is_on", "Off") # JASCO MODIFICATION
+                g.waitfor_block("pump_is", "Off") # JASCO MODIFICATION
 
     @staticmethod
     @DryRun
@@ -791,13 +791,14 @@ class SEActions:
             movement = _Movement(dry_run)
             movement.dry_run_warning()
 
-            g.cset("Speed", 0.0)  # set speed to 0 before going into run control
+            # g.cset("Speed", 0.0)  # set speed to 0 before going into run control
 
             g.cset("Nima_mode", "Pressure Control")  # 1 for PRESSURE control, 2 for AREA control
             g.cset("Control", "START")
 
+            g.cset("Speed", speed)
             g.cset("Pressure", pressure)
-            g.cset("Speed", speed)  # start barrie movement
+              # start barrie movement
             g.waitfor_block("Target_reached", "NO")
             if wait:
                 g.waitfor_block("Target_reached", "YES", maxwait=maxwait)  # not sure what
@@ -824,7 +825,7 @@ class SEActions:
             movement = _Movement(dry_run)
             movement.dry_run_warning()
 
-            g.cset("Speed", 0.0)  # set speed to 0 before going into run control
+ #           g.cset("Speed", 0.0)  # set speed to 0 before going into run control
 
             g.cset("Nima_mode", "Area Control")  # 1 for PRESSURE control, 2 for AREA control
             g.cset("Control", "START")
@@ -835,7 +836,7 @@ class SEActions:
             if wait:
                 g.waitfor_block("Target_reached", "YES", maxwait=maxwait)  # not sure what
 
-            g.cset("Speed", 0.0)  # set speed to 0 to stop barriers moving; pressure may change
+  #          g.cset("Speed", 0.0)  # set speed to 0 to stop barriers moving; pressure may change
 
 
 def autoheight(laser_offset_block: str = 'KEYENCE', fine_height_block: str = 'HEIGHT', target: float = 0.0,
