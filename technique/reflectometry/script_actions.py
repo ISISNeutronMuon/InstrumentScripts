@@ -423,11 +423,6 @@ class RunActions:
             with movement.reset_hgaps_and_sample_height_new(sample):
                 movement.sample_setup(sample, 0.0, mode_out, height_offset)
 
-                if vgaps is None:
-                    vgaps = {}
-                # if "S3VG" not in [gg.upper() for gg in vgaps.keys()]:
-                #     vgaps.update({"S3VG": constants.s3max}) # TODO: remove constants somehow
-
                 if hgaps is None:
                     hgaps = sample.hgaps
                 movement.set_axis_dict(hgaps)
@@ -528,10 +523,6 @@ class RunActions:
 
                 smblock_out, smang_out = movement.sample_setup(sample, 0.0, mode_out, height_offset, smangle)
 
-                if vgaps is None:
-                    vgaps = {}
-                # if "S3VG" not in [gg.upper() for gg in vgaps.keys()]:
-                #     vgaps.update({"S3VG": constants.s3max}) # TODO: remove reference to constants
                 if hgaps is None:
                     hgaps = sample.hgaps
                 movement.set_axis_dict(hgaps)
