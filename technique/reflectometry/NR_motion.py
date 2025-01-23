@@ -104,8 +104,10 @@ class _Movement(object):
         :raises ValueError: if block does not exist
 
         """
-        block_value = g.cget(pv_name)
-        if block_value is None:
+        blocks = [block.upper() for block in g.get_blocks()]
+        if pv_name.upper() in blocks:
+            block_value = g.cget(pv_name)
+        else:
             raise KeyError("Block {} does not exist".format(pv_name))
         return block_value["value"]
 
@@ -162,7 +164,7 @@ class _Movement(object):
             print("S3 not in beam blocker mode")
             try:
                 calc_dict.update({'S3VC': -self._get_block_value('DOFF_PARALLEL')+8.459})
-            except AttributeError:
+            except KeyError:
                 # If instrument does not have block "DOFF_PARALLEL"
                 calc_dict.update({'S3VC': 0.0})
             removes=['S3S','S3N']
