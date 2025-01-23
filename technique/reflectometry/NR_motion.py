@@ -153,13 +153,26 @@ class _Movement(object):
         """
         calc_dict = self.calculate_slit_gaps(theta, sample.footprint, sample.resolution)
         # TODO: Add None handling for when s1s2 and s2sa are not properly defined.
+        
+        #TODO: Change this handling to use correct S3 gap calculation/blocker behaviour
+        if self._get_block_value("S3Block") == 'No':
+            factor = theta / self.constants.MAX_THETA
+            s3 = self.constants.s3max * factor
+            calc_dict.update({'S3VG': s3})
+            print("S3 not in beam blocker mode")
+            calc_dict.update({'S3VC': 0.0})
+            removes=['S3South','S3North']
 
-        factor = theta / self.constants.MAX_THETA
-        s3 = self.constants.s3max * factor
-        calc_dict.update({'S3VG': s3})
+        else:
+            print("S3 in Beam blocker mode")
+            calc_dict.update({'S3North':25, 'S3South':-3}) ##set some defaults.
+            removes=['S3VG','S3VC']
+        # factor = theta / self.constants.MAX_THETA
+        # s3 = self.constants.s3max * factor
+        # calc_dict.update({'S3VG': s3})
 
-        g.cset('S3VC', 0)
-        self.wait_for_move()
+        # g.cset('S3VC', 0)
+        # self.wait_for_move()
 
         if vgaps is None:
             vgaps = {}
