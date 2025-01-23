@@ -160,29 +160,17 @@ class _Movement(object):
             s3 = self.constants.s3max * factor
             calc_dict.update({'S3VG': s3})
             print("S3 not in beam blocker mode")
-            calc_dict.update({'S3VC': -self._get_block_value('DOFF_PARALLEL')+8.459})
+            try:
+                calc_dict.update({'S3VC': -self._get_block_value('DOFF_PARALLEL')+8.459})
+            except AttributeError:
+                # If instrument does not have block "DOFF_PARALLEL"
+                calc_dict.update({'S3VC': 0.0})
             removes=['S3S','S3N']
-            # try:
-                # del vgaps['S3S']
-            # except:
-                # print('No need to remove S3S')
-            # try:
-                # del vgaps['S3N']
-            # except:
-                # print('No need to remove S3N')
         else:
             print("S3 in Beam blocker mode")
             calc_dict.update({'S3N':20, 'S3S':3}) ##set some defaults.
             removes=['S3VG','S3VC']
-            # try:
-                # del vgaps['S3VG']
-            # except:
-                # print('No need to remove S3VG')
-            # try:
-                # del vgaps['S3VC']
-            # except:
-                # print('No need to remove S£Vc')
-        
+
         if vgaps is None:
             vgaps = {}
         ## Look at inputs. Might not need to deal with None...?
