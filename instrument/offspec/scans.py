@@ -31,7 +31,7 @@ class OffspecDefaultScan(Defaults):
     # spectra definition based on gcl script.
     _spectra = [create_spectra_definition(i, 15.0, 99992.5) for i in range(1, 772)]  # linear detector
 
-    detector = NormalisedIntensityDetector(default_monitor=2, default_detector=344,
+    detector = NormalisedIntensityDetector(default_monitor=2, default_detector=345,
                                            spectra_definitions=_spectra)
 
     def __init__(self):

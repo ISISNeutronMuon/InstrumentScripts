@@ -12,7 +12,7 @@ try:
     # pylint: disable=import-error
     from genie_python import genie as g
 except ImportError:
-    from technique.reflectometry.mocks import g
+    from .technique.reflectometry.mocks import g
 
 # Remove all handlers associated with the root logger object.
 for handler in logging.root.handlers[:]:
@@ -97,7 +97,7 @@ def runscript(dry_run=False):
     transmission(sample_3, "Si3-unmarked", at_angle=0.7, count_uamps=20, hgaps={'S1HG': 10, 'S2HG': 6})
     transmission(sample_3, "Si3-unmarked", at_angle=0.7, count_uamps=20, hgaps={'S1HG': 50, 'S2HG': 30})
 
-    go_to_pressure(28, speed=30)
+    # go_to_pressure(28, speed=30)
 
     inject(sample_4, D2O, flow=2.0, volume=20)
 
@@ -106,20 +106,20 @@ def runscript(dry_run=False):
     run_angle_SM(sample_5, 1.0, 60)
 
     if dry_run:
-        # print("\n=== Total time: ", str(int(DryRun.run_time / 60)) + "h " + str(int(DryRun.run_time % 60)) + "min ===\n")
-
-        volumes = '\033[2;34m    Volumes used for contrast changes: ' + \
-                  str(DryRun.buffer_volumes) + " mL     \033[0;0m"
-        print('\n\t \u2554' + '\u2550' * (len(volumes) - 13) + '\u2557')
-        print('\t \u2551' + volumes + '\u2551')
-        total_time = "=== Total time: " + str(int(DryRun.run_time / 60)) + "h " + str(
-            int(DryRun.run_time % 60)) + "min ==="
-        left = int(len(volumes) / 2 - len(total_time))
-        right = len(volumes) - 17 - left - len(total_time)
-        print('\t \u2551' + '    ' + ' ' * left + total_time + ' ' * right + '\u2551')
-        print('\t \u255A' + '\u2550' * (len(volumes) - 13) + '\u255D')
+        volumes = 'Volumes used for contrast changes: ' + str(DryRun.buffer_volumes) + " mL"
+        top_line = '\n\t +' + '=' * (len(volumes) + 12) + '+'
+        print(top_line)
+        print('\t |\t' + volumes + ' ' * (len(top_line) - len(volumes) - 11) + '|')
+        
+        total_time = "=== Total time: " + str(int(DryRun.run_time / 60)) + "h " + str(int(DryRun.run_time % 60)) + "min ==="
+        
+        left = int(len(top_line) / 2 - len(total_time) / 2) - 2 - 4 # -tab
+        right = len(top_line) - (left + len(total_time)) - 1 - 2*4
+        
+        print('\t |' + '    ' + ' ' * left + total_time + ' ' * right + '|')
+        print('\t +' + '=' * (len(volumes) + 12) + '+')
         print('\n')
-        return DryRun.run_time
+        # return DryRun.run_time
 
 
 runtime = runscript(dry_run=True)

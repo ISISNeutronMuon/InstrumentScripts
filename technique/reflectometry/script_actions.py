@@ -11,12 +11,12 @@ try:
     # pylint: disable=import-error
     from genie_python import genie as g
 except ImportError:
-    from mocks import g
+    from .mocks import g
 
 # import general.utilities.io
-from sample import Sample
-from NR_motion import _Movement
-from instrument_constants import get_instrument_constants #TODO: update this path as required.
+from .sample import Sample
+from .NR_motion import _Movement
+from .instrument_constants import get_instrument_constants #TODO: update this path as required.
 
 os.system('color')
 
@@ -90,8 +90,11 @@ class DryRun:
             if len(absent_blocks):
                 # print("The following blocks were not found in config: ", absent_blocks)
                 print("\033[1;31;40m>>The following blocks were not found in config: ", absent_blocks, "\033[0;0m")
-
-            rt, summary = self.f(*args, **kwargs)
+            try:
+                rt, summary = self.f(*args, **kwargs)
+            except TypeError:
+                rt = 0
+                summary = "Only setup"
 
             # check contrast_change and add to total volume
             list_pattern = r'\[\s*\d+(?:\.\d+)?\s*,\s*\d+(?:\.\d+)?\s*,\s*\d+(?:\.\d+)?\s*,\s*\d+(?:\.\d+)?\s*\]'
@@ -167,6 +170,7 @@ class DryRun:
 
 
 class RunActions:
+
     @staticmethod
     @DryRun
     def run_angle(sample, angle: float, count_uamps: float = None, count_seconds: float = None,
@@ -234,25 +238,27 @@ class RunActions:
             movement = _Movement(dry_run)
 
             mode_out = movement.setup_measurement(mode)  # TODO: make sure we're not in 'LIQUID' mode?
-            if ht_block is None:
-                movement.sample_setup(sample, angle, mode_out)
+
+            movement.sample_setup(sample, angle, mode_out, trans_offset=None, ht_block=ht_block)
+
             if hgaps is None:
                 hgaps = sample.hgaps
             movement.set_axis_dict(hgaps)
             movement.set_slit_vgaps(angle, vgaps, sample)
-            
+
             # TODO: Once set_beam_blocker has been sorted out, change this do deal with different options
             if use_beam_blocker:
                 movement.set_beam_blocker(angle, s3_beam_blocker_offset, angle_for_s3_offset, s3_vgap)
-            
+
             movement.wait_for_move()
             new_title = movement.update_title(sample.title, sample.subtitle, angle,
                                               add_current_gaps=include_gaps_in_title)
 
-            dur_dict = {'uamps': count_uamps, 'sec': count_seconds, 'frames': count_frames}
-            duration = [[dur_dict[dur], dur] for dur in dur_dict if dur_dict[dur] is not None][0]
-            logging.log(RUN, "{} | ** {}, th={}, {}={} **".
-                        format(str(g.get_runnumber()), sample.title, angle, duration[1], duration[0]))
+            # TODO: Breaks if no count time set (ie setup only)
+            # dur_dict = {'uamps': count_uamps, 'sec': count_seconds, 'frames': count_frames}
+            # duration = [[dur_dict[dur], dur] for dur in dur_dict if dur_dict[dur] is not None][0]
+            # logging.log(RUN, "{} | ** {}, th={}, {}={} **".
+                        # format(str(g.get_runnumber()), sample.title, angle, duration[1], duration[0]))
             # TODO use 'coloredlogs' library
 
             movement.start_measurement(count_uamps, count_seconds, count_frames, osc_slit, osc_block, osc_gap, vgaps,
@@ -355,8 +361,8 @@ class RunActions:
     @staticmethod
     @DryRun
     def transmission(sample, title: str = None, vgaps: dict = None, hgaps: dict = None, count_uamps: float = None,
-                     count_seconds: float = None, count_frames: float = None, height_offset: float = None,
-                     osc_slit: bool = False, osc_block: str = 'Default', osc_gap: float = None, mode: str = None,
+                     count_seconds: float = None, count_frames: float = None, height_offset: float = 0.0,
+                     osc_slit: bool = True, osc_block: str = 'Default', osc_gap: float = None, mode: str = None,
                      at_angle: float = None, ht_block: str = 'Default', dry_run: bool = False,
                      include_gaps_in_title: bool = False):
 
@@ -400,7 +406,7 @@ class RunActions:
         """
         # REVIEW: updated osc_slit default to False (better to explicitly as it to do this?)
         # TODO: Add in a beamline constant to default to true or false oscillating slit gap.
-        
+
         if dry_run:
             if count_uamps:
                 return count_uamps / 40 * 60, f"({sample.title}, {count_uamps} uAmps)"  # TODO: value for TS2, needs instrument check
@@ -417,18 +423,13 @@ class RunActions:
             with movement.reset_hgaps_and_sample_height_new(sample):
                 movement.sample_setup(sample, 0.0, mode_out, height_offset)
 
-                # if vgaps is None:
-                #     vgaps = {}
-                # if "S3VG" not in [gg.upper() for gg in vgaps.keys()]:
-                #     vgaps.update({"S3VG": constants.s3max}) # TODO: remove constants somehow
-
                 if hgaps is None:
                     hgaps = sample.hgaps
                 movement.set_axis_dict(hgaps)
                 movement.set_slit_vgaps(at_angle, vgaps, sample)
                 # Edit for this to be an instrument default for the angle to be used in calc when vg not defined.
                 movement.wait_for_move()
-                
+
                 # REVIEW: If no title is given, takes sample.title, otherwise, uses the string given.
                 if title is not None:
                     new_title = movement.update_title(title, "", None, add_current_gaps=include_gaps_in_title)
@@ -441,9 +442,9 @@ class RunActions:
                 movement.start_measurement(count_uamps, count_seconds, count_frames, osc_slit, osc_block, osc_gap,
                                            vgaps,
                                            hgaps)
-            
-            # do stuff here 
-            
+
+            # do stuff here
+
 
                 # Horizontal gaps and height reset by with reset_gaps_and_sample_height
 
@@ -454,7 +455,7 @@ class RunActions:
     @DryRun
     def transmission_SM(sample, title: str, vgaps: dict = None, hgaps: dict = None,
                         count_uamps: float = None, count_seconds: float = None, count_frames: float = None,
-                        height_offset: float = None, smangle: float = 0.0,
+                        height_offset: float = 0.0, smangle: float = 0.0,
                         mode: str = None, dry_run: bool = False, include_gaps_in_title: bool = True,
                         osc_slit: bool = True,
                         osc_block: str = 'Default', osc_gap: float = None, at_angle: float = None,
@@ -522,10 +523,6 @@ class RunActions:
 
                 smblock_out, smang_out = movement.sample_setup(sample, 0.0, mode_out, height_offset, smangle)
 
-                # if vgaps is None:
-                #     vgaps = {}
-                # if "S3VG" not in [gg.upper() for gg in vgaps.keys()]:
-                #     vgaps.update({"S3VG": constants.s3max}) # TODO: remove reference to constants
                 if hgaps is None:
                     hgaps = sample.hgaps
                 movement.set_axis_dict(hgaps)
@@ -543,6 +540,86 @@ class RunActions:
                 movement.start_measurement(count_uamps, count_seconds, count_frames, osc_slit, osc_block, osc_gap,
                                            vgaps, hgaps)
 
+    @staticmethod
+    @DryRun
+    def run_angle_store(sample, angle: float, count_uamps: float = None, count_seconds: float = None,
+                  count_frames: float = None, vgaps: dict = None, hgaps: dict = None, mode: str = None,
+                  dry_run: bool = False, include_gaps_in_title: bool = False, osc_slit: bool = False,
+                  osc_block: str = 'S2HG', osc_gap: float = None, store: bool = False, storerate: float = 120):
+        """
+        ** Function for testing store option.
+        Move to a given theta and smangle with slits set. If a current, time or frame count are given then take a
+        measurement.
+        Both supermirrors removed and all angle axes enabled.
+
+        Args:
+            sample (techniques.reflectometry.sample.Sample): The sample to measure
+            angle: The angle to measure at, theta and in liquid mode also the sm angle
+            count_uamps: the current to run the measurement for; None for use count_seconds
+            count_seconds: the time to run the measurement for if uamps not set; None for use count_frames
+            count_frames: the number of frames to wait for; None for don't count
+            vgaps: vertical gaps to be set; Where not defined uses sample footprint and resolution
+            hgaps: horizontal gaps to be set; Where not defined gap is unchanged
+            mode: mode to run in; None don't change modes
+            dry_run: If True just print what would happen; If False, run the experiment
+            include_gaps_in_title: Whether current slit gap sizes should be appended to the run title or not
+            osc_slit: whether slit oscillates during measurement; only osc if osc_gap < total gap extent setting.
+            osc_block: block to oscillate
+            osc_gap: gap of slit during oscillation. If None then takes defaults (see osc_slit_setup)
+            store: whether the run should regularly create a nxs file
+            storerate: frequency of stored runs in seconds.
+        TODO: this set of examples needs updating.
+        Examples:
+            The simplest scan is:
+            >>> my_sample = Sample("My title", "my subtitle", 0, 0, 0, 0, 0, 0.6, 3.0)
+            >>> run_angle(my_sample, 0.3, count_seconds=10)
+            This will use my_sample settings to perform a measurement at the theta angle of 0.3 for 10 seconds. It will set
+            slits 1 and 2 so that the resolution is 0.6 and the footprint is 3, then set slits 3 based on the fraction
+            of the the maximum theta allowed. It will remove all supermirrors from the beam. The mode will not be
+            changed and it will not use a height gun for auto-height mode.
+
+            >>> run_angle(my_sample, 0.5, vgaps={'s1vg': 0.1, 's2vg' 0.3}, mode="Solid")
+            In this evocation we are setting theta to 0.5 with s1 and s2 set to 0.1 and 0.3. The mode is also
+            changed to Solid. Depending on what this means on your instrument this may also set the offsets for components
+            back to 0. No count was specified so in this case the beamline is moved to the position and left there; no
+            data is captured.
+
+            >>> run_angle(my_sample, 0.0, dry_run=True)
+            In this run, dry_run is set to True so nothing will actually happen, it will only print the settings that would
+            be used for the run to the screen.
+        """
+
+        if dry_run:
+            if count_uamps:
+                return count_uamps / 40 * 60, f"({angle}, {count_uamps} uAmps)"  # value for TS2, needs instrument check
+            elif count_seconds:
+                return count_seconds / 60, f"({angle}, {count_seconds} s)"
+            elif count_frames:
+                return count_frames / 36000, f"({angle}, {count_frames} frames)"
+        else:
+            print("** Run angle {} **".format(sample.title))
+
+            movement = _Movement(dry_run)
+
+            constants, mode_out = movement.setup_measurement(mode)
+
+            movement.sample_setup(sample, angle, constants, mode_out)
+            if hgaps is None:
+                hgaps = sample.hgaps
+            movement.set_axis_dict(hgaps)
+            movement.set_slit_vgaps(angle, constants, vgaps, sample)
+            movement.wait_for_move()
+            movement.update_title(sample.title, sample.subtitle, angle, add_current_gaps=include_gaps_in_title)
+
+            movement.start_measurement_store(count_uamps, count_seconds, count_frames, osc_slit, osc_block, osc_gap, vgaps,
+                                       hgaps, store, storerate)
+
+# This means they can be typed directly into the IBEX python console:
+# _runaction_instance = RunActions()
+# run_angle = _runaction_instance.run_angle
+# run_angle_SM = _runaction_instance.run_angle_SM
+# transmission = _runaction_instance.transmission
+# transmission_SM = _runaction_instance.transmission_SM
 
 class SEActions:
     @staticmethod
@@ -559,7 +636,7 @@ class SEActions:
             wait: True wait for completion; False don't wait
             dry_run: True don't do anything just print what it will do; False otherwise
         """
-        # TODO: Depreciate this for exposure to users, and just use inject. 
+        # TODO: Depreciate this for exposure to users, and just use inject.
         if dry_run:
             if isinstance(sample, int):
                 valvepos = sample
@@ -591,8 +668,8 @@ class SEActions:
 
             # print( "Concentration: Valve {}, concentrations {}, flow {},  volume {}, time {}, and {}waiting for
             # completion" .format(valvepos, concentrations, flow, volume, seconds, waiting) )
-            
-            # REVIEW: Added in catch for 2 valve setup, assuming HPLC is always plugged into valve3... 
+
+            # REVIEW: Added in catch for 2 valve setup, assuming HPLC is always plugged into valve3...
             # TODO: Change block names on all instruments for kanuer0/knauer2 to be the same name....
             try:
                 g.cset("knauer2", 3)
@@ -614,8 +691,7 @@ class SEActions:
             else:
                 print("Error concentration not set neither volume or time set!")
                 return
-            #g.waitfor_block("pump_is_on", "IDLE")
-            g.waitfor_block("pump_is_on", "Pumping") # JASCO MODIFICATION
+            g.waitfor_block("pumping", "Pumping") # JASCO MODIFICATION
 
             logging.log(CONTRASTCHANGE,
                         "Valve {}, concentrations {}, flow {},  volume {}, time {}, and {}wait "
@@ -623,8 +699,7 @@ class SEActions:
                                 waiting))  # TODO use 'coloredlogs' library
 
             if wait:
-                # g.waitfor_block("pump_is_on", "OFF")
-                g.waitfor_block("pump_is_on", "Off") # JASCO MODIFICATION
+                g.waitfor_block("pumping", "Off") # JASCO MODIFICATION
 
     @staticmethod
     @DryRun
@@ -705,13 +780,14 @@ class SEActions:
             movement = _Movement(dry_run)
             movement.dry_run_warning()
 
-            g.cset("Speed", 0.0)  # set speed to 0 before going into run control
+            # g.cset("Speed", 0.0)  # set speed to 0 before going into run control
 
             g.cset("Nima_mode", "Pressure Control")  # 1 for PRESSURE control, 2 for AREA control
             g.cset("Control", "START")
 
+            g.cset("Speed", speed)
             g.cset("Pressure", pressure)
-            g.cset("Speed", speed)  # start barrie movement
+              # start barrie movement
             g.waitfor_block("Target_reached", "NO")
             if wait:
                 g.waitfor_block("Target_reached", "YES", maxwait=maxwait)  # not sure what
@@ -738,7 +814,7 @@ class SEActions:
             movement = _Movement(dry_run)
             movement.dry_run_warning()
 
-            g.cset("Speed", 0.0)  # set speed to 0 before going into run control
+ #           g.cset("Speed", 0.0)  # set speed to 0 before going into run control
 
             g.cset("Nima_mode", "Area Control")  # 1 for PRESSURE control, 2 for AREA control
             g.cset("Control", "START")
@@ -749,7 +825,39 @@ class SEActions:
             if wait:
                 g.waitfor_block("Target_reached", "YES", maxwait=maxwait)  # not sure what
 
-            g.cset("Speed", 0.0)  # set speed to 0 to stop barriers moving; pressure may change
+  #          g.cset("Speed", 0.0)  # set speed to 0 to stop barriers moving; pressure may change
+
+
+def autoheight(laser_offset_block: str = 'KEYENCE', fine_height_block: str = 'HEIGHT', target: float = 0.0,
+               settle_time=0):
+    """
+    Version for in console window.
+    Moves the sample fine height axis so that it is centred on the beam, based on the readout of a laser height gun.
+
+    Args:
+        laser_offset_block: The name of the block for the laser offset from centre
+        fine_height_block: The name of the block for the sample fine height axis
+        target: The target laser offset
+
+        >>> auto_height(b.KEYENCE, b.HEIGHT2)
+
+        Moves HEIGHT2 by (KEYENCE * (-1))
+
+        >>> auto_height(b.KEYENCE, b.HEIGHT2, target=0.5, continue_if_nan=True)
+
+        Moves HEIGHT2 by (target - b.KEYENCE) and does not interrupt script execution if an invalid value is read.
+    """
+    g.waitfor_time(seconds=settle_time)
+    current_laser_offset = g.cget(laser_offset_block)["value"]
+    difference = target - current_laser_offset
+
+    current_height = g.cget(fine_height_block)["value"]
+    target_height = current_height + difference
+
+    print("Target for fine height axis: {} (current {})".format(target_height, current_height))
+
+    g.cset(fine_height_block, target_height)
+    g.waitfor_move()
 
 
 # THIS MAY BECOME REDUNDANT.
@@ -773,3 +881,5 @@ def slit_check(theta, footprint, resolution):
 _SEaction_instance = SEActions()
 contrast_change = _SEaction_instance.contrast_change
 inject = _SEaction_instance.inject
+go_to_pressure = _SEaction_instance.go_to_pressure
+go_to_area = _SEaction_instance.go_to_area

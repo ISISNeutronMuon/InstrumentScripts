@@ -193,7 +193,7 @@ class Scan(object):
         log_path = path.parent
 
         path_exists = os.path.isdir(log_path)
-        
+
         if path_exists:
             print("Writing data to: {}".format(log_path))
             with open(log_filename, "w") as logfile, \

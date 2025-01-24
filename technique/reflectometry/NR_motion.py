@@ -5,6 +5,7 @@ from contextlib2 import contextmanager
 
 from future.moves import itertools
 from math import tan, radians, sin
+import time
 
 from six.moves import input
 
@@ -14,11 +15,11 @@ try:
     # pylint: disable=import-error
     from genie_python import genie as g
 except ImportError:
-    from mocks import g
+    from .mocks import g
 
 # import general.utilities.io
-from sample import Sample
-from instrument_constants import get_instrument_constants  # TODO: need to update import
+from .sample import Sample
+from .instrument_constants import get_instrument_constants  # TODO: need to update import
 
 
 class _Movement(object):
@@ -103,8 +104,10 @@ class _Movement(object):
         :raises ValueError: if block does not exist
 
         """
-        block_value = g.cget(pv_name)
-        if block_value is None:
+        blocks = [block.upper() for block in g.get_blocks()]
+        if pv_name.upper() in blocks:
+            block_value = g.cget(pv_name)
+        else:
             raise KeyError("Block {} does not exist".format(pv_name))
         return block_value["value"]
 
@@ -154,12 +157,21 @@ class _Movement(object):
         calc_dict = self.calculate_slit_gaps(theta, sample.footprint, sample.resolution)
         # TODO: Add None handling for when s1s2 and s2sa are not properly defined.
 
-        factor = theta / self.constants.MAX_THETA
-        s3 = self.constants.s3max * factor
-        calc_dict.update({'S3VG': s3})
-
-        g.cset('S3VC', 0)
-        self.wait_for_move()
+        if self._get_block_value("S3Block") == 'No':
+            factor = theta / self.constants.MAX_THETA
+            s3 = self.constants.s3max * factor
+            calc_dict.update({'S3VG': s3})
+            print("S3 not in beam blocker mode")
+            try:
+                calc_dict.update({'S3VC': -self._get_block_value('DOFF_PARALLEL')+8.459})
+            except KeyError:
+                # If instrument does not have block "DOFF_PARALLEL"
+                calc_dict.update({'S3VC': 0.0})
+            removes=['S3S','S3N']
+        else:
+            print("S3 in Beam blocker mode")
+            calc_dict.update({'S3N':20, 'S3S':3}) ##set some defaults.
+            removes=['S3VG','S3VC']
 
         if vgaps is None:
             vgaps = {}
@@ -167,11 +179,12 @@ class _Movement(object):
         for key, value in vgaps.items():
             calc_dict.update({} if value is None else {key.upper(): value})
 
-        print("Slit gaps set to: {}".format(calc_dict))
-        for key, value in calc_dict.items():
+        calc_dict2={key: val for key, val in calc_dict.items() if key.upper() not in removes}
+        print("Slit gaps set to: {}".format(calc_dict2))
+        for key, value in calc_dict2.items():
             if value < 0.0:
                 sys.stderr.write("Vertical slit gaps are being set to less than 0!\n")
-        self.set_axis_dict(calc_dict)
+        self.set_axis_dict(calc_dict2)
 
     def set_axis_dict(self, axes_to_set: dict):
         """
@@ -219,6 +232,8 @@ class _Movement(object):
                     "The slit calculation gives a negative gap. Check the footprint and resolution values.")
             return {'S1VG': s1, 'S2VG': s2}
 
+    # This and the centres below can be combined if input is a dictionary instead.
+
     # Horizontal gaps and height reset by with reset_gaps_and_sample_height
     # Added extra part for centres too.
     @contextmanager
@@ -233,6 +248,8 @@ class _Movement(object):
             constants: instrument constants
 
         """
+
+
         horizontal_gaps = self.get_gaps(vertical=False, centres=False, slitrange=self.constants.HSLITS_INDICES)
         horizontal_cens = self.get_gaps(vertical=False, centres=True, slitrange=self.constants.HSLITS_INDICES)
 
@@ -440,6 +457,63 @@ class _Movement(object):
             print("Run with oscillating {} with gap of {} over a total width of {}.".format(slit_block, slit_gap,
                                                                                             slit_extent))
 
+
+    def count_osc_slit_old(self, slit_block: str, slit_gap: float = None, slit_extent: float = None,
+                       count_uamps: float = None,
+                       count_seconds: float = None, count_frames: float = None):
+        """
+        Starts and ends a measurement with a block oscillating during the measurement. Written as for slit but could be
+        any block with minor adjustment. If the gap is not smaller than the extent of the oscillation then it runs a
+        normal measurement.
+        See osc_slit_setup for setup and defaults.
+        Run times will be slightly long as it completes a full oscillation before checking if the requested duration
+        has been met.
+        A maximum wait is included on the movement in case close to a limit but the maxwait value may need adjusting.
+        At end of measurement, the slit centre is set back to its original centre point.
+        TODO: Does the gap also need to be reset?
+
+        If multiple counts are non-zero then will take first non-zero in order uamps, seconds, frames.
+        Args:
+            slit_block: block to be moved during oscillation
+            slit_gap: gap of slit during oscillation
+            slit_extent: total range of oscillation, based around initial centre (see osc_slit_setup)
+            count_uamps: number of uamps to count for; None=count in a different way
+            count_seconds: number of seconds to count for; None=count in a different way
+            count_frames: number of frames to count for; None=count in a different way
+        """
+        c_block, c_prior, c_min, c_max = self.osc_slit_setup(slit_block, slit_gap, slit_extent)
+        self.wait_for_move()
+        count_options = {'g.get_uamps()': count_uamps, 'g.get_time_since_begin(False)': count_seconds,
+                         'g.get_frames()': count_frames}
+        count_choice_idx = [i for i in count_options if count_options[i] is not None][0]
+        print(count_choice_idx)
+        # Alternative way to get durations:
+        # count_options = {'total_current': count_uamps,'run_time': count_seconds, 'good_frames_total': count_frames}
+        # g.get_dashboard()['run_time']; #g.get_dashboard()['good_frames_total']; #g.get_dashboard()['total_current']
+
+        if not self.dry_run:
+            if c_min < c_max:
+                g.begin()
+                current_counts = eval(count_choice_idx)
+                print(current_counts)
+                while current_counts < count_options[count_choice_idx]:
+                    g.cset(c_block, c_min)
+                    g.waitfor_block(c_block, c_min, maxwait=40)
+                    g.waitfor_time(seconds=1)  ##use sleep or remove?
+                    g.cset(c_block, c_max)
+                    g.waitfor_block(c_block, c_max, maxwait=40)
+                    g.waitfor_time(seconds=1)
+                    current_counts = eval(count_choice_idx)
+                    print("Continuing run, counts at {}={}".format(count_choice_idx, current_counts))
+                g.end()
+            else:
+                self.count_for(count_uamps=count_uamps, count_seconds=count_seconds, count_frames=count_frames)
+
+            g.cset(c_block, c_prior)
+        else:
+            print("Run with oscillating {} with gap of {} over a total width of {}.".format(slit_block, slit_gap,
+                                                                                            slit_extent))
+
     def osc_slit_setup(self, slit_block: str, slit_gap: float = None, slit_extent: float = None):
         """
         Setup for the oscillating slit. Sets the slit gap for the oscillation and calculates the min and max movement
@@ -455,7 +529,7 @@ class _Movement(object):
 
         Returns: block to be used as the centre point, prior centre point for resetting, min and max of movement.
         """
-        HG_defaults = constants.hg_defaults
+        HG_defaults = self.constants.HG_DEFAULTS
         if not slit_extent:
             try:
                 slit_extent = HG_defaults[slit_block]
@@ -513,9 +587,9 @@ class _Movement(object):
             self.change_to_soft_period_count()
         else:
             print("Periods not changed as no default periods set in instrument constants.")
-        try:
+        if "MONITOR" in g.get_blocks():
             g.cset("MONITOR", "IN")
-        except:
+        else:
             print("Monitor not found")
 
         mode_out = self.change_to_mode_if_not_none(mode)
@@ -551,27 +625,30 @@ class _Movement(object):
             transoffset = trans_offset
 
         self.set_axis("TRANS", sample.translation)
-        smblock_out, smang_out = self._SM_setup(angle, sm_ang, mode)
+        # TODO: Should _SM_setup be called if there is no smblock defined.
+        smblock_out, smang_out = self._SM_setup(angle, sm_ang, sm_block, mode)
         self.set_axis("THETA", angle)
         self.wait_for_move()
         if mode.upper() != "LIQUID":
             self.set_axis("PSI", sample.psi_offset)
             self.set_axis("PHI", sample.phi_offset + angle)
 
+        if mode.upper() != "LIQUID":
+            self.set_axis("PSI", sample.psi_offset)
+            self.set_axis("PHI", sample.phi_offset + angle)
         if self.constants.HAS_HEIGHT2:
-            if angle == 0 and abs(
-                    self.constants.TRANSM_HT_OFFS) > self.constants.TRANSM_FIN_Z_OFF_M:  # i.e. if transmission
+            if angle == 0 and abs(transoffset) > self.constants.TRANSM_FIN_Z_OFF_M:  # i.e. if transmission
                 self.set_axis("HEIGHT2", sample.height2_offset - transoffset)
-                self.set_axis(sample.ht_block, sample.height_offset)
+                self.set_axis(htblock, sample.height_offset)
             else:
                 self.set_axis("HEIGHT2", sample.height2_offset)
-                self.set_axis(sample.ht_block, sample.height_offset - transoffset)
+                self.set_axis(htblock, sample.height_offset - transoffset)
         else:
-            self.set_axis(sample.ht_block, sample.height_offset - transoffset)
+            self.set_axis(htblock, sample.height_offset - transoffset)
         self.wait_for_move()
         return smblock_out, smang_out
 
-    def _SM_setup(self, angle, smangle=0.0, mode=None):
+    def _SM_setup(self, angle, smangle=0.0, smblock=None, mode=None):
         """
         Setup mirrors in and out of beam and at correct angles.
         Args:
@@ -581,7 +658,7 @@ class _Movement(object):
             smblock: axis for mirror, can be a list for multiple mirrors. Defaults to entry in instrument constants file.
             mode: flag for liquid mode where smangle is determined from angle instead
         """
-        if self.constants.SM_BLOCK is None and smangle != 0.0:
+        if smblock is None and smangle != 0.0:
             print("Supermirror not set as no block name provided. Check instrument constants file.")
             smang = smangle
         else:
@@ -590,23 +667,25 @@ class _Movement(object):
             if mode.upper() in protect_modes and angle != 0.0:
                 # In liquid the sample is tilted by the incoming beam angle so that it is level, this is accounted for by
                 # adjusting the super mirror
-                smang = (self.constants.incoming_beam_angle - angle) / 2
+                smang = (self.constants.NATURAL_ANGLE - angle) / 2
             else:
                 smang = smangle
             # TODO: Need to change the except statement to an error/warning?
             SM_defaults = self.constants.SM_DEFAULTS
-            if type(self.constants.SM_BLOCK) is str:
-                smblock = [self.constants.SM_BLOCK]
+            if type(smblock) is str:
+                smblock = [smblock]
 
             for mirrors in smblock:
                 try:
-                    SM_defaults[mirrors.upper()] = smang / (len(self.constants.SM_BLOCK))
+                    SM_defaults[mirrors.upper()] = smang / (len(smblock))
                 except:
                     print('Incorrect SM block given: {}'.format(mirrors.upper()))
             print('SM values to be set: {}'.format(SM_defaults))
-            for mir in SM_defaults.keys():
-                self.set_smangle_if_not_none(SM_defaults[mir])
-        return self.constants.SM_BLOCK, smang
+
+            if SM_defaults is not None:
+                for mir in SM_defaults.keys():
+                    self.set_smangle_if_not_none(SM_defaults[mir])
+        return smblock, smang
 
     def start_measurement(self, count_uamps: float = None, count_seconds: float = None, count_frames: float = None,
                           osc_slit: bool = False, osc_block: str = 'Default', osc_gap: float = None,
@@ -633,7 +712,7 @@ class _Movement(object):
         elif osc_slit:
             # Tries to take the extent for oscillation from the equivalent param e.g. s2hg.
             # Otherwise carries None to osc input.
-            hgaps.update(vgaps)  # TODO: what happens if vgaps is None and why vgaps?
+            hgaps.update(hgaps)  # TODO: what happens if vgaps is None and why vgaps?
             try:
                 use_block = hgaps[oscblock.casefold()]
                 print('using block {}={}'.format(oscblock, use_block))
@@ -645,6 +724,96 @@ class _Movement(object):
             print('Inputs: osc_block {}, osc_gap {},use_block {}'.format(oscblock, osc_gap, use_block))
             self.count_osc_slit(oscblock, osc_gap, use_block, count_uamps, count_seconds, count_frames)
             # TODO Add to title or leave?
+        else:
+            # Think this might be redundant but keep for safety.
+            self.count_for(count_uamps, count_seconds, count_frames)
+
+    def count_with_store(self, count_uamps: float = None, count_seconds: float = None, count_frames: float = None, saverate = 120):
+        """
+        Test the principle of storing the run whilst measuring.
+        Will currently always give an overcount. Needs logic adding to check if close first.
+
+        Count for one of uamps, seconds, frames if not None in that order
+        :param count_uamps: number of uamps to count for; None count in a different way
+        :param count_seconds: number of seconds to count for; None count in a different way
+        :param count_frames: number of frames to count for; None count in a different way
+        :param saverate: interval to create saved snapshot of run in seconds.
+        """
+        # create point to stop saving:
+        # Code needs some work! Should this be pulled out as a separate function?
+        # All the waits print in the console so gets messy. Might be worth using time instead?
+        if count_uamps is not None:
+            stop_point_uamps = count_uamps - (saverate*42/3600)
+            print("Storing will stop at {} uamps.".format(stop_point_uamps))
+            stop_point_sec = count_seconds
+            stop_point_fram = count_frames
+        elif count_seconds is not None:
+            stop_point_sec = count_seconds - (saverate + 120)
+            print("Storing will stop at {} seconds.".format(stop_point_sec))
+            stop_point_uamps = count_uamps
+            stop_point_fram = count_frames
+        elif count_frames is not None:
+            stop_point_fram = count_frames - (saverate + 2400)
+            print("Storing will stop at {} frames.".format(stop_point_fram))
+            stop_point_sec = count_seconds
+            stop_point_uamps = count_uamps
+        else:
+            print("Counts in uamps, seconds or frames must be defined.")
+
+        if not self.dry_run:
+            g.begin()
+            stop_test = self._check_if_done(stop_point_uamps, stop_point_sec, stop_point_fram)
+            while stop_test is False:
+                g.waitfor_time(seconds=saverate)
+                g.snapshot_crpt("U:\\CurrentRun\INTER00000000.nxs") #decide where to store
+                g.waitfor_time(seconds=2)
+                stop_test = self._check_if_done(stop_point_uamps, stop_point_sec, stop_point_fram)
+            # final part of run:
+            stop_test = self._check_if_done(count_uamps, count_seconds, count_frames)
+            while stop_test is False:
+                g.waitfor_time(seconds=2)
+                stop_test = self._check_if_done(count_uamps, count_seconds, count_frames)
+            g.end()
+        else:
+            print("Run with store.")
+
+    def start_measurement_store(self, count_uamps: float = None, count_seconds: float = None, count_frames: float = None,
+                          osc_slit: bool = False, osc_block: str = 'S2HG', osc_gap: float = None, vgaps: dict = None,
+                          hgaps: dict = None, store: bool = False, storerate: float = 120):
+        """
+        ** for testing store. All rest left as for start_measurement. Logic stops store if osc at the moment.
+        Starts a measurement based on count inputs and oscillating inputs, with addition of store for testing.
+        Args:
+            count_uamps: the current to run the measurement for; None for use count_seconds
+            count_seconds: the time to run the measurement for if uamps not set; None for use count_frames
+            count_frames: the number of frames to wait for; None for don't count
+            osc_slit: whether slit oscillates during measurement; only osc if osc_gap < total gap extent setting.
+            osc_block: block to oscillate
+            osc_gap: gap of slit during oscillation. If None then takes defaults (see osc_slit_setup)
+            vgaps: vertical gap dict to check for osc_extent
+            hgaps: horizonal gap dict to check for osc_extent
+            store: whether the run should regularly create a nxs file
+            storerate: frequency of stored runs in seconds.
+        """
+        if count_seconds is None and count_uamps is None and count_frames is None:
+            print("Setup only - no measurement")
+        elif osc_slit:
+            # Tries to take the extent for oscillation from the equivalent param e.g. s2hg.
+            # Otherwise carries None to osc input.
+            hgaps.update(vgaps)
+            try:
+                use_block = hgaps[osc_block.casefold()]
+                print('using block {}={}'.format(osc_block, use_block))
+            except:
+                use_block = None
+            # If the gap isn't specified, this is set to match the extent (i.e. not osc).
+            if osc_gap is None:
+                osc_gap = use_block
+            print('Inputs: osc_block {}, osc_gap {},use_block {}'.format(osc_block, osc_gap, use_block))
+            self.count_osc_slit(osc_block, osc_gap, use_block, count_uamps, count_seconds, count_frames)
+            # TODO Add to title or leave?
+        elif store:
+            self.count_with_store(count_uamps, count_seconds, count_frames, saverate=storerate)
         else:
             # Think this might be redundant but keep for safety.
             self.count_for(count_uamps, count_seconds, count_frames)
@@ -677,9 +846,9 @@ class _Movement(object):
         if not self.dry_run:
             g.resume()
 
-    def auto_height(self, laser_offset_block: str, fine_height_block: str = None, target: float = 0.0,
+    def auto_height(self, laser_offset_block: str, fine_height_block: str=None, target: float = 0.0,
                     continue_if_nan: bool = False,
-                    dry_run: bool = False):
+                    dry_run: bool = False, settle_time: float = 5):
         """
         Moves the sample fine height axis so that it is centred on the beam, based on the readout of a laser height gun.
 
@@ -700,6 +869,7 @@ class _Movement(object):
             Moves HEIGHT2 by (target - b.KEYENCE) and does not interrupt script execution if an invalid value is read.
         """
         try:
+            g.waitfor_time(seconds=settle_time)
             target_height, current_height = self._calculate_target_auto_height(laser_offset_block, fine_height_block,
                                                                                target)
             if not dry_run:

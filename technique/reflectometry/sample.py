@@ -2,6 +2,7 @@
 Sample classes for reflectometry
 """
 
+from .instrument_constants import get_instrument_constants
 
 class SampleGenerator:
     """
@@ -9,7 +10,7 @@ class SampleGenerator:
     """
 
     def __init__(self, translation, height2_offset, phi_offset, psi_offset, height_offset, resolution, footprint,
-                 sample_length, valve, hgaps, title="", subtitle="", ht_block="HEIGHT"):
+                 sample_length, valve, hgaps=None, title="", subtitle="", ht_block="HEIGHT"):
         """
         Initialiser.
         Args:
@@ -25,6 +26,7 @@ class SampleGenerator:
             subtitle: subtitle for the sample; defaults to blank
             ht_block: motor to be used for height movement.
         """
+        self.constants = get_instrument_constants()
         self.subtitle = subtitle
         self.title = title
         self.footprint = float(footprint)
@@ -36,8 +38,12 @@ class SampleGenerator:
         self.height2_offset = float(height2_offset)
         self.sample_length = float(sample_length)
         self.valve = int(valve)
-        self.hgaps = dict(hgaps)
+        if hgaps is None:
+            self.hgaps = self.constants.HG_DEFAULTS
+        else:
+            self.hgaps = dict(hgaps)
         self.ht_block = ht_block
+
 
     def new_sample(self, title=None, subtitle=None, translation=None, height2_offset=None, phi_offset=None,
                    psi_offset=None, height_offset=None, resolution=None, footprint=None,
