@@ -620,7 +620,7 @@ class SEActions:
                 print("Error concentration not set neither volume or time set!")
                 return
             #g.waitfor_block("pump_is_on", "IDLE")
-            g.waitfor_block("pump_is_on", "Pumping") # JASCO MODIFICATION
+            g.waitfor_block("pumping", "Pumping") # JASCO MODIFICATION
 
             logging.log(CONTRASTCHANGE,
                         "Valve {}, concentrations {}, flow {},  volume {}, time {}, and {}wait "
@@ -629,7 +629,7 @@ class SEActions:
 
             if wait:
                 # g.waitfor_block("pump_is_on", "OFF")
-                g.waitfor_block("pump_is_on", "Off") # JASCO MODIFICATION
+                g.waitfor_block("pumping", "Off") # JASCO MODIFICATION
 
     @staticmethod
     @DryRun
