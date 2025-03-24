@@ -3,7 +3,7 @@ import os
 
 import genie as g
 import genie_advanced
-
+INSTRUMENT_PC = genie_advanced.get_instrument_full_name()
 
 class CaenThresholdSetter:
     def __init__(self,
@@ -17,7 +17,7 @@ class CaenThresholdSetter:
         # default value to write to discriminator output width register
         self.dsc_width_default = dsc_width_default
         self.enable_table_path = os.path.join(
-            "C:\\Instrument\\Settings\\config\\NDXCHRONUS\\Python\\tables",
+            f"C:\\Instrument\\Settings\\config\\{INSTRUMENT_PC}\\Python\\tables",
             "enabled.csv")
         # Maximum number of crates in use by CAENs, increase if it is higher on any instrument
         self.max_crates = 3
@@ -137,7 +137,7 @@ class CaenThresholdSetter:
             file_name = (f"constant_threshold_{int(absolute_threshold * threshold_scale)}V_"
                          + "_".join([str(cards) for _, cards in num_cards.items()]) + ".csv")
             file_path = os.path.join(
-                "C:\\Instrument\\Settings\\config\\NDXCHRONUS\\Python\\tables", file_name)
+                f"C:\\Instrument\\Settings\\config\\{INSTRUMENT_PC}\\Python\\tables", file_name)
             if not os.path.isfile(file_path):
                 with open(file_path, "w", newline='') as table_file:
                     table_writer = csv.writer(table_file)
