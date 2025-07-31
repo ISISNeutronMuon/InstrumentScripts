@@ -163,7 +163,7 @@ class _Movement(object):
             calc_dict.update({'S3VG': s3})
             print("S3 not in beam blocker mode")
             try:
-                calc_dict.update({'S3VC': -self._get_block_value('DOFF_PARALLEL')+8.459})
+                calc_dict.update({'S3VC': -self._get_block_value('DOFF_PARALLEL')+0}) #8.459})
             except KeyError:
                 # If instrument does not have block "DOFF_PARALLEL"
                 calc_dict.update({'S3VC': 0.0})

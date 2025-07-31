@@ -21,6 +21,7 @@ except ImportError:
 from general.scans.defaults import Defaults
 from general.scans.motion import get_motion
 from general.scans.detector import NormalisedIntensityDetector, create_spectra_definition
+from general.scans.fit import Fit, ExactFit, Gaussian
 
 
 # pylint: disable=no-name-in-module
@@ -37,7 +38,7 @@ class InterDefaultScan(Defaults):
 
     _multi_det_spectra = [create_spectra_definition(i, 6410.0, 90000.0) for i in range(5, 2060)]  # linear detector
 
-    detector = NormalisedIntensityDetector(default_monitor=3, default_detector=854,
+    detector = NormalisedIntensityDetector(default_monitor=3, default_detector=853,
                                            spectra_definitions=_single_det_spectra + _multi_det_spectra)
 
     def __init__(self):
@@ -97,16 +98,14 @@ class InterDefaultScan(Defaults):
 
     def mscan(self, motion, delta=None, count=11, frames=None, **kwargs):
         """
-        Scan a motion.
+        Relative scan a motion.
 
         Parameters
         ----------
         motion
             motion to scan, usually a block
-        start
-            value to start from; if None must be specified in a different way
-        stop
-            value to stop at; if None must be specified in a different way
+        delta
+            interval to scan below and above current position
         count
             number of points; if None must be specified in a different way
         frames
@@ -209,6 +208,18 @@ class InterDefaultScan(Defaults):
         finally:
             motion(init)
             g.change_number_soft_periods(1)
+            
+    def phi(self):
+        ft=self.mscan("PHI", 0.04, 11, 30, fit=Gaussian)
+        ans = input("Move to new centre ([y]/n)?")
+        if ans != "n":
+            g.cset("PHI", ft['center'])
+        
+    def ht(self):
+        ft=self.mscan("HEIGHT", 0.8, 11, 30, fit=Gaussian)
+        ans = input("Move to new centre ([y]/n)?")
+        if ans != "n":
+            g.cset("HEIGHT", ft['center'])
 
 _scan_instance = InterDefaultScan()
 scan = _scan_instance.scan
@@ -217,4 +228,6 @@ dscan = _scan_instance.dscan
 rscan = _scan_instance.rscan
 mscan = _scan_instance.mscan
 qscan = _scan_instance.qscan
+phi = _scan_instance.phi
+ht = _scan_instance.ht
 last_scan = _scan_instance.last_scan
