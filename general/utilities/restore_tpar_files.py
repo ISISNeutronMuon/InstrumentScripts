@@ -173,7 +173,8 @@ def tpar_load_save(save_name: str) -> None:
 
     # The goal is to load the state of their "main" files as they were at the old tag. As such, we're not deleting any
     # new files created as discrete copies of them, and only rolling back files that existed in the old tag.
-    subprocess.run(f"git checkout {save_tag.commit.message} -- .")
+    dirname = os.path.dirname(__file__)
+    subprocess.run(f"git checkout {save_tag.commit.message} -- .", cwd=dirname)
 
     print(f"Successfully loaded file states as of {save_name}")
 
