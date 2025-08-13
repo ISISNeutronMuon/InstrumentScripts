@@ -33,7 +33,8 @@ def tpar_check_dir() -> str | None:
         The contents of tpar_directory.txt if they exist, or None if it is empty.
 
     """
-    with open("tpar_directory.txt", "r") as tpar_dir_file:
+    dirname = os.path.dirname(__file__)
+    with open(os.path.join(dirname, "tpar_directory.txt"), "r") as tpar_dir_file:
         # Get rid of unneeded whitespace
         tpar_dir = tpar_dir_file.read().strip()
         if len(tpar_dir) == 0:
@@ -88,7 +89,8 @@ def tpar_set_dir(directory: str) -> None:
         git.Repo.init(directory)
 
     # save this directory for use in all future tpar commands
-    with open("tpar_directory.txt", "w") as tpar_dir_file:
+    dirname = os.path.dirname(__file__)
+    with open(os.path.join(dirname, "tpar_directory.txt"), "w") as tpar_dir_file:
         tpar_dir_file.write(directory)
 
     print(f"TPAR directory set to {directory}")
