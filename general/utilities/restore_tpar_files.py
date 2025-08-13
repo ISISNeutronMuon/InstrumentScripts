@@ -202,7 +202,7 @@ def tpar_load_latest_save() -> None:
     save_tag = max(repo.tags, key=lambda t: t.commit.committed_datetime)
     # The goal is to load the state of their "main" files as they were at the old tag. As such, we're not deleting any
     # new files created as discrete copies of them, and only rolling back files that existed in the old tag.
-    subprocess.run(f"git checkout {save_tag.commit.message} -- .")
+    subprocess.run(f"git checkout {save_tag.commit.message} -- .", cwd=directory)
 
     # Let the user know what the tag was called, in case they were expecting something else.
     print(f"Successfully loaded file states as of the latest git tag, {save_tag}")
