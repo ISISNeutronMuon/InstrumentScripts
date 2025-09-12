@@ -34,7 +34,8 @@ def tpar_check_dir() -> str | None:
         The contents of tpar_directory.txt if they exist, or None if it is empty.
 
     """
-    with open("tpar_directory.txt", "r") as tpar_dir_file:
+    dirname = os.path.dirname(__file__)
+    with open(os.path.join(dirname, "tpar_directory.txt"), "r") as tpar_dir_file:
         # Get rid of unneeded whitespace
         tpar_dir = tpar_dir_file.read().strip()
         if len(tpar_dir) == 0:
@@ -90,7 +91,8 @@ def tpar_set_dir(directory: str) -> None:
         git.Repo.init(directory)
 
     # save this directory for use in all future tpar commands
-    with open("tpar_directory.txt", "w") as tpar_dir_file:
+    dirname = os.path.dirname(__file__)
+    with open(os.path.join(dirname, "tpar_directory.txt"), "w") as tpar_dir_file:
         tpar_dir_file.write(directory)
 
     print(f"TPAR directory set to {directory}")
@@ -163,8 +165,7 @@ def tpar_load_save(save_name: str) -> None:
     # The goal is to load the state of their "main" files as they were at the old tag. As such,
     # we're not deleting any new files created as discrete copies of them, and only rolling back
     # files that existed in the old tag.
-    subprocess.run(f"git checkout {save_tag.commit.message} -- .")
-
+    subprocess.run(f"git checkout {save_tag.commit.message} -- .", cwd=directory)
     print(f"Successfully loaded file states as of {save_name}")
 
 
@@ -192,7 +193,7 @@ def tpar_load_latest_save() -> None:
     # The goal is to load the state of their "main" files as they were at the old tag. As such,
     # we're not deleting any new files created as discrete copies of them, and only rolling back
     # files that existed in the old tag.
-    subprocess.run(f"git checkout {save_tag.commit.message} -- .")
+    subprocess.run(f"git checkout {save_tag.commit.message} -- .", cwd=directory)
 
     # Let the user know what the tag was called, in case they were expecting something else.
     print(f"Successfully loaded file states as of the latest git tag, {save_tag}")
