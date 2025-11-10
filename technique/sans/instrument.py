@@ -980,6 +980,9 @@ class ScanningInstrument(object):
           Wait for the detector to warm up before continuing
         """
 
+
+
+
     @abstractmethod
     def _detector_turn_off(self, delay=True):  # pragma: no cover
         """Remove detector power
@@ -1000,6 +1003,9 @@ class ScanningInstrument(object):
           The aperture size. e.g. "Small" or "Medium"
           A blank string (the default value) results in
           the aperture not being changed."""
+
+
+
 
     def _set_poslist_dls(self):
         try:
