@@ -15,7 +15,7 @@ class LOQ(ScanningInstrument):
         super().__init__()
         self._set_poslist_dls()
 
-    def do_sans_large(self, title=None, pos=None, thickness=1.0,
+    def do_sans_large(self, title=None, pos=None, thickness=None,
                       dae=None, uamps=None, time=None, **kwargs):
         """
         A wrapper around do_sans with aperture set to large
@@ -63,7 +63,8 @@ class LOQ(ScanningInstrument):
         gen.change_sync("smp")
         gen.change_monitor(2, low=5000.0, high=27000.0)
         gen.change_vetos(clearall=True, smp=True, TS2=True,
-                         ext0=True, ext1=True, ext2=True, ext3=True)
+                         # Set ext2=False to DISABLE moderator temperature veto
+                         ext0=True, ext1=True, ext2=False, ext3=True)
         return self._generic_scan(
             tcbs=[{"low": 3500.0, "high": 43500.0, "step": 0.025,
                    "log": True},

@@ -56,6 +56,7 @@ class LoqSampleChanger(Defaults):
             iterations (optional): the number of times to repeat the moves
 
         """
+        self.create_fig()
         # pylint: disable=arguments-differ
         if isinstance(motion, str):
             motion = BlockMotion(motion, "mm")

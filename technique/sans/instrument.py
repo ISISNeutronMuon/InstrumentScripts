@@ -241,10 +241,11 @@ class ScanningInstrument(object):
                 '1WT', '2WT', '3WT', '4WT', '5WT', '6WT', '7WT',
                 '8WT', '9WT', '10WT', '11WT', '12WT', '13WT', '14WT',
                 '1GT', '2GT', '3GT', '4GT', '5GT', '6GT', '7GT', '8GT', '9GT',
-                '10GT', '11GT', '12GT', '1R', '2R', '3R', '4R', '5R', '6R', '7R']
+                '10GT', '11GT', '12GT', '1R', '2R', '3R', '4R', '5R', '6R', '7R',
+                '1OX', '2OX', '3OX', '4OX', '5OX']
 
     def _attempt_resume(self, title, pos, thick, dae, **kwargs):
-        if gen.get_title() != f"{title}{self.title_footer}":
+        if title is not None and gen.get_title() != f"{title}{self.title_footer}":
             raise RuntimeError(
                 f'Attempted to continue measurement "{title}", but was already in '
                 f'the middle of measurement "{gen.get_title()}".')
@@ -278,7 +279,7 @@ class ScanningInstrument(object):
                     f'at {val}, but instead found it at {gen.cget(val)["value"]}. Please either '
                     f'correct the script or manually end the run.')
 
-        if gen.get_sample_pars()['THICK'] != thick:
+        if thick is not None and gen.get_sample_pars()['THICK'] != thick:
             raise RuntimeError(
                 f'Expected to resume a run on a sample of thickness {thick}, '
                 f'but was already running a measurement on a sample of '
@@ -547,7 +548,7 @@ class ScanningInstrument(object):
         else:
             self.setup_sans()
 
-    def measure(self, title="", position=None, thickness=1.0, trans=False,
+    def measure(self, title=None, position=None, thickness=None, trans=False,
                 dae=None, aperture="", time=None,
                 period=None, dls_sample_changer=False, **kwargs):
         """Take a sample measurement. If no timing parameter is provided
@@ -631,7 +632,7 @@ class ScanningInstrument(object):
                       dae=dae, aperture=aperture, time=time,
                       period=period, _custom=True, dls_sample_changer=dls_sample_changer, **kwargs)
 
-    def _setup(self, title="", position=None, thickness=1.0, trans=False,
+    def _setup(self, title=None, position=None, thickness=None, trans=False,
                dae=None, aperture="", period=None,
                _custom=True, dls_sample_changer=False, **kwargs):
         # Check detector for sans
@@ -645,8 +646,16 @@ class ScanningInstrument(object):
             self.set_default_dae(dae, trans)
             self._setup_measurement_software(trans)
 
-        self.measurement_label = title
-        gen.change(title=title + self.title_footer)
+        if title is None:
+            full_title = gen.get_title()
+            part_title = title
+            if full_title.endswith(self.title_footer):
+                part_title = full_title[:-len(self.title_footer)]
+            self.measurement_label = part_title
+            gen.change(title=full_title)
+        else:
+            self.measurement_label = title
+            gen.change(title=title + self.title_footer)
 
         self.set_aperture(aperture)
 
@@ -660,7 +669,8 @@ class ScanningInstrument(object):
             info(f"Moving {arg} to {val}")
             gen.cset(arg, val)
         gen.waitfor_move()
-        gen.change_sample_par("Thick", thickness)
+        if thickness is not None:
+            gen.change_sample_par("Thick", thickness)
         info("Using the following Sample Parameters")
         self.print_sample_pars()
         if period:
@@ -696,19 +706,22 @@ class ScanningInstrument(object):
             raise TypeError(f"Cannot understand position {position}")
         gen.waitfor_move()
 
-    def _do_measure(self, title="", time=None, **kwargs):
+    def _do_measure(self, title=None, time=None, **kwargs):
         if time:
             times = {"seconds": time}
         else:
             times = self.sanitised_timings(kwargs)
 
         unit, time = _get_times(times)
-        info(f"Measuring {title + self.title_footer} for {time} {unit}")
+        if title is None:
+            info(f"Measuring {gen.get_title()} for {time} {unit}")
+        else:
+            info(f"Measuring {title + self.title_footer} for {time} {unit}")
         self._begin()
         self._waitfor(**times)
         self._end()
 
-    def _measure(self, title="", position=None, thickness=1.0, trans=False,
+    def _measure(self, title=None, position=None, thickness=None, trans=False,
                  dae=None, aperture="", period=None,
                  time=None, _custom=True, **kwargs):
 
@@ -721,7 +734,9 @@ class ScanningInstrument(object):
         if time or self.sanitised_timings(kwargs):
             self._do_measure(title=title, time=time, **kwargs)
 
+
     def do_sans(self, title="", pos=None, thickness=1.0, dae="event",
+
                 aperture="", period=None, time=None, dls_sample_changer=False, **kwargs):
         """A wrapper around ``measure`` which ensures that the instrument is
         in sans mode before running the measurement if a title is given.
@@ -752,7 +767,9 @@ class ScanningInstrument(object):
                       dae=dae, aperture=aperture, period=period,
                       time=time, _custom=False, dls_sample_changer=dls_sample_changer, **kwargs)
 
+
     def do_trans(self, title="", pos=None, thickness=1.0, dae="transmission",
+
                  aperture="", period=None, time=None, dls_sample_changer=False, **kwargs):
         """A wrapper around ``measure`` which ensures that the instrument is
          in transition mode before running the measurement if a title is given. It ensures that the
