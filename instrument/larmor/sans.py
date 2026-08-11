@@ -26,11 +26,16 @@ class Larmor(ScanningInstrument):  # pylint: disable=too-many-public-methods
     # _lrange = "0.65-12.95"
     # change for 13-26 AA
     # _lrange = "13-26"
+    # change to 2-11 for MIEZE
+    #_lrange = "2.0-11.0"
+    
 
     @property
     def TIMINGS(self):
-        if self._dae_mode == "polsans":
-            return self._TIMINGS + ["u", "d"]
+        if self._dae_mode == "polsans" or self._dae_mode == "poltrans":
+            return self._TIMINGS + ["up_state_frames", "down_state_frames"]
+        if self._dae_mode == "pasans" or self._dae_mode == "patrans":
+            return self._TIMINGS + ["no_flip_state_frames", "flip_state_frames"]    
         return self._TIMINGS
 
     def get_lrange(self):
@@ -60,8 +65,11 @@ class Larmor(ScanningInstrument):  # pylint: disable=too-many-public-methods
         # Setting the T0 phase to 0 (50ms) does
         if lrange == "0.9-13.25":
             gen.cset(T0Phase=0)
+            gen.cset(T0Frequency=20)
             gen.cset(TargetDiskPhase=2750)
+            gen.cset(TargetDiskFrequency=10)
             gen.cset(InstrumentDiskPhase=2450)
+            gen.cset(InstrumentDiskFrequency=10)
         elif lrange == "0.65-12.95":
             gen.cset(TargetDiskPhase=1900)
             gen.cset(InstrumentDiskPhase=1600)
@@ -73,6 +81,8 @@ class Larmor(ScanningInstrument):  # pylint: disable=too-many-public-methods
             raise ValueError(
                 "The only known lranges for the chopper "
                 "are '0.9-13.25', '0.65-12.95' and '13-26AA'")
+    # for a reduced bandwidth then set the instrument disk to CW rotation (co-rotating)
+    # then change the phase to e.g. Inst. Disk 10000 Target Disk 95000 for a range of ~2-5Ang
 
     def _generic_scan(  # pylint: disable=dangerous-default-value
             self,
@@ -81,10 +91,13 @@ class Larmor(ScanningInstrument):  # pylint: disable=too-many-public-methods
             wiring=r"C:\Instrument\Settings\config\NDXLARMOR\configurations\tables\wiring_dae3.dat",
             tcbs=[]):
         ScanningInstrument._generic_scan(self, detector, spectra, wiring, tcbs)
-
+        # sleep(2)
+        # ScanningInstrument._generic_scan(self, detector, spectra, wiring, tcbs)
 
     @dae_setter("SCAN", "scan")
     def setup_dae_scanning(self):
+        gen.change_sync("isis")
+        gen.change_vetos(ext0=True, ext1=True)
         self._generic_scan(
             spectra=r"C:\Instrument\Settings\config\NDXLARMOR\configurations\tables\spectra_scanning_80.dat",
             tcbs=[{"low": 5.0, "high": 100000.0, "step": 100.0,
@@ -92,17 +105,21 @@ class Larmor(ScanningInstrument):  # pylint: disable=too-many-public-methods
 
     @dae_setter("SCAN", "scan")
     def setup_dae_scanning12(self):
+        gen.change_sync("isis")
+        gen.change_vetos(ext0=True, ext1=True)
         """Set the wiring tables for performing a scan where the entire main
 detector is contained in only two channels."""
         self._generic_scan(
             spectra=r"C:\Instrument\Settings\config\NDXLARMOR\configurations\tables\spectra_scanning_12.dat",
-            tcbs=[{"low": 5.0, "high": 100000.0, "step": 100.0,
+            tcbs=[{"low": 5.0, "high": 100000.0, "step": 2.0,
                    "trange": 1, "log": 0}])
 
     @dae_setter("SCAN", "scan")
     def setup_dae_scanningAlanis(self):  # pylint: disable=no-self-use
         """Set the wiring tables for performing a scan where the entire main
             detector is contained in channel 11 and the Alanis Detector is in channel 12."""
+        gen.change_sync("isis")
+        gen.change_vetos(ext0=True, ext1=True)    
         self._generic_scan(
             spectra=r"C:\Instrument\Settings\config\NDXLARMOR\configurations\tables\spectra_scanning_Alanis.dat",
             tcbs=[{"low": 5.0, "high": 100000.0, "step": 100.0,
@@ -112,6 +129,8 @@ detector is contained in only two channels."""
     def setup_dae_scanning11(self):  # pylint: disable=no-self-use
         """Set the wiring tables for performing a scan where the entire main
         detector is contained in only one channel now we are using dae 3."""
+        gen.change_sync("isis")
+        gen.change_vetos(ext0=True, ext1=True)
         self._generic_scan(
             spectra=r"C:\Instrument\Settings\config\NDXLARMOR\configurations\tables\spectra_scanning_11.dat",
             tcbs=[{"low": 5.0, "high": 100000.0, "step": 100.0,
@@ -139,6 +158,8 @@ involves only having two spectra covering the entire main detecor."""
 
     @dae_setter("SANS", "sans")
     def setup_dae_event(self):
+        gen.change_sync("isis")
+        gen.change_vetos(ext0=True, ext1=True)
         if self._lrange == "13-26":
             self._generic_scan(
                 wiring="wiring_dae3_event.dat",
@@ -165,16 +186,44 @@ involves only having two spectra covering the entire main detecor."""
                   {"low": 5.0, "high": 100000.0, "step": 2.0, "trange": 1,
                    "log": 0, "regime": 2}])
             #Below is for MIEZE SANS
-            # tcbs=[{"low": 5.0, "high": 100000.0, "step": self.get_tof_step(),
-                   # "trange": 1, "log": 0},
-                  # {"low": 0.0, "high": 0.0, "step": 0.0,
-                   # "trange": 2, "log": 0},
-                  # {"low": 22222.0, "high": 86222.0, "step": 1.0, "trange": 1,
-                   # "log": 0, "regime": 2}])
+            #tcbs=[{"low": 5.0, "high": 100000.0, "step": self.get_tof_step(),
+            #        "trange": 1, "log": 0},
+            #       {"low": 0.0, "high": 0.0, "step": 0.0,
+            #        "trange": 2, "log": 0},
+            #       {"low": 22222.0, "high": 86222.0, "step": 1.0, "trange": 1,
+            #        "log": 0, "regime": 2}])
         self._set_choppers(self._lrange)
+        if not self._monitor_is_on():
+            self._monitor_turn_on(delay=True)
+            
+    @dae_setter("SANS", "sans")
+    def setup_dae_event_wans(self):
+        gen.change_sync("isis")
+        gen.change_vetos(ext0=True, ext1=True)
+       
+        # Normal event mode with full detector binning
+        self._generic_scan(
+        wiring=r"C:\Instrument\Settings\config\NDXLARMOR\configurations\tables\WLSF_Wiring_dae3.dat",
+        spectra=r'C:\Instrument\Settings\config\NDXLARMOR\configurations\tables\WLSF_Spectra.dat',
+        detector=r'C:\Instrument\Settings\config\NDXLARMOR\configurations\tables\WLSF_Detector.dat',
+        tcbs=[{"low": 5.0, "high": 100000.0, "step": 100.0,
+               "trange": 1, "log": 0},
+              {"low": 0.0, "high": 0.0, "step": 0.0,
+               "trange": 2, "log": 0},
+              {"low": 5.0, "high": 100000.0, "step": 2.0, "trange": 1,
+               "log": 0, "regime": 2},
+              {"low": 5.0, "high": 100000.0, "step": 100, "trange": 1,
+               "log": 0, "regime": 3},
+              {"low": 0.0, "high": 0.0, "step": 0.0, "trange": 2,
+               "log": 0, "regime": 3}])
+        if not self._monitor_is_on():
+            self._monitor_turn_on(delay=True)            
+
 
     @dae_setter("SANS", "sans")
     def setup_dae_event_tshift(self):
+        gen.change_sync("isis")
+        gen.change_vetos(ext0=True, ext1=True)
         self._generic_scan(
         wiring="wiring_dae3_event.dat",
         tcbs=[{"low": 7000.0, "high": 107000.0, "step": self.get_tof_step(),
@@ -187,6 +236,8 @@ involves only having two spectra covering the entire main detecor."""
 
     @dae_setter("SANS", "sans")
     def setup_dae_event_fastsave(self):
+        gen.change_sync("isis")
+        gen.change_vetos(ext0=True, ext1=True)
         """Event mode with reduced detector histogram binning to decrease
         filesize."""
         # Event mode with reduced detector histogram binning to
@@ -210,10 +261,15 @@ involves only having two spectra covering the entire main detecor."""
                   {"low": 0.0, "high": 0.0, "step": 0.0, "trange": 2,
                    "log": 0, "regime": 3}])
         self._set_choppers(self._lrange)
+        if not self._monitor_is_on():
+            self._monitor_turn_on(delay=True)
+
 
     @dae_setter("SANS", "sans")
     def setup_dae_histogram(self):
-        #gen.change_sync('isis')
+        gen.change_sync("isis")
+        gen.change_vetos(ext0=True, ext1=True)
+        
         self._generic_scan(
             tcbs=[{"low": 5.0, "high": 100000.0, "step": 100.0,
                    "trange": 1, "log": 0},
@@ -223,7 +279,8 @@ involves only having two spectra covering the entire main detecor."""
 
     @dae_setter("TRANS", "transmission")
     def setup_dae_transmission(self):
-        #gen.change_sync('isis')
+        gen.change_sync("isis")
+        gen.change_vetos(ext0=True, ext1=True)
         if self._lrange == "13-26":
             self._generic_scan(
             r"C:\Instrument\Settings\config\NDXLARMOR\configurations\tables\detector_monitors_only.dat",
@@ -243,6 +300,14 @@ involves only having two spectra covering the entire main detecor."""
              {"low": 0.0, "high": 0.0, "step": 0.0,
               "trange": 2, "log": 0}])
         self._set_choppers(self._lrange)
+        if not self._monitor_is_on():
+            self._monitor_turn_on(delay=True)
+            
+    @staticmethod
+    def _begin_transmission():
+        """Initialise a POLSANS run"""
+        gen.change(nperiods=1)            
+        gen.begin(paused=0)          
 
     @dae_setter("TRANS", "transmission")
     def setup_dae_monotest(self):
@@ -261,6 +326,8 @@ involves only having two spectra covering the entire main detecor."""
     @dae_setter("SANS", "sans")
     def setup_dae_tshift(self, tlowdet=5.0, thighdet=100000.0, tlowmon=5.0,
                          thighmon=100000.0):
+        gen.change_sync("isis")
+        gen.change_vetos(ext0=True, ext1=True)                 
         """Allow m1 to count as normal but to shift the rest of the detectors
         in order to allow counting over the frame.
 
@@ -277,6 +344,8 @@ involves only having two spectra covering the entire main detecor."""
     @dae_setter("SANS", "sans")
     def setup_dae_diffraction(self):
         """Set the wiring tables for a diffraction measurement"""
+        gen.change_sync("isis")
+        gen.change_vetos(ext0=True, ext1=True)
         self._generic_scan(
             tcbs=[{"low": 5.0, "high": 100000.0, "step": 0.01,
                    "trange": 1, "log": 1},
@@ -285,6 +354,8 @@ involves only having two spectra covering the entire main detecor."""
 
     @dae_setter("SANS", "sans")
     def setup_dae_polarised(self):
+        gen.change_sync("isis")
+        gen.change_vetos(ext0=True, ext1=True)
         """Set the wiring tables for a polarisation measurement."""
         self._generic_scan(
             tcbs=[{"low": 5.0, "high": 100000.0, "step": 100.0, "trange": 1},
@@ -302,6 +373,8 @@ involves only having two spectra covering the entire main detecor."""
     @dae_setter("TRANS", "transmission")
     def setup_dae_monitorsonly(self):
         """Set the wiring tables to record only the monitors."""
+        gen.change_sync("isis")
+        gen.change_vetos(ext0=True, ext1=True)
         self._generic_scan(
             spectra=r"C:\Instrument\Settings\config\NDXLARMOR\configurations\tables\spectra_phase1.dat",
             tcbs=[{"low": 5.0, "high": 100000.0, "step": 20.0,
@@ -333,6 +406,8 @@ involves only having two spectra covering the entire main detecor."""
     @dae_setter("SANS", "sans")
     def setup_dae_4periods(self):
         """Setup the instrument with four periods."""
+        gen.change_sync("isis")
+        gen.change_vetos(ext0=True, ext1=True)
         self._generic_scan(
             r"C:\Instrument\Settings\config\NDXLARMOR\configurations\tables\detector.dat",
             r"C:\Instrument\Settings\config\NDXLARMOR\configurations\tables\spectra_4To1.dat",
@@ -341,11 +416,11 @@ involves only having two spectra covering the entire main detecor."""
               "trange": 1, "log": 0},
              {"low": 0.0, "high": 0.0, "step": 0.0, "trange": 2, "log": 0}])
 
-    @dae_setter("POLSANS", "polsans")
+    @dae_setter("SANS", "sans")
     def setup_dae_polsans(self):
         """Setup the instrument for POLSANS measurements."""
         self.setup_dae_event()
-
+        #self.setup_dae_event_wans()
 
     @staticmethod
     def _begin_polsans():
@@ -353,9 +428,20 @@ involves only having two spectra covering the entire main detecor."""
         gen.change(nperiods=2)
         gen.begin(paused=1)
 
+    @dae_setter("TRANS", "transmission")
+    def setup_dae_poltrans(self):
+        """Setup the instrument for POLSANS transmission measurements."""
+        self.setup_dae_transmission()
+              
 
     @staticmethod
-    def _waitfor_polsans(up_state_frames=600, down_state_frames=600, **kwargs):
+    def _begin_poltrans():
+        """Initialise a POLSANS transmission run"""
+        gen.change(nperiods=2)
+        gen.begin(paused=1)   
+
+    @staticmethod
+    def _waitfor_polsans(up_state_frames=300, down_state_frames=300, **kwargs):
         """Perform a POLSANS run"""
         if "uamps" in kwargs:
             get_total = gen.get_uamps
@@ -405,16 +491,119 @@ involves only having two spectra covering the entire main detecor."""
                 gen.pause()
                 gtotal = get_total()
 
-    @dae_setter("POLTRANS", "poltrans")
-    def setup_dae_poltrans(self):
+    @staticmethod
+    def _waitfor_poltrans(up_state_frames=300, down_state_frames=300, **kwargs):
         """Setup the instrument for POLSANS transmission measurements."""
-        self.setup_dae_transmission()
+        if "uamps" in kwargs:
+            get_total = gen.get_uamps
+            key = "uamps"
+        elif "seconds" in kwargs:
+            get_total = gen.get_uamps
+            key = "seconds"
+        else:
+            get_total = gen.get_frames
+            key = "frames"
+        gfrm = gen.get_frames()
+        gtotal = get_total()
+
+        if key == "seconds":
+            gtotal=gen.get_pv("IN:LARMOR:DAE:RUNDURATION")
+            up_state_frames=up_state_frames/10
+            down_state_frames=down_state_frames/10
+
+        while gtotal < kwargs[key]:
+            gen.change(period=1)
+            info("Flipper On")
+            flipper1(1)
+            if key == "seconds":
+                gen.resume()
+                ttime=gen.get_pv("IN:LARMOR:DAE:RUNDURATION")
+                gen.waitfor(seconds=(gtotal+up_state_frames)-ttime)
+                gen.pause()
+            else:
+                gfrm = gen.get_frames()
+                gen.resume()
+                gen.waitfor(frames=gfrm + up_state_frames)
+                gen.pause()
+
+            gen.change(period=2)
+            info("Flipper Off")
+            flipper1(0)
+            if key == "seconds":
+                gen.resume()
+                ttime=gen.get_pv("IN:LARMOR:DAE:RUNDURATION")
+                gen.waitfor(seconds=(gtotal+up_state_frames+down_state_frames)-ttime)
+                gen.pause()
+                gtotal=gen.get_pv("IN:LARMOR:DAE:RUNDURATION")
+            else:
+                gfrm = gen.get_frames()
+                gen.resume()
+                gen.waitfor(frames=gfrm + down_state_frames)
+                gen.pause()
+                gtotal = get_total()
+                
+    @dae_setter("WANS", "wans")
+    def setup_dae_poldiffraction(self):
+        """Setup the instrument for polarised diffraction measurements."""
+        self.setup_dae_event_wans()
 
     @staticmethod
-    def _begin_poltrans():
-        """Initialise a POLSANS transmission run"""
-        Larmor._begin_polsans()  
+    def _begin_poldiffraction():
+        """Initialise a polarised diffraction measurement."""
+        gen.change(nperiods=2)
+        gen.begin(paused=1) 
 
+    @staticmethod
+    def _waitfor_poldiffraction(up_state_frames=300, down_state_frames=300, **kwargs):
+        """Perform a POLSANS run"""
+        if "uamps" in kwargs:
+            get_total = gen.get_uamps
+            key = "uamps"
+        elif "seconds" in kwargs:
+            get_total = gen.get_uamps
+            key = "seconds"
+        else:
+            get_total = gen.get_frames
+            key = "frames"
+        gfrm = gen.get_frames()
+        gtotal = get_total()
+
+        if key == "seconds":
+            gtotal=gen.get_pv("IN:LARMOR:DAE:RUNDURATION")
+            up_state_frames=up_state_frames/10
+            down_state_frames=down_state_frames/10
+
+        while gtotal < kwargs[key]:
+            gen.change(period=1)
+            info("Flipper On")
+            flipper1(1)
+            if key == "seconds":
+                gen.resume()
+                ttime=gen.get_pv("IN:LARMOR:DAE:RUNDURATION")
+                gen.waitfor(seconds=(gtotal+up_state_frames)-ttime)
+                gen.pause()
+            else:
+                gfrm = gen.get_frames()
+                gen.resume()
+                gen.waitfor(frames=gfrm + up_state_frames)
+                gen.pause()
+
+            gen.change(period=2)
+            info("Flipper Off")
+            flipper1(0)
+            if key == "seconds":
+                gen.resume()
+                ttime=gen.get_pv("IN:LARMOR:DAE:RUNDURATION")
+                gen.waitfor(seconds=(gtotal+up_state_frames+down_state_frames)-ttime)
+                gen.pause()
+                gtotal=gen.get_pv("IN:LARMOR:DAE:RUNDURATION")
+            else:
+                gfrm = gen.get_frames()
+                gen.resume()
+                gen.waitfor(frames=gfrm + down_state_frames)
+                gen.pause()
+                gtotal = get_total()
+        
 
     @dae_setter("SEMSANS", "semsans")
     def setup_dae_alanis(self):
@@ -446,30 +635,139 @@ involves only having two spectra covering the entire main detecor."""
 
     @dae_setter("SESANS", "sesans")
     def setup_dae_sesans(self):
-        """Setup the instrument for SESANS measurements."""
-        self.setup_dae_alanis()
+        """Setup the instrument for SESANS measurements using the Scruffy detector."""
+        self.setup_dae_scruffy()
+        #self.setup_dae_alanis()
+
+    @dae_setter("SESANS", "sesans")
+    def setup_dae_scruffy(self):
+        """Setup the instrument for using the Scruffy SESANS detector"""
+        self._generic_scan(
+            r"C:\Instrument\Settings\config\NDXLARMOR\configurations\tables\scruffy_Detector.dat",
+            r"C:\Instrument\Settings\config\NDXLARMOR\configurations\tables\scruffy_Spectra.dat",
+            r"C:\Instrument\Settings\config\NDXLARMOR\configurations\tables\scruffy_Wiring_dae3.dat",
+            [{"low": 5.0, "high": 100000.0, "step": self.get_tof_step(),
+              "trange": 1, "log": 0},
+             {"low": 0.0, "high": 0.0, "step": 0.0,
+              "trange": 2, "log": 0},
+             {"low": 5.0, "high": 100000.0, "step": 2.0, "trange": 1,
+              "log": 0, "regime": 2}])
 
     @staticmethod
     def _begin_semsans():
         """Initialise a SEMSANS run"""
-        Larmor._begin_polsans()
+        gen.change(nperiods=2)
+        gen.begin(paused=1) 
 
     @staticmethod
     def _begin_sesans():
         """Initialise a SESANS run"""
-        Larmor._begin_polsans()        
+        gen.change(nperiods=2)
+        gen.begin(paused=1)        
 
     @staticmethod
-    def _waitfor_semsans(up_state_frames=600, down_state_frames=600, **kwargs):
+    def _waitfor_semsans(up_state_frames=300, down_state_frames=300, **kwargs):
         """Perform a SEMSANS run"""
-        Larmor._waitfor_polsans(up_state_frames, down_state_frames, **kwargs)
+        if "uamps" in kwargs:
+            get_total = gen.get_uamps
+            key = "uamps"
+        elif "seconds" in kwargs:
+            get_total = gen.get_uamps
+            key = "seconds"
+        else:
+            get_total = gen.get_frames
+            key = "frames"
+        gfrm = gen.get_frames()
+        gtotal = get_total()
+
+        if key == "seconds":
+            gtotal=gen.get_pv("IN:LARMOR:DAE:RUNDURATION")
+            up_state_frames=up_state_frames/10
+            down_state_frames=down_state_frames/10
+
+        while gtotal < kwargs[key]:
+            gen.change(period=1)
+            info("Flipper On")
+            flipper1(1)
+            if key == "seconds":
+                gen.resume()
+                ttime=gen.get_pv("IN:LARMOR:DAE:RUNDURATION")
+                gen.waitfor(seconds=(gtotal+up_state_frames)-ttime)
+                gen.pause()
+            else:
+                gfrm = gen.get_frames()
+                gen.resume()
+                gen.waitfor(frames=gfrm + up_state_frames)
+                gen.pause()
+
+            gen.change(period=2)
+            info("Flipper Off")
+            flipper1(0)
+            if key == "seconds":
+                gen.resume()
+                ttime=gen.get_pv("IN:LARMOR:DAE:RUNDURATION")
+                gen.waitfor(seconds=(gtotal+up_state_frames+down_state_frames)-ttime)
+                gen.pause()
+                gtotal=gen.get_pv("IN:LARMOR:DAE:RUNDURATION")
+            else:
+                gfrm = gen.get_frames()
+                gen.resume()
+                gen.waitfor(frames=gfrm + down_state_frames)
+                gen.pause()
+                gtotal = get_total()
 
     @staticmethod
-    def _waitfor_sesans(up_state_frames=600, down_state_frames=600, **kwargs):
+    def _waitfor_sesans(up_state_frames=300, down_state_frames=300, **kwargs):
         """Perform a SANSPOL run"""
-        Larmor._waitfor_polsans(up_state_frames, down_state_frames, **kwargs)      
+        if "uamps" in kwargs:
+            get_total = gen.get_uamps
+            key = "uamps"
+        elif "seconds" in kwargs:
+            get_total = gen.get_uamps
+            key = "seconds"
+        else:
+            get_total = gen.get_frames
+            key = "frames"
+        gfrm = gen.get_frames()
+        gtotal = get_total()
 
-    @dae_setter("PASANS", "pasans")
+        if key == "seconds":
+            gtotal=gen.get_pv("IN:LARMOR:DAE:RUNDURATION")
+            up_state_frames=up_state_frames/10
+            down_state_frames=down_state_frames/10
+
+        while gtotal < kwargs[key]:
+            gen.change(period=1)
+            info("Flipper On")
+            flipper1(1)
+            if key == "seconds":
+                gen.resume()
+                ttime=gen.get_pv("IN:LARMOR:DAE:RUNDURATION")
+                gen.waitfor(seconds=(gtotal+up_state_frames)-ttime)
+                gen.pause()
+            else:
+                gfrm = gen.get_frames()
+                gen.resume()
+                gen.waitfor(frames=gfrm + up_state_frames)
+                gen.pause()
+
+            gen.change(period=2)
+            info("Flipper Off")
+            flipper1(0)
+            if key == "seconds":
+                gen.resume()
+                ttime=gen.get_pv("IN:LARMOR:DAE:RUNDURATION")
+                gen.waitfor(seconds=(gtotal+up_state_frames+down_state_frames)-ttime)
+                gen.pause()
+                gtotal=gen.get_pv("IN:LARMOR:DAE:RUNDURATION")
+            else:
+                gfrm = gen.get_frames()
+                gen.resume()
+                gen.waitfor(frames=gfrm + down_state_frames)
+                gen.pause()
+                gtotal = get_total()    
+
+    @dae_setter("SANS", "sans")
     def setup_dae_pasans(self):
         """Setup the instrument for Polarisation Analysis SANS measurements."""
         #As there is no monitor after the analyser on Larmor a transmisson is 
@@ -489,7 +787,7 @@ involves only having two spectra covering the entire main detecor."""
         gen.begin(paused=1)   
 
     @staticmethod
-    def _waitfor_pasans(no_flip_state_frames=600, flip_state_frames=600, **kwargs):
+    def _waitfor_pasans(no_flip_state_frames=9000, flip_state_frames=9000, **kwargs):
         """Perform a polarisation analysis SANS run"""
         if "uamps" in kwargs:
             get_total = gen.get_uamps
@@ -513,7 +811,7 @@ involves only having two spectra covering the entire main detecor."""
             info("Flipper On")
             flipper1(1)
             info("Analyser On State")            
-            self.send_pv('3HE:STATE', 1)
+            gen.set_pv('3HE:STATE', 1)
             if key == "seconds":
                 gen.resume()
                 gen.waitfor(seconds=no_flip_state_frames)
@@ -529,7 +827,7 @@ involves only having two spectra covering the entire main detecor."""
             info("Flipper Off")
             flipper1(0)
             info("Analyser On State")            
-            self.send_pv('3HE:STATE', 1)
+            gen.set_pv('3HE:STATE', 1)
             if key == "seconds":
                 gen.resume()
                 gen.waitfor(seconds=flip_state_frames)
@@ -545,7 +843,7 @@ involves only having two spectra covering the entire main detecor."""
             info("Flipper Off")
             flipper1(0)
             info("Analyser Off State")            
-            self.send_pv('3HE:STATE', 0)
+            gen.set_pv('3HE:STATE', 0)
             if key == "seconds":
                 gen.resume()
                 gen.waitfor(seconds=no_flip_state_frames)
@@ -561,7 +859,7 @@ involves only having two spectra covering the entire main detecor."""
             info("Flipper On")
             flipper1(1)
             info("Analyser On State")            
-            self.send_pv('3HE:STATE', 0)            
+            gen.set_pv('3HE:STATE', 0)            
             if key == "seconds":
                 gen.resume()
                 gen.waitfor(seconds=flip_state_frames)
@@ -574,7 +872,7 @@ involves only having two spectra covering the entire main detecor."""
                 gen.pause()
                 gtotal = get_total()         
 
-    @dae_setter("PATRANS", "patrans")
+    @dae_setter("TRANS", "transmission")
     def setup_dae_patrans(self):
         """Setup the instrument for polarisation analysis SANS transmission measurements."""
         #As there is no monitor after the analyser on Larmor the attenuated direct beam
@@ -586,20 +884,106 @@ involves only having two spectra covering the entire main detecor."""
         gen.waitfor_move()
         self.setup_dae_event()
 
-
     @staticmethod
     def _begin_patrans():
-        """Initialise a polarisation analysis SANS transmission run"""
-        Larmor._begin_pasans()                 
+        """Initialise a polarisation analysis Trans run"""
+        gen.change(nperiods=4)
+        gen.begin(paused=1)       
+
+    @staticmethod
+    def _waitfor_patrans(no_flip_state_frames=1200, flip_state_frames=1200, **kwargs):
+        """Initialise a polarisation analysis transmission run"""
+        if "uamps" in kwargs:
+            get_total = gen.get_uamps
+            key = "uamps"
+        elif "seconds" in kwargs:
+            get_total = gen.get_uamps
+            key = "seconds"
+        else:
+            get_total = gen.get_frames
+            key = "frames"
+        gfrm = gen.get_frames()
+        gtotal = get_total()
+
+        if key == "seconds":
+            gtotal=gen.get_pv("IN:LARMOR:DAE:RUNDURATION")
+            no_flip_state_frames=no_flip_state_frames/10
+            flip_state_frames=flip_state_frames/10
+
+        while gtotal < kwargs[key]:
+            gen.change(period=1)
+            info("Flipper On")
+            flipper1(1)
+            info("Analyser On State")            
+            gen.set_pv('3HE:STATE', 1)
+            if key == "seconds":
+                gen.resume()
+                gen.waitfor(seconds=no_flip_state_frames)
+                gen.pause()
+                gtotal=gen.get_pv("IN:LARMOR:DAE:RUNDURATION")
+            else:
+                gfrm = gen.get_frames()
+                gen.resume()
+                gen.waitfor(frames=gfrm + no_flip_state_frames)
+                gen.pause()
+
+            gen.change(period=2)
+            info("Flipper Off")
+            flipper1(0)
+            info("Analyser On State")            
+            gen.set_pv('3HE:STATE', 1)
+            if key == "seconds":
+                gen.resume()
+                gen.waitfor(seconds=flip_state_frames)
+                gen.pause()
+                gtotal=gen.get_pv("IN:LARMOR:DAE:RUNDURATION")
+            else:
+                gfrm = gen.get_frames()
+                gen.resume()
+                gen.waitfor(frames=gfrm + flip_state_frames)
+                gen.pause()     
+
+            gen.change(period=3)
+            info("Flipper Off")
+            flipper1(0)
+            info("Analyser Off State")            
+            gen.set_pv('3HE:STATE', 0)
+            if key == "seconds":
+                gen.resume()
+                gen.waitfor(seconds=no_flip_state_frames)
+                gen.pause()
+                gtotal=gen.get_pv("IN:LARMOR:DAE:RUNDURATION")
+            else:
+                gfrm = gen.get_frames()
+                gen.resume()
+                gen.waitfor(frames=gfrm + no_flip_state_frames)
+                gen.pause()                            
+
+            gen.change(period=4)
+            info("Flipper On")
+            flipper1(1)
+            info("Analyser On State")            
+            gen.set_pv('3HE:STATE', 0)            
+            if key == "seconds":
+                gen.resume()
+                gen.waitfor(seconds=flip_state_frames)
+                gen.pause()
+                gtotal=gen.get_pv("IN:LARMOR:DAE:RUNDURATION")
+            else:
+                gfrm = gen.get_frames()
+                gen.resume()
+                gen.waitfor(frames=gfrm + flip_state_frames)
+                gen.pause()
+                gtotal = get_total()               
 
     @staticmethod
     def set_aperture(size):
         if size.upper() == "SMALL":
             pass
         elif size.upper() == "MEDIUM":
-            gen.cset(a1hgap=20.0, a1vgap=20.0, s1hgap=14.0, s1vgap=14.0)
+            gen.cset(a1hgap=20.0, a1vgap=20.0, s1hgap=18.0, s1vgap=18.0)
         elif size.upper() == "LARGE":
-            pass
+            gen.cset(a1hgap=25.0, a1vgap=25.0, s1hgap=18.0, s1vgap=18.0)
         else:
             info("Aperture unchanged")
 
@@ -614,21 +998,37 @@ involves only having two spectra covering the entire main detecor."""
         gen.cset(m4trans=0.0)
         gen.waitfor_move()
 
+    def _monitor_is_on(self):
+        """Are the monitors currently on?"""
+        voltage_status = all([
+            self.get_pv(
+                "CAEN:hv0:0:{}:status".format(x)).lower() == "on"
+            for x in [0, 1, 3]])
+        return voltage_status
+
+    def _monitor_turn_on(self, delay=True):
+        for i in [0, 1, 3]:
+            self.send_pv(f"CAEN:hv0:0:{i}:pwonoff", "On")
+
+        if delay:
+            info("Waiting For Detector To Power Up (60s)")
+            sleep(60)
+            
     def _detector_is_on(self):
         """Is the detector currently on?"""
         voltage_status = all([
             self.get_pv(
                 "CAEN:hv0:0:{}:status".format(x)).lower() == "on"
-            for x in [8, 9, 10, 11]])
+            for x in [ 8, 9, 10, 11]])
         return voltage_status
 
     def _detector_turn_on(self, delay=True):
-        for i in range(8, 12):
+        for i in [ 8, 9, 10, 11]:
             self.send_pv(f"CAEN:hv0:0:{i}:pwonoff", "On")
 
         if delay:
-            info("Waiting For Detector To Power Up (180s)")
-            sleep(180)
+            info("Waiting For Detector To Power Up (100s)")
+            sleep(100)            
 
     def _detector_turn_off(self, delay=True):
         for i in range(8, 12):
@@ -670,9 +1070,9 @@ involves only having two spectra covering the entire main detecor."""
         """
         # move beam stop in or out. The default is to move in
         if stop_in:
-            gen.cset(Beamstop_Pos=317)
+            gen.cset(Beamstop_Pos=312)
         else:
-            gen.cset(Beamstop_Pos=0)
+            gen.cset(Beamstop_Pos=262)
 
     def _generic_home_slit(self, slit):
         # home north and west
