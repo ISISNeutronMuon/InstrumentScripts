@@ -735,7 +735,7 @@ class ScanningInstrument(object):
             self._do_measure(title=title, time=time, **kwargs)
 
 
-    def do_sans(self, title="", pos=None, thickness=1.0, dae="event",
+    def do_sans(self, title="", pos=None, thickness=None, dae=None,
 
                 aperture="", period=None, time=None, dls_sample_changer=False, **kwargs):
         """A wrapper around ``measure`` which ensures that the instrument is
@@ -768,7 +768,7 @@ class ScanningInstrument(object):
                       time=time, _custom=False, dls_sample_changer=dls_sample_changer, **kwargs)
 
 
-    def do_trans(self, title="", pos=None, thickness=1.0, dae="transmission",
+    def do_trans(self, title="", pos=None, thickness=None, dae=None,
 
                  aperture="", period=None, time=None, dls_sample_changer=False, **kwargs):
         """A wrapper around ``measure`` which ensures that the instrument is
