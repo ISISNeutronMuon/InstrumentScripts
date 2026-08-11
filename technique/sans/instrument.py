@@ -87,6 +87,8 @@ class ScanningInstrument(object):
                callable(getattr(self, method)):
                 yield method
 
+
+
     def set_default_dae(self, mode=None, trans=False):
         """Set the default DAE mode for SANS or TRANS measurements.
 
@@ -448,7 +450,7 @@ class ScanningInstrument(object):
             else:
                 self._detector_turn_off(delay=delay)
         return self._detector_is_on()
-
+        
     def check_move_pos(self, pos):
         """Check whether the position is valid and return True or False
 
@@ -458,8 +460,9 @@ class ScanningInstrument(object):
           The sample changer position
 
         """
-        if pos.upper() not in [pos_name.upper() for pos_name in self._poslist]:
-            warning(f"Error in script, position {pos} does not exist")
+        stripped_pos = pos.strip()
+        if stripped_pos.upper() not in [pos_name.upper() for pos_name in self._poslist]:
+            warning(f"Error in script, position {stripped_pos} does not exist")
             return False
         return True
 
@@ -663,6 +666,18 @@ class ScanningInstrument(object):
         if period:
             gen.change_period(period)
 
+
+
+    def _validate_sample_position(self, position):
+        if position is None:
+            raise ValueError("Sample position cannot be None")
+            
+        stripped_pos = position.strip()
+        if stripped_pos not in self._poslist:
+            raise ValueError(f"Invalid sample position: '{stripped_pos}'. "
+                                f"Available positions are: {', '.join(self._poslist)}")        
+        return stripped_pos
+
     def _set_sample_position(self, position, dls_sample_changer=False):
         if isinstance(position, str):
             if dls_sample_changer and self.check_move_pos_dls(position):
@@ -670,7 +685,7 @@ class ScanningInstrument(object):
                 self.changer_pos_dls = position
             elif self.check_move_pos(position):
                 info(f"Moving to sample changer position {position}")
-                self.changer_pos = position
+                self.changer_pos = self._validate_sample_position(position)
             else:
                 raise RuntimeError(
                     f"Position {position} does not exist")
@@ -697,7 +712,8 @@ class ScanningInstrument(object):
                  dae=None, aperture="", period=None,
                  time=None, _custom=True, **kwargs):
 
-        self._setup(title=title, position=position, thickness=thickness, trans=trans,
+        valid_pos = self._validate_sample_position(position)
+        self._setup(title=title, position=valid_pos, thickness=thickness, trans=trans,
                     dae=dae, aperture=aperture, period=period,
                     _custom=_custom, **kwargs)
 
@@ -705,7 +721,7 @@ class ScanningInstrument(object):
         if time or self.sanitised_timings(kwargs):
             self._do_measure(title=title, time=time, **kwargs)
 
-    def do_sans(self, title="", pos=None, thickness=1.0, dae=None,
+    def do_sans(self, title="", pos=None, thickness=1.0, dae="event",
                 aperture="", period=None, time=None, dls_sample_changer=False, **kwargs):
         """A wrapper around ``measure`` which ensures that the instrument is
         in sans mode before running the measurement if a title is given.
@@ -736,7 +752,7 @@ class ScanningInstrument(object):
                       dae=dae, aperture=aperture, period=period,
                       time=time, _custom=False, dls_sample_changer=dls_sample_changer, **kwargs)
 
-    def do_trans(self, title="", pos=None, thickness=1.0, dae=None,
+    def do_trans(self, title="", pos=None, thickness=1.0, dae="transmission",
                  aperture="", period=None, time=None, dls_sample_changer=False, **kwargs):
         """A wrapper around ``measure`` which ensures that the instrument is
          in transition mode before running the measurement if a title is given. It ensures that the
