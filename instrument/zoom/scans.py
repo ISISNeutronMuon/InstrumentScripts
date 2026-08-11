@@ -24,6 +24,7 @@ class Zoom(Defaults):
     """
 
     detector = specific_spectra([[4]], setup_dae_transmission)
+    # detector = specific_spectra([[5]], setup_dae_transmission)
 
     @staticmethod
     def log_file(info):
@@ -38,7 +39,7 @@ class Zoom(Defaults):
             Name for the log file
         """
         now = datetime.now()
-        return "U:/zoom_scan_{}_{}_{}_{}_{}_{}.dat".format(
+        return "U:/scans/zoom_scan_{}_{}_{}_{}_{}_{}.dat".format(
             now.year, now.month, now.day, now.hour, now.minute, now.second)
 
     def __repr__(self):
