@@ -4,6 +4,7 @@ from logging import warning
 from technique.sans.instrument import ScanningInstrument
 from technique.sans.util import dae_setter
 from general.scans.util import local_wrapper
+from technique.sans.genie import gen
 from .util import flipper1
 
 
@@ -35,6 +36,17 @@ class Zoom(ScanningInstrument):
             detector="detector_1det_1dae3card.dat",
             spectra="spec2det_280318_to_test_18_1.txt",
             wiring="wiring1det_event_200218.dat")
+            
+    @dae_setter("SANS", "sans")
+    def setup_dae_quiet(self):
+        """Setup ZOOM for quiet operation"""
+        gen.change_sync("internal")        
+        gen.change_vetos(clearall=True, smp=False, TS2=False,
+                         ext0=False, ext1=False, ext2=False, ext3=False)
+        self._generic_scan(
+            detector="detector_1det_1dae3card.dat",
+            spectra="spec2det_280318_to_test_18_1.txt",
+            wiring="wiring1det_event_200218.dat")            
 
     @dae_setter("SANS", "sans")
     def setup_dae_histogram(self):
